@@ -1,0 +1,39 @@
+{
+	"schemaVersion": 1,
+	"id": "buildnotes",
+	"version": "${version}",
+
+	"name": "Build Notes ",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+
+	"authors": [
+		"Atif"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+
+	"license": "MIT",
+	"icon": "assets/buildnotes/icon.png",
+
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.atif.buildnotes.Buildnotes"
+		]
+	},
+	"mixins": [
+		"buildnotes.mixins.json"
+	],
+
+	"depends": {
+		"fabricloader": ">=0.17.3",
+		"minecraft": "~1.18.2",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
