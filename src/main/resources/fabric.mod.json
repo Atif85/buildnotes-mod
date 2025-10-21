@@ -4,11 +4,12 @@
 	"version": "${version}",
 
 	"name": "Build Notes ",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "An in-game mod for tracking projects, builds, and other important information.",
 
 	"authors": [
 		"Atif"
 	],
+
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
@@ -19,9 +20,12 @@
 
 	"environment": "*",
 	"entrypoints": {
-		"main": [
-			"net.atif.buildnotes.Buildnotes"
-		]
+        "main": [
+          "net.atif.buildnotes.Buildnotes"
+        ],
+        "client": [
+          "net.atif.buildnotes.client.BuildnotesClient"
+        ]
 	},
 	"mixins": [
 		"buildnotes.mixins.json"
@@ -31,9 +35,8 @@
 		"fabricloader": ">=0.17.3",
 		"minecraft": "~1.18.2",
 		"java": ">=17",
-		"fabric-api": "*"
+		"fabric-api": "*",
+        "cloth-config": ">=6.5.133"
 	},
-	"suggests": {
-		"another-mod": "*"
-	}
+	"suggests": {}
 }

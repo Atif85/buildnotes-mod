@@ -1,0 +1,12 @@
+{
+  "key.buildnotes.opengui": "Open BuildNotes",
+  "category.buildnotes.main": "BuildNotes",
+
+  "gui.buildnotes.main_title": "BuildNotes",
+  "gui.buildnotes.notes_tab": "Notes",
+  "gui.buildnotes.builds_tab": "Builds",
+
+  "gui.buildnotes.add_button": "Add",
+  "gui.buildnotes.edit_button": "Edit",
+  "gui.buildnotes.delete_button": "Delete"
+}
