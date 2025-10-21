@@ -56,6 +56,7 @@ public class MainScreen extends Screen {
         this.addSelectableChild(this.noteListWidget);
         this.addSelectableChild(this.buildListWidget);
 
+
         // --- ACTION BUTTONS ---
         int buttonWidth = 60;
         int buttonHeight = 20;
