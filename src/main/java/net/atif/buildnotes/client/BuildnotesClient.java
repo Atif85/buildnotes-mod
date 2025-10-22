@@ -1,6 +1,8 @@
 package net.atif.buildnotes.client;
 
 import net.atif.buildnotes.gui.screen.MainScreen;
+import net.atif.buildnotes.gui.TabType;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -17,7 +19,7 @@ public class BuildnotesClient implements ClientModInitializer {
             while (KeyBinds.openGuiKey.wasPressed()) {
                 // Make sure the player isn't in another screen before opening ours
                 if (client.currentScreen == null) {
-                    client.setScreen(new MainScreen());
+                    client.setScreen(new MainScreen(TabType.NOTES));
                 }
             }
         });

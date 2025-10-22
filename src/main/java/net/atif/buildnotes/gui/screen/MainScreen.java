@@ -1,29 +1,35 @@
 package net.atif.buildnotes.gui.screen;
 
-import net.atif.buildnotes.data.Build;
-import net.atif.buildnotes.data.DataManager;
-import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.data.*;
+import net.atif.buildnotes.gui.TabType;
+import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.TabButtonWidget;
 import net.atif.buildnotes.gui.widget.list.BuildListWidget;
 import net.atif.buildnotes.gui.widget.list.NoteListWidget;
 
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 
 public class MainScreen extends Screen {
 
     private TabButtonWidget notesTab;
     private TabButtonWidget buildsTab;
-    private ButtonWidget editButton;
-    private ButtonWidget deleteButton;
+    private DarkButtonWidget editButton;
+    private DarkButtonWidget deleteButton;
+    private DarkButtonWidget addButton;
+    private DarkButtonWidget openButton;
+    private DarkButtonWidget closeButton;
 
     private NoteListWidget noteListWidget;
     private BuildListWidget buildListWidget;
 
-    public MainScreen() {
+    private TabType currentTab;
+
+    public MainScreen(TabType startTab) {
         super(new TranslatableText("gui.buildnotes.main_title"));
+        this.currentTab = startTab;
     }
 
     @Override
@@ -34,19 +40,20 @@ public class MainScreen extends Screen {
         // --- TABS ---
         int tabWidth = 80;
         int tabHeight = 20;
-        int topMargin = 40; // Space for title and tabs
-        int bottomMargin = 40; // Space for action buttons
+        int topMargin = 60; // Space for title and tabs
+        int bottomMargin = 60; // Space for action buttons
+
 
         this.notesTab = this.addDrawableChild(new TabButtonWidget(
                 (this.width / 2) - tabWidth - 2, 15, tabWidth, tabHeight,
                 new TranslatableText("gui.buildnotes.notes_tab"),
-                button -> selectTab(notesTab)
+                button -> selectTab(TabType.NOTES)
         ));
 
         this.buildsTab = this.addDrawableChild(new TabButtonWidget(
                 (this.width / 2) + 2, 15, tabWidth, tabHeight,
                 new TranslatableText("gui.buildnotes.builds_tab"),
-                button -> selectTab(buildsTab)
+                button -> selectTab(TabType.BUILDS)
         ));
 
         // --- LIST WIDGETS ---
@@ -58,39 +65,55 @@ public class MainScreen extends Screen {
 
 
         // --- ACTION BUTTONS ---
-        int buttonWidth = 60;
+        int buttonWidth = 80;
         int buttonHeight = 20;
-        int bottomPadding = 10;
+        int bottomPadding = 12;
         int buttonSpacing = 8;
-        int totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
+        int totalButtonWidth = (buttonWidth * 5) + (buttonSpacing * 4);
         int buttonsStartX = (this.width - totalButtonWidth) / 2;
         int buttonsY = this.height - buttonHeight - bottomPadding;
 
-        this.addDrawableChild(new ButtonWidget(
+        // Add
+        this.addButton = this.addDrawableChild(new DarkButtonWidget(
                 buttonsStartX, buttonsY, buttonWidth, buttonHeight,
                 new TranslatableText("gui.buildnotes.add_button"),
-                button -> System.out.println("Add clicked") // Placeholder
+                button -> addDummy()
         ));
 
-        this.editButton = this.addDrawableChild(new ButtonWidget(
-                buttonsStartX + buttonWidth + buttonSpacing, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.edit_button"),
-                button -> System.out.println("Edit clicked") // Placeholder
+        // Open / Select
+        this.openButton = this.addDrawableChild(new DarkButtonWidget(
+                buttonsStartX + (buttonWidth + buttonSpacing), buttonsY, buttonWidth, buttonHeight,
+                new TranslatableText("gui.buildnotes.open_button"),
+                button -> openSelected()
         ));
 
-        this.deleteButton = this.addDrawableChild(new ButtonWidget(
+        // Edit
+        this.editButton = this.addDrawableChild(new DarkButtonWidget(
                 buttonsStartX + (buttonWidth + buttonSpacing) * 2, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.delete_button"),
-                button -> System.out.println("Delete clicked") // Placeholder
+                new TranslatableText("gui.buildnotes.edit_button"),
+                button -> editSelected()
         ));
 
+        // Delete
+        this.deleteButton = this.addDrawableChild(new DarkButtonWidget(
+                buttonsStartX + (buttonWidth + buttonSpacing) * 3, buttonsY, buttonWidth, buttonHeight,
+                new TranslatableText("gui.buildnotes.delete_button"),
+                button -> confirmDelete()
+        ));
 
-        // Set the initial active tab
-        selectTab(this.buildsTab);
+        // Close / Back
+        this.closeButton = this.addDrawableChild(new DarkButtonWidget(
+                buttonsStartX + (buttonWidth + buttonSpacing) * 4, buttonsY, buttonWidth, buttonHeight,
+                new TranslatableText("gui.buildnotes.close_button"),
+                button -> this.client.setScreen(null)
+        ));
+
+        selectTab(this.currentTab);
     }
 
-    private void selectTab(TabButtonWidget selectedTab) {
-        boolean isNotes = selectedTab == notesTab;
+    private void selectTab(TabType tab) {
+        this.currentTab = tab;
+        boolean isNotes = tab == TabType.NOTES;
 
         notesTab.setActive(isNotes);
         buildsTab.setActive(!isNotes);
@@ -98,20 +121,19 @@ public class MainScreen extends Screen {
         noteListWidget.setVisible(isNotes);
         buildListWidget.setVisible(!isNotes);
 
-        this.noteListWidget.setSelected(null);
-        this.buildListWidget.setSelected(null);
+        noteListWidget.setSelected(null);
+        buildListWidget.setSelected(null);
 
         if (isNotes) {
-            this.noteListWidget.setNotes(DataManager.getInstance().getNotes());
+            noteListWidget.setNotes(DataManager.getInstance().getNotes());
         } else {
-            this.buildListWidget.setBuilds(DataManager.getInstance().getBuilds());
+            buildListWidget.setBuilds(DataManager.getInstance().getBuilds());
         }
 
         updateActionButtons();
     }
 
     public void onNoteSelected() { updateActionButtons(); }
-
     public void onBuildSelected() { updateActionButtons(); }
 
     private void updateActionButtons() {
@@ -124,20 +146,83 @@ public class MainScreen extends Screen {
         this.deleteButton.active = hasSelection;
     }
 
+    public void openSelected() {
+        if (currentTab == TabType.NOTES) {
+            Note sel = noteListWidget.getSelectedNote();
+            if (sel != null) System.out.println("Opened Note: " + sel.getTitle());
+        } else {
+            Build sel = buildListWidget.getSelectedBuild();
+            if (sel != null) System.out.println("Opened Build: " + sel.getName());
+        }
+    }
+
+    private void editSelected() {
+        if (currentTab == TabType.NOTES) {
+            Note sel = noteListWidget.getSelectedNote();
+            if (sel != null) System.out.println("Edit clicked: " + sel.getTitle());
+        } else {
+            Build sel = buildListWidget.getSelectedBuild();
+            if (sel != null) System.out.println("Edit clicked: " + sel.getName());
+        }
+    }
+
+    private void confirmDelete() {
+        DataManager dataManager = DataManager.getInstance();
+        Runnable onCancel = () -> { this.client.setScreen(this); };
+        
+        if (currentTab == TabType.NOTES) {
+            Note sel = this.noteListWidget.getSelectedNote();
+            if (sel == null) return;
+
+            this.client.setScreen(new ConfirmScreen(this, new LiteralText("Delete note \"" + sel.getTitle() + "\"?"), () -> {
+                dataManager.getNotes().removeIf(n -> n.getId().equals(sel.getId()));
+                dataManager.saveNotes();
+                this.noteListWidget.setNotes(dataManager.getNotes());
+                this.client.setScreen(this); // return to main screen
+            }, onCancel ));
+        } else {
+            Build sel = this.buildListWidget.getSelectedBuild();
+            if (sel == null) return;
+
+            this.client.setScreen(new ConfirmScreen(this, new LiteralText("Delete build \"" + sel.getName() + "\"?"), () -> {
+                dataManager.getBuilds().removeIf(b -> b.getId().equals(sel.getId()));
+                dataManager.saveBuilds();
+                this.buildListWidget.setBuilds(dataManager.getBuilds());
+                this.client.setScreen(this);
+            }, onCancel ));
+        }
+    }
+    
+    private void addDummy() {
+        if (currentTab == TabType.NOTES) {
+            Note newNote = new Note("New Note", "New note content.");
+            DataManager.getInstance().getNotes().add(newNote);
+            DataManager.getInstance().saveNotes();
+            noteListWidget.setNotes(DataManager.getInstance().getNotes());
+        } else {
+            Build newBuild = new Build("New Build", "0, 64, 0", "Overworld", "New build description", "Designer");
+            newBuild.getCustomFields().add(new CustomField("Example", "Value"));
+            DataManager.getInstance().getBuilds().add(newBuild);
+            DataManager.getInstance().saveBuilds();
+            buildListWidget.setBuilds(DataManager.getInstance().getBuilds());
+        }
+    }
+
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
 
-        if (notesTab.isActive()) {
-            this.noteListWidget.render(matrices, mouseX, mouseY, delta);
-        } else {
-            this.buildListWidget.render(matrices, mouseX, mouseY, delta);
+        if (currentTab == TabType.NOTES) {
+            noteListWidget.render(matrices, mouseX, mouseY, delta);
+        }
+        else {
+            buildListWidget.render(matrices, mouseX, mouseY, delta);
         }
 
         drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 5, 0xFFFFFF);
         super.render(matrices, mouseX, mouseY, delta);
     }
-
+    
     @Override
     public void close() {
         this.client.keyboard.setRepeatEvents(false);

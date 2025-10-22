@@ -2,16 +2,24 @@ package net.atif.buildnotes.gui.widget.list;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.gui.screen.MainScreen;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.client.sound.PositionedSoundInstance;
 
 public abstract class AbstractListWidget<E extends EntryListWidget.Entry<E>> extends EntryListWidget<E> {
 
     protected final MainScreen parentScreen;
     private boolean visible = false;
     private static final int FADE_HEIGHT = 12;
+
+    // double-click tracking
+    private long lastClickTime = 0L;
+    private E lastClickedEntry = null;
+    private static final long DOUBLE_CLICK_MS = 250L;
 
     public AbstractListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
         // We pass the parent's width and height to the super constructor.
@@ -27,6 +35,7 @@ public abstract class AbstractListWidget<E extends EntryListWidget.Entry<E>> ext
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
+
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -93,9 +102,32 @@ public abstract class AbstractListWidget<E extends EntryListWidget.Entry<E>> ext
         return xStart + listWidth + 4; // small padding from edge
     }
 
+
     // --- SHARED UTILITY OVERRIDES ---
     @Override
     public void appendNarrations(NarrationMessageBuilder builder) {
         // We don't need narrations for this UI.
     }
+
+    protected void handleEntryClick(E entry) {
+        long now = System.currentTimeMillis();
+        if (entry == this.lastClickedEntry && (now - this.lastClickTime) <= DOUBLE_CLICK_MS) {
+            MinecraftClient.getInstance().getSoundManager().play(
+                    PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0F)
+            );
+
+            // double click detected
+            if (this.parentScreen != null) {
+                this.parentScreen.openSelected();
+            }
+            // reset to avoid triple click detection
+            this.lastClickedEntry = null;
+            this.lastClickTime = 0L;
+            return;
+        }
+        // not a double-click, register this as the last click
+        this.lastClickedEntry = entry;
+        this.lastClickTime = now;
+    }
+
 }

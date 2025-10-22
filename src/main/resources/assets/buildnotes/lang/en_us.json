@@ -8,5 +8,7 @@
 
   "gui.buildnotes.add_button": "Add",
   "gui.buildnotes.edit_button": "Edit",
-  "gui.buildnotes.delete_button": "Delete"
+  "gui.buildnotes.delete_button": "Delete",
+  "gui.buildnotes.open_button": "Open",
+  "gui.buildnotes.close_button": "Close"
 }

@@ -22,6 +22,10 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
         builds.forEach(build -> this.addEntry(new BuildEntry(build)));
     }
 
+    public BuildEntry getPublicEntry(int index) {
+        return this.getEntry(index);
+    }
+
     public Build getSelectedBuild() {
         BuildEntry entry = getSelectedOrNull();
         return entry != null ? entry.getBuild() : null;
@@ -55,6 +59,8 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
                 BuildListWidget.this.setSelected(this);
+
+                BuildListWidget.this.handleEntryClick(this);
                 return true;
             }
             return false;

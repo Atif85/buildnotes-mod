@@ -27,6 +27,10 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
         return entry != null ? entry.getNote() : null;
     }
 
+    public NoteEntry getPublicEntry(int index) {
+        return this.getEntry(index);
+    }
+
     @Override
     public void setSelected(NoteEntry entry) {
         super.setSelected(entry);
@@ -58,6 +62,8 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
                 NoteListWidget.this.setSelected(this);
+
+                NoteListWidget.this.handleEntryClick(this);
                 return true;
             }
             return false;
