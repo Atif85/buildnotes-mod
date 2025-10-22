@@ -77,7 +77,7 @@ public class MainScreen extends Screen {
         this.addButton = this.addDrawableChild(new DarkButtonWidget(
                 buttonsStartX, buttonsY, buttonWidth, buttonHeight,
                 new TranslatableText("gui.buildnotes.add_button"),
-                button -> addDummy()
+                button -> addEntry()
         ));
 
         // Open / Select
@@ -149,7 +149,9 @@ public class MainScreen extends Screen {
     public void openSelected() {
         if (currentTab == TabType.NOTES) {
             Note sel = noteListWidget.getSelectedNote();
-            if (sel != null) System.out.println("Opened Note: " + sel.getTitle());
+            if (sel != null) {
+                this.client.setScreen(new ViewNoteScreen(this, sel));
+            }
         } else {
             Build sel = buildListWidget.getSelectedBuild();
             if (sel != null) System.out.println("Opened Build: " + sel.getName());
@@ -159,6 +161,7 @@ public class MainScreen extends Screen {
     private void editSelected() {
         if (currentTab == TabType.NOTES) {
             Note sel = noteListWidget.getSelectedNote();
+            this.client.setScreen(new EditNoteScreen(this, sel));
             if (sel != null) System.out.println("Edit clicked: " + sel.getTitle());
         } else {
             Build sel = buildListWidget.getSelectedBuild();
@@ -192,13 +195,17 @@ public class MainScreen extends Screen {
             }, onCancel ));
         }
     }
+
+    private void addNewNote() {
+        DataManager dataManager = DataManager.getInstance();
+        Note newNote = new Note("New Note", ""); // Create a new, empty note
+        dataManager.getNotes().add(newNote);
+        this.client.setScreen(new EditNoteScreen(this, newNote));
+    }
     
-    private void addDummy() {
+    private void addEntry() {
         if (currentTab == TabType.NOTES) {
-            Note newNote = new Note("New Note", "New note content.");
-            DataManager.getInstance().getNotes().add(newNote);
-            DataManager.getInstance().saveNotes();
-            noteListWidget.setNotes(DataManager.getInstance().getNotes());
+            addNewNote();
         } else {
             Build newBuild = new Build("New Build", "0, 64, 0", "Overworld", "New build description", "Designer");
             newBuild.getCustomFields().add(new CustomField("Example", "Value"));
@@ -219,7 +226,7 @@ public class MainScreen extends Screen {
             buildListWidget.render(matrices, mouseX, mouseY, delta);
         }
 
-        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 5, 0xFFFFFF);
+        // drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 5, 0xFFFFFF);
         super.render(matrices, mouseX, mouseY, delta);
     }
     
