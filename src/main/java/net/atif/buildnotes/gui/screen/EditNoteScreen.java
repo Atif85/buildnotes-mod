@@ -4,7 +4,6 @@ import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
-import net.atif.buildnotes.gui.widget.TransparentTextFieldWidget;
 
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -42,7 +41,7 @@ public class EditNoteScreen extends Screen {
         // --- Title Text Field ---
         this.titleField = new MultiLineTextFieldWidget(
                 this.textRenderer, contentX, topMargin + 5, contentWidth,
-                titlePanelHeight, note.getTitle(), 1, false
+                titlePanelHeight, note.getTitle(), "Enter Title Here", 1, false
         );
         this.addSelectableChild(this.titleField);
 
@@ -52,7 +51,7 @@ public class EditNoteScreen extends Screen {
         this.contentField = new MultiLineTextFieldWidget(
                 this.textRenderer, contentX, contentPanelY, contentWidth,
                 contentPanelBottom - contentPanelY, note.getContent(),
-                Integer.MAX_VALUE, true
+                "Enter Text Here ", Integer.MAX_VALUE, true
         );
         this.addSelectableChild(this.contentField);
 

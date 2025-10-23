@@ -1,5 +1,8 @@
 package net.atif.buildnotes.gui.widget;
 
+import net.atif.buildnotes.data.undoredo.TextAction;
+import net.atif.buildnotes.data.undoredo.UndoManager;
+
 import com.google.common.collect.Lists;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -47,34 +50,40 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     private int selectionStart = 0;
     private int selectionEnd = 0;
     private int selectionAnchor = 0; // anchor for mouse dragging (fixed until mouse released)
+    private long lastClickTime = 0;
+    private int lastClickIndex = -1;
+    private int clickCount = 0;
+    private static final long DOUBLE_CLICK_INTERVAL_MS = 300;
 
     // dragging selection by mouse
     private boolean isDraggingText = false;
 
+    private final UndoManager undoManager = new UndoManager(this); // NEW FIELD
+    private String placeholderText;
     // caret blink
     private boolean caretVisible = true;
     private long lastBlinkTime = System.currentTimeMillis();
     private static final long BLINK_INTERVAL_MS = 500;
 
     public MultiLineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, String initialText) {
-        this(textRenderer, x, y, width, height, initialText, Integer.MAX_VALUE, true);
+        this(textRenderer, x, y, width, height, initialText,"", Integer.MAX_VALUE, true);
     }
 
     public MultiLineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, String initialText, int maxLines) {
-        this(textRenderer, x, y, width, height, initialText, maxLines, true);
+        this(textRenderer, x, y, width, height, initialText,"", maxLines, true);
     }
 
-    public MultiLineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, String initialText, int maxLines, boolean scrollingEnabled) {
+    public MultiLineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, String initialText, String placeholder, int maxLines, boolean scrollingEnabled) {
         this.textRenderer = textRenderer;
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.maxLines = maxLines;
-        this.scrollingEnabled = scrollingEnabled; // This flag now primarily controls scrollbar visibility
+        this.scrollingEnabled = scrollingEnabled;
+        this.placeholderText = placeholder;
 
         boolean defaultVerticalScroll = this.scrollingEnabled;
-        // if it's a single-line text field, vertical scrolling is always disabled.
         if (maxLines == 1) {
             defaultVerticalScroll = false;
         }
@@ -146,14 +155,26 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return new int[]{last, lines.get(last).length()};
     }
 
-    private void setCursorFromAbsolute(int absoluteIndex) {
+    public int getCursorAbsolute() {
+        return getAbsoluteIndex(cursorY, cursorX);
+    }
+
+    public int getSelectionStartAbsolute() {
+        return this.selectionStart;
+    }
+
+    public int getSelectionEndAbsolute() {
+        return this.selectionEnd;
+    }
+
+    public void setCursorFromAbsolute(int absoluteIndex) {
         int[] lc = getLineColFromAbsolute(absoluteIndex);
         // lc[0] = line, lc[1] = col
         setCursor(lc[1], lc[0]);
     }
 
     // ---------- Selection helpers ----------
-    private void setSelectionAbsolute(int a, int b) {
+    public void setSelectionAbsolute(int a, int b) {
         int t = Math.max(0, Math.min(a, getTotalLength()));
         int e = Math.max(0, Math.min(b, getTotalLength()));
         if (t <= e) {
@@ -198,25 +219,68 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     private void deleteSelection() {
         if (!hasSelection()) return;
-        int start = selectionStart;
-        int end = selectionEnd;
-        int[] sLC = getLineColFromAbsolute(start);
-        int[] eLC = getLineColFromAbsolute(end);
 
-        if (sLC[0] == eLC[0]) {
-            String line = lines.get(sLC[0]);
-            String before = line.substring(0, sLC[1]);
-            String after = line.substring(eLC[1]);
-            lines.set(sLC[0], before + after);
-            setCursor(sLC[1], sLC[0]);
-        } else {
-            String firstPart = lines.get(sLC[0]).substring(0, sLC[1]);
-            String lastPart = lines.get(eLC[0]).substring(eLC[1]);
-            for (int i = eLC[0]; i > sLC[0]; i--) lines.remove(i);
-            lines.set(sLC[0], firstPart + lastPart);
-            setCursor(sLC[1], sLC[0]);
+        final int start = selectionStart;
+        final int end = selectionEnd;
+        final String selectedText = getSelectedText();
+
+        // Create an action that knows how to delete AND re-insert the text
+        TextAction action = new TextAction() {
+            @Override
+            public void execute() {
+                _deleteTextInternal(start, end);
+            }
+            @Override
+            public void undo() {
+                _insertTextInternal(start, selectedText);
+            }
+        };
+
+        undoManager.perform(action);
+    }
+
+    // In MultiLineTextFieldWidget.java
+
+    private void selectWordAt(int absoluteIndex) {
+        int[] lc = getLineColFromAbsolute(absoluteIndex);
+        int line = lc[0];
+        int col = lc[1];
+        String lineStr = this.lines.get(line);
+
+        if (lineStr.isEmpty()) return; // Nothing to select on an empty line
+
+        // Find the start of the word by moving backward
+        int wordStartCol = col;
+        // If the cursor is at the end of a word, move it back one to be "inside" it
+        if (wordStartCol > 0 && wordStartCol >= lineStr.length() || Character.isWhitespace(lineStr.charAt(wordStartCol))) {
+            if (wordStartCol > 0) wordStartCol--;
         }
-        clearSelection();
+        while (wordStartCol > 0 && !Character.isWhitespace(lineStr.charAt(wordStartCol - 1))) {
+            wordStartCol--;
+        }
+
+        // Find the end of the word by moving forward
+        int wordEndCol = col;
+        while (wordEndCol < lineStr.length() && !Character.isWhitespace(lineStr.charAt(wordEndCol))) {
+            wordEndCol++;
+        }
+
+        int selectionStartAbs = getAbsoluteIndex(line, wordStartCol);
+        int selectionEndAbs = getAbsoluteIndex(line, wordEndCol);
+
+        setSelectionAbsolute(selectionStartAbs, selectionEndAbs);
+        setCursorFromAbsolute(selectionEndAbs); // Move cursor to the end of the new selection
+    }
+
+    private void selectLineAt(int absoluteIndex) {
+        int[] lc = getLineColFromAbsolute(absoluteIndex);
+        int line = lc[0];
+
+        int lineStartAbs = getAbsoluteIndex(line, 0);
+        int lineEndAbs = getAbsoluteIndex(line, this.lines.get(line).length());
+
+        setSelectionAbsolute(lineStartAbs, lineEndAbs);
+        setCursorFromAbsolute(lineEndAbs); // Move cursor to the end of the line
     }
 
     // ---------- Insertion ----------
@@ -224,32 +288,20 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         if (textToInsert == null || textToInsert.isEmpty()) return;
         if (hasSelection()) deleteSelection();
 
-        String[] parts = textToInsert.split("\n", -1);
-        String currentLine = lines.get(cursorY);
-        String beforeCursor = currentLine.substring(0, cursorX);
-        String afterCursor = currentLine.substring(cursorX);
+        final int start = getCursorAbsolute();
+        final String text = textToInsert;
 
-        if (parts.length == 1) {
-            lines.set(cursorY, beforeCursor + parts[0] + afterCursor);
-            setCursor(beforeCursor.length() + parts[0].length(), cursorY);
-        } else {
-            lines.set(cursorY, beforeCursor + parts[0]);
-            int insertAt = cursorY + 1;
-            for (int i = 1; i < parts.length - 1; i++) {
-                if (lines.size() >= maxLines) break;
-                lines.add(insertAt, parts[i]);
-                insertAt++;
+        TextAction action = new TextAction() {
+            @Override
+            public void execute() {
+                _insertTextInternal(start, text);
             }
-            if (lines.size() < maxLines) {
-                lines.add(insertAt, parts[parts.length - 1] + afterCursor);
-                setCursor(parts[parts.length - 1].length(), insertAt);
-            } else {
-                String last = lines.get(lines.size() - 1);
-                lines.set(lines.size() - 1, last + afterCursor);
-                setCursor(lines.get(lines.size() - 1).length(), lines.size() - 1);
+            @Override
+            public void undo() {
+                _deleteTextInternal(start, start + text.length());
             }
-        }
-        ensureCursorVisible();
+        };
+        undoManager.perform(action);
     }
 
     // ---------- Rendering ----------
@@ -273,6 +325,12 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         int scissorWidth = (int) (this.width * scale);
         int scissorHeight = (int) (this.height * scale);
         com.mojang.blaze3d.systems.RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+
+        if (getText().isEmpty() && !this.focused && this.placeholderText != null && !this.placeholderText.isEmpty()) {
+            // Draw placeholder text, respecting horizontal scroll
+            int drawX = contentX - (int) Math.round(scrollX);
+            textRenderer.draw(matrices, this.placeholderText, drawX, contentY, 0xFF808080); // Gray color
+        }
 
         int firstVisibleLine = (int) (scrollY / textRenderer.fontHeight);
         int lastVisibleLine = Math.min(this.lines.size() - 1, firstVisibleLine + (contentHeight / textRenderer.fontHeight) + 1);
@@ -393,19 +451,40 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             // normal text area click
             this.focused = true;
             int clickedAbs = absoluteIndexFromMouse(mouseX, mouseY);
-            boolean shift = Screen.hasShiftDown();
-            if (shift) {
-                // extend selection from existing anchor (or selectionStart if no anchor set)
-                // keep selectionAnchor unchanged
-                setSelectionAbsolute(selectionAnchor, clickedAbs);
-                setCursorFromAbsolute(clickedAbs);
+            long now = System.currentTimeMillis();
+
+            // --- NEW: Double/Triple click detection logic ---
+            if (now - lastClickTime < DOUBLE_CLICK_INTERVAL_MS && clickedAbs == lastClickIndex) {
+                clickCount++;
             } else {
-                // start new selection anchor
-                selectionAnchor = clickedAbs;
-                setSelectionAbsolute(clickedAbs, clickedAbs);
-                setCursorFromAbsolute(clickedAbs);
-                this.isDraggingText = true;
+                clickCount = 1;
             }
+
+            // Update state for the next click
+            this.lastClickTime = now;
+            this.lastClickIndex = clickedAbs;
+
+            // Handle actions based on click count
+            if (clickCount == 1) { // SINGLE CLICK
+                boolean shift = Screen.hasShiftDown();
+                if (shift) {
+                    setSelectionAbsolute(selectionAnchor, clickedAbs);
+                    setCursorFromAbsolute(clickedAbs);
+                } else {
+                    selectionAnchor = clickedAbs;
+                    setSelectionAbsolute(clickedAbs, clickedAbs);
+                    setCursorFromAbsolute(clickedAbs);
+                    this.isDraggingText = true; // Only start dragging on single click
+                }
+            } else if (clickCount == 2) { // DOUBLE CLICK
+                selectWordAt(clickedAbs);
+                this.isDraggingText = false;
+            } else if (clickCount == 3) { // TRIPLE CLICK
+                selectLineAt(clickedAbs);
+                this.isDraggingText = false;
+                clickCount = 0; // Reset after triple-click to restart the cycle
+            }
+
             return true;
         }
         this.focused = false;
@@ -497,6 +576,15 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
         boolean shift = Screen.hasShiftDown();
         boolean ctrl = Screen.hasControlDown();
+
+        if (ctrl && keyCode == GLFW.GLFW_KEY_Z) {
+            undoManager.undo();
+            return true;
+        }
+        if (ctrl && keyCode == GLFW.GLFW_KEY_Y) {
+            undoManager.redo();
+            return true;
+        }
 
         // ctrl+word moves (absolute space)
         if (ctrl && keyCode == GLFW.GLFW_KEY_LEFT) {
@@ -782,6 +870,56 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= this.x && mouseX < this.x + this.width && mouseY >= this.y && mouseY < this.y + this.height;
+    }
+
+    public void _deleteTextInternal(int startAbsolute, int endAbsolute) {
+        int[] sLC = getLineColFromAbsolute(startAbsolute);
+        int[] eLC = getLineColFromAbsolute(endAbsolute);
+
+        if (sLC[0] == eLC[0]) {
+            String line = lines.get(sLC[0]);
+            String before = line.substring(0, sLC[1]);
+            String after = line.substring(eLC[1]);
+            lines.set(sLC[0], before + after);
+        } else {
+            String firstPart = lines.get(sLC[0]).substring(0, sLC[1]);
+            String lastPart = lines.get(eLC[0]).substring(eLC[1]);
+            for (int i = eLC[0]; i > sLC[0]; i--) lines.remove(i);
+            lines.set(sLC[0], firstPart + lastPart);
+        }
+        setCursorFromAbsolute(startAbsolute);
+        clearSelection();
+    }
+
+    public void _insertTextInternal(int startAbsolute, String textToInsert) {
+        setCursorFromAbsolute(startAbsolute); // Set cursor to know where to insert
+
+        String[] parts = textToInsert.split("\n", -1);
+        String currentLine = lines.get(cursorY);
+        String beforeCursor = currentLine.substring(0, cursorX);
+        String afterCursor = currentLine.substring(cursorX);
+
+        if (parts.length == 1) {
+            lines.set(cursorY, beforeCursor + parts[0] + afterCursor);
+            setCursor(beforeCursor.length() + parts[0].length(), cursorY);
+        } else {
+            lines.set(cursorY, beforeCursor + parts[0]);
+            int insertAt = cursorY + 1;
+            for (int i = 1; i < parts.length - 1; i++) {
+                if (lines.size() >= maxLines) break;
+                lines.add(insertAt, parts[i]);
+                insertAt++;
+            }
+            if (lines.size() < maxLines) {
+                lines.add(insertAt, parts[parts.length - 1] + afterCursor);
+                setCursor(parts[parts.length - 1].length(), insertAt);
+            } else {
+                String last = lines.get(lines.size() - 1);
+                lines.set(lines.size() - 1, last + afterCursor);
+                setCursor(lines.get(lines.size() - 1).length(), lines.size() - 1);
+            }
+        }
+        ensureCursorVisible();
     }
 
     @Override
