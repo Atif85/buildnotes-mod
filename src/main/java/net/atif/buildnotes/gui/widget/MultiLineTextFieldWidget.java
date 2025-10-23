@@ -23,13 +23,16 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     private final int x, y, width, height;
     private final int maxLines;
     private final boolean scrollingEnabled;
+    private boolean allowVerticalScroll;
+    private boolean allowHorizontalScroll;
+
 
     private List<String> lines = Lists.newArrayList("");
     private int cursorX = 0; // column
     private int cursorY = 0; // line index
     private boolean focused = false;
     private double scrollY = 0;
-    private double scrollX = 0; // NEW: horizontal scroll in pixels
+    private double scrollX = 0;
 
     private static final int SCROLLBAR_THICKNESS = 6;
     private boolean isDraggingVScrollbar = false;
@@ -68,7 +71,16 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         this.width = width;
         this.height = height;
         this.maxLines = maxLines;
-        this.scrollingEnabled = scrollingEnabled;
+        this.scrollingEnabled = scrollingEnabled; // This flag now primarily controls scrollbar visibility
+
+        boolean defaultVerticalScroll = this.scrollingEnabled;
+        // if it's a single-line text field, vertical scrolling is always disabled.
+        if (maxLines == 1) {
+            defaultVerticalScroll = false;
+        }
+        this.allowVerticalScroll = defaultVerticalScroll;
+        this.allowHorizontalScroll = true;
+
         setText(initialText);
     }
 
@@ -81,6 +93,8 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         this.focused = false;
         this.scrollX = 0;
         this.scrollY = 0;
+
+        clampScroll();
     }
 
     public String getText() {
@@ -301,8 +315,8 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
         // Caret drawing (vertical bar) - make it a bit wider and taller for visibility
         if (this.focused && caretVisible) {
-            int paddingTop = 2;
-            int paddingBottom = 2;
+            int paddingTop = 1;
+            int paddingBottom = 1;
             if (cursorY >= firstVisibleLine && cursorY <= lastVisibleLine) {
                 String line = this.lines.get(this.cursorY);
                 int caretPixelX = contentX + (int) Math.round(textRenderer.getWidth(line.substring(0, this.cursorX)) - scrollX);
@@ -310,7 +324,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 int top = caretYPos - paddingTop;
                 int bottom = caretYPos + textRenderer.fontHeight + paddingBottom;
                 // draw 2px wide vertical caret centered at caretPixelX
-                fill(matrices, caretPixelX - 1, top, caretPixelX + 1, bottom, 0xFFFFFFFF);
+                fill(matrices, caretPixelX, top, caretPixelX + 1, bottom, 0xFFFFFFFF);
             }
         }
 
@@ -446,17 +460,20 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         // If shift is down -> horizontal scroll, otherwise vertical
         if (!isMouseOver(mouseX, mouseY)) return false;
-        if (Screen.hasShiftDown()) {
-            // horizontal scroll
+
+        boolean shift = Screen.hasShiftDown();
+
+        if (shift && this.allowHorizontalScroll) {
             this.scrollX -= amount * 10;
             clampScroll();
             return true;
-        } else {
-            // vertical
+        } else if (!shift && this.allowVerticalScroll) {
             this.scrollY -= amount * 10;
             clampScroll();
             return true;
         }
+
+        return false;
     }
 
     private int absoluteIndexFromMouse(double mouseX, double mouseY) {
@@ -525,7 +542,19 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 return true;
             }
             case GLFW.GLFW_KEY_BACKSPACE -> {
-                if (hasSelection()) { deleteSelection(); return true; }
+                if (hasSelection()) {
+                    deleteSelection();
+                    return true;
+                }
+                if (ctrl) {
+                    int oldAbs = getAbsoluteIndex(cursorY, cursorX);
+                    if (oldAbs > 0) {
+                        int newAbs = moveWordBackAbsolute(oldAbs);
+                        setSelectionAbsolute(newAbs, oldAbs);
+                        deleteSelection();
+                    }
+                    return true;
+                }
                 if (cursorX == 0 && cursorY > 0) {
                     String lineToMerge = this.lines.remove(this.cursorY);
                     int prevLineIndex = this.cursorY - 1;
@@ -543,7 +572,19 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 return true;
             }
             case GLFW.GLFW_KEY_DELETE -> {
-                if (hasSelection()) { deleteSelection(); return true; }
+                if (hasSelection()) {
+                    deleteSelection();
+                    return true;
+                }
+                if (ctrl) {
+                    int oldAbs = getAbsoluteIndex(cursorY, cursorX);
+                    if (oldAbs < getTotalLength()) {
+                        int newAbs = moveWordForwardAbsolute(oldAbs);
+                        setSelectionAbsolute(oldAbs, newAbs);
+                        deleteSelection();
+                    }
+                    return true;
+                }
                 String line = this.lines.get(this.cursorY);
                 if (cursorX == line.length() && cursorY < this.lines.size() - 1) {
                     String nextLine = this.lines.remove(cursorY + 1);
@@ -666,12 +707,21 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     }
 
     private void clampScroll() {
-        double maxV = getMaxScrollV();
-        if (this.scrollY > maxV) this.scrollY = maxV;
-        if (this.scrollY < 0) this.scrollY = 0;
-        double maxH = getMaxScrollH();
-        if (this.scrollX > maxH) this.scrollX = maxH;
-        if (this.scrollX < 0) this.scrollX = 0;
+        if (allowVerticalScroll) {
+            double maxV = getMaxScrollV();
+            if (this.scrollY > maxV) this.scrollY = maxV;
+            if (this.scrollY < 0) this.scrollY = 0;
+        } else {
+            this.scrollY = 0;
+        }
+
+        if (allowHorizontalScroll) {
+            double maxH = getMaxScrollH();
+            if (this.scrollX > maxH) this.scrollX = maxH;
+            if (this.scrollX < 0) this.scrollX = 0;
+        } else {
+            this.scrollX = 0;
+        }
     }
 
     // ---------- Cursor & selection movement ----------

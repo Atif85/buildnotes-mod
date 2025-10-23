@@ -41,18 +41,18 @@ public class EditNoteScreen extends Screen {
 
         // --- Title Text Field ---
         this.titleField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX + 5, topMargin + 10,
-                contentWidth - 10, titlePanelHeight - 10,
-                note.getTitle(), 1, false
+                this.textRenderer, contentX, topMargin + 5, contentWidth,
+                titlePanelHeight, note.getTitle(), 1, false
         );
-        this.addDrawableChild(this.titleField);
+        this.addSelectableChild(this.titleField);
 
         // --- Content Text Field ---
         int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
         int contentPanelBottom = this.height - bottomMargin;
         this.contentField = new MultiLineTextFieldWidget(
                 this.textRenderer, contentX, contentPanelY, contentWidth,
-                contentPanelBottom - contentPanelY, note.getContent()
+                contentPanelBottom - contentPanelY, note.getContent(),
+                Integer.MAX_VALUE, true
         );
         this.addSelectableChild(this.contentField);
 
