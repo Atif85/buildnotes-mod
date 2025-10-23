@@ -1,16 +1,14 @@
 package net.atif.buildnotes.gui.screen;
 
-import me.shedaniel.clothconfig2.impl.builders.TextFieldBuilder;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
-import net.minecraft.client.MinecraftClient;
+import net.atif.buildnotes.gui.widget.TransparentTextFieldWidget;
+
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
@@ -20,7 +18,7 @@ public class EditNoteScreen extends Screen {
     private final Screen parent;
     private final Note note;
 
-    private TextFieldWidget titleField;
+    private MultiLineTextFieldWidget titleField;
     private MultiLineTextFieldWidget contentField;
 
     public EditNoteScreen(Screen parent, Note note) {
@@ -42,15 +40,20 @@ public class EditNoteScreen extends Screen {
         int bottomMargin = 70; // More space for two rows of buttons
 
         // --- Title Text Field ---
-        this.titleField = new TextFieldWidget(this.textRenderer, contentX + 5, topMargin + 5, contentWidth - 10, titlePanelHeight - 10, new LiteralText("Title"));
-        this.titleField.setText(note.getTitle());
+        this.titleField = new MultiLineTextFieldWidget(
+                this.textRenderer, contentX + 5, topMargin + 10,
+                contentWidth - 10, titlePanelHeight - 10,
+                note.getTitle(), 1, false
+        );
         this.addDrawableChild(this.titleField);
 
         // --- Content Text Field ---
         int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
         int contentPanelBottom = this.height - bottomMargin;
-        this.contentField = new MultiLineTextFieldWidget(this.textRenderer, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY, note.getContent());
-        // We add this as a generic `Element` to ensure it receives all event types (mouse, keyboard, scroll, etc.)
+        this.contentField = new MultiLineTextFieldWidget(
+                this.textRenderer, contentX, contentPanelY, contentWidth,
+                contentPanelBottom - contentPanelY, note.getContent()
+        );
         this.addSelectableChild(this.contentField);
 
         // --- ACTION BUTTONS ---
