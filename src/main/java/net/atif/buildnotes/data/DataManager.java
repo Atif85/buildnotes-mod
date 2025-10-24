@@ -64,29 +64,6 @@ public class DataManager {
         }
     }
 
-    private void addDefaultNotes() {
-        this.notes.add(new Note("Welcome!", "This is your first note.\nYou can edit or delete it."));
-        this.notes.add(new Note("Shopping List", "- 1 Stack of Cobblestone\n- 32 Oak Logs\n- 8 Diamonds"));
-        this.notes.add(new Note("Project: Castle Walls", "The east wall needs to be extended by 30 blocks. Use stone bricks and add mossy variants for detail."));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-        this.notes.add(new Note("Test", "Content"));
-
-    }
-
-
     // --- Build Methods ---
     public List<Build> getBuilds() { return this.builds; }
 
@@ -116,9 +93,46 @@ public class DataManager {
     private void addDefaultBuilds() {
         Build starterBase = new Build("Starter Base", "100, 64, -250", "Overworld", "A small oak and cobblestone house.", "Player");
         starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resousdfrces Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resourcdsfses Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resoussdfdfsrces Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("sda Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources fdsfNeeded", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resources Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("sdfded", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resourdfces Needed", "5 stacks of wood, 10 stacks of cobblestone."));
+        starterBase.getCustomFields().add(new CustomField("Resosdfurces Needed", "5 stacks of wood, 10 stacks of cobblestone."));
         this.builds.add(starterBase);
 
         Build netherHub = new Build("Nether Hub", "12, 80, -31", "The Nether", "Main hub for all nether portals.", "Player");
         this.builds.add(netherHub);
+    }
+
+    private void addDefaultNotes() {
+        this.notes.add(new Note("Welcome!", "This is your first note.\nYou can edit or delete it."));
+        this.notes.add(new Note("Shopping List", "- 1 Stack of Cobblestone\n- 32 Oak Logs\n- 8 Diamonds"));
+        this.notes.add(new Note("Project: Castle Walls", "The east wall needs to be extended by 30 blocks. Use stone bricks and add mossy variants for detail."));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+        this.notes.add(new Note("Test", "Content"));
+
     }
 }

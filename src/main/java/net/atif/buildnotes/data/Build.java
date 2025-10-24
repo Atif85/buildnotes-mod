@@ -11,17 +11,17 @@ public class Build {
     private String coordinates;
     private String dimension;
     private String description;
-    private String designer;
+    private String credits;
     private final List<CustomField> customFields;
     private long lastModified;
 
-    public Build(String name, String coordinates, String dimension, String description, String designer) {
+    public Build(String name, String coordinates, String dimension, String description, String credits) {
         this.id = UUID.randomUUID();
         this.name = name;
         this.coordinates = coordinates;
         this.dimension = dimension;
         this.description = description;
-        this.designer = designer;
+        this.credits = credits;
         this.customFields = new ArrayList<>();
         this.updateTimestamp();
     }
@@ -36,7 +36,7 @@ public class Build {
     public String getCoordinates() { return coordinates; }
     public String getDimension() { return dimension; }
     public String getDescription() { return description; }
-    public String getDesigner() { return designer; }
+    public String getCredits() { return credits; }
     public List<CustomField> getCustomFields() { return customFields; }
     public long getLastModified() { return lastModified; }
 
@@ -45,5 +45,5 @@ public class Build {
     public void setCoordinates(String coordinates) { this.coordinates = coordinates; }
     public void setDimension(String dimension) { this.dimension = dimension; }
     public void setDescription(String description) { this.description = description; }
-    public void setDesigner(String designer) { this.designer = designer; }
+    public void setcredits(String credits) { this.credits = credits; }
 }

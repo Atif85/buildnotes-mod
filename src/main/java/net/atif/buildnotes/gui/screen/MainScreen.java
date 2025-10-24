@@ -154,18 +154,23 @@ public class MainScreen extends Screen {
             }
         } else {
             Build sel = buildListWidget.getSelectedBuild();
-            if (sel != null) System.out.println("Opened Build: " + sel.getName());
+            if (sel != null) {
+                this.client.setScreen(new ViewBuildScreen(this, sel));
+            }
         }
     }
 
     private void editSelected() {
         if (currentTab == TabType.NOTES) {
             Note sel = noteListWidget.getSelectedNote();
-            this.client.setScreen(new EditNoteScreen(this, sel));
-            if (sel != null) System.out.println("Edit clicked: " + sel.getTitle());
+            if (sel != null) {
+                this.client.setScreen(new EditNoteScreen(this, sel));
+            }
         } else {
             Build sel = buildListWidget.getSelectedBuild();
-            if (sel != null) System.out.println("Edit clicked: " + sel.getName());
+            if (sel != null) {
+                this.client.setScreen(new EditBuildScreen(this, sel));
+            }
         }
     }
 
@@ -196,22 +201,16 @@ public class MainScreen extends Screen {
         }
     }
 
-    private void addNewNote() {
-        DataManager dataManager = DataManager.getInstance();
-        Note newNote = new Note("New Note", ""); // Create a new, empty note
-        dataManager.getNotes().add(newNote);
-        this.client.setScreen(new EditNoteScreen(this, newNote));
-    }
-    
+
     private void addEntry() {
         if (currentTab == TabType.NOTES) {
-            addNewNote();
+            Note newNote = new Note("New Note", ""); // Create a new, empty note
+            DataManager.getInstance().getNotes().add(newNote);
+            this.client.setScreen(new EditNoteScreen(this, newNote));
         } else {
-            Build newBuild = new Build("New Build", "0, 64, 0", "Overworld", "New build description", "Designer");
-            newBuild.getCustomFields().add(new CustomField("Example", "Value"));
-            DataManager.getInstance().getBuilds().add(newBuild);
-            DataManager.getInstance().saveBuilds();
-            buildListWidget.setBuilds(DataManager.getInstance().getBuilds());
+            Build newBuild = new Build("New Build", "", "", "", ""); // Create a new, empty build
+            DataManager.getInstance().getBuilds().add(newBuild); // Add it to the list
+            this.client.setScreen(new EditBuildScreen(this, newBuild)); // Open the edit screen immediately
         }
     }
 

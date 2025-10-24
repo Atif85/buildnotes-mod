@@ -11,5 +11,7 @@
   "gui.buildnotes.delete_button": "Delete",
   "gui.buildnotes.open_button": "Open",
   "gui.buildnotes.close_button": "Close",
-  "gui.buildnotes.edit_note_title": "Edit Note Title"
+
+  "gui.buildnotes.edit_note_title": "Edit Note",
+  "gui.buildnotes.edit_build_title": "Edit Build"
 }

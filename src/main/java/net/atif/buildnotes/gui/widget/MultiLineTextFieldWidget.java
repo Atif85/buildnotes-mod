@@ -23,47 +23,52 @@ import static net.minecraft.client.gui.DrawableHelper.fill;
 public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     private final TextRenderer textRenderer;
-    private final int x, y, width, height;
-    private final int maxLines;
-    private final boolean scrollingEnabled;
-    private boolean allowVerticalScroll;
-    private boolean allowHorizontalScroll;
+    protected final int x;
+    public final int y;
+    protected final int width;
+    protected final int height;
+    protected final int maxLines;
 
+    protected final boolean scrollingEnabled;
+    protected boolean allowVerticalScroll;
+    protected boolean allowHorizontalScroll;
 
-    private List<String> lines = Lists.newArrayList("");
-    private int cursorX = 0; // column
-    private int cursorY = 0; // line index
-    private boolean focused = false;
-    private double scrollY = 0;
-    private double scrollX = 0;
+    protected List<String> lines = Lists.newArrayList("");
+    protected int cursorX = 0; // column
+    protected int cursorY = 0; // line index
+    protected boolean focused = false;
+    protected double scrollY = 0;
+    protected double scrollX = 0;
 
-    private static final int SCROLLBAR_THICKNESS = 6;
-    private boolean isDraggingVScrollbar = false;
-    private double vScrollbarDragStartY = 0;
-    private double vScrollbarDragStartScrollY = 0;
+    protected static final int SCROLLBAR_THICKNESS = 6;
+    protected boolean isDraggingVScrollbar = false;
+    protected double vScrollbarDragStartY = 0;
+    protected double vScrollbarDragStartScrollY = 0;
 
-    private boolean isDraggingHScrollbar = false;
-    private double hScrollbarDragStartX = 0;
-    private double hScrollbarDragStartScrollX = 0;
+    protected boolean isDraggingHScrollbar = false;
+    protected double hScrollbarDragStartX = 0;
+    protected double hScrollbarDragStartScrollX = 0;
 
     // Selection as absolute indices across the joined text (includes '\n' between lines)
-    private int selectionStart = 0;
-    private int selectionEnd = 0;
-    private int selectionAnchor = 0; // anchor for mouse dragging (fixed until mouse released)
-    private long lastClickTime = 0;
-    private int lastClickIndex = -1;
-    private int clickCount = 0;
+    protected int selectionStart = 0;
+    protected int selectionEnd = 0;
+    protected int selectionAnchor = 0; // anchor for mouse dragging (fixed until mouse released)
+    protected long lastClickTime = 0;
+    protected int lastClickIndex = -1;
+    protected int clickCount = 0;
     private static final long DOUBLE_CLICK_INTERVAL_MS = 300;
 
     // dragging selection by mouse
-    private boolean isDraggingText = false;
+    protected boolean isDraggingText = false;
 
     private final UndoManager undoManager = new UndoManager(this); // NEW FIELD
-    private String placeholderText;
+    protected String placeholderText;
     // caret blink
-    private boolean caretVisible = true;
-    private long lastBlinkTime = System.currentTimeMillis();
-    private static final long BLINK_INTERVAL_MS = 500;
+    protected boolean caretVisible = true;
+    protected long lastBlinkTime = System.currentTimeMillis();
+    protected static final long BLINK_INTERVAL_MS = 500;
+
+    private boolean internalScissoringEnabled = true;
 
     public MultiLineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, String initialText) {
         this(textRenderer, x, y, width, height, initialText,"", Integer.MAX_VALUE, true);
@@ -93,6 +98,10 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         setText(initialText);
     }
 
+    public void setInternalScissoring(boolean enabled) {
+        this.internalScissoringEnabled = enabled;
+    }
+
     public void setText(String text) {
         this.lines.clear();
         this.lines.addAll(Arrays.asList(Objects.requireNonNullElse(text, "").split("\n", -1)));
@@ -110,27 +119,27 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return String.join("\n", this.lines);
     }
 
-    private void setCursor(int x, int y) {
+    protected void setCursor(int x, int y) {
         this.cursorY = Math.max(0, Math.min(y, this.lines.size() - 1));
         this.cursorX = Math.max(0, Math.min(x, this.lines.get(this.cursorY).length()));
         ensureCursorVisible();
     }
 
-    private void setCursorToEnd() {
+    protected void setCursorToEnd() {
         this.cursorY = this.lines.size() - 1;
         this.cursorX = this.lines.get(this.cursorY).length();
         ensureCursorVisible();
     }
 
     // ---------- Absolute index helpers ----------
-    private int getTotalLength() {
+    protected int getTotalLength() {
         int total = 0;
         for (String s : lines) total += s.length();
         total += Math.max(0, lines.size() - 1); // newlines
         return total;
     }
 
-    private int getAbsoluteIndex(int lineIndex, int col) {
+    protected int getAbsoluteIndex(int lineIndex, int col) {
         int abs = 0;
         for (int i = 0; i < lineIndex; i++) {
             abs += lines.get(i).length() + 1; // line + newline
@@ -139,7 +148,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return abs;
     }
 
-    private int[] getLineColFromAbsolute(int absoluteIndex) {
+    protected int[] getLineColFromAbsolute(int absoluteIndex) {
         int remaining = Math.max(0, Math.min(absoluteIndex, getTotalLength()));
         for (int i = 0; i < lines.size(); i++) {
             int lineLen = lines.get(i).length();
@@ -186,18 +195,18 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         }
     }
 
-    private void clearSelection() {
+    protected void clearSelection() {
         int abs = getAbsoluteIndex(cursorY, cursorX);
         selectionStart = abs;
         selectionEnd = abs;
         selectionAnchor = abs;
     }
 
-    private boolean hasSelection() {
+    protected boolean hasSelection() {
         return selectionEnd > selectionStart;
     }
 
-    private String getSelectedText() {
+    protected String getSelectedText() {
         if (!hasSelection()) return "";
         StringBuilder sb = new StringBuilder();
         int start = selectionStart;
@@ -217,7 +226,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return sb.toString();
     }
 
-    private void deleteSelection() {
+    protected void deleteSelection() {
         if (!hasSelection()) return;
 
         final int start = selectionStart;
@@ -241,7 +250,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     // In MultiLineTextFieldWidget.java
 
-    private void selectWordAt(int absoluteIndex) {
+    protected void selectWordAt(int absoluteIndex) {
         int[] lc = getLineColFromAbsolute(absoluteIndex);
         int line = lc[0];
         int col = lc[1];
@@ -272,7 +281,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         setCursorFromAbsolute(selectionEndAbs); // Move cursor to the end of the new selection
     }
 
-    private void selectLineAt(int absoluteIndex) {
+    protected void selectLineAt(int absoluteIndex) {
         int[] lc = getLineColFromAbsolute(absoluteIndex);
         int line = lc[0];
 
@@ -319,12 +328,14 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         if (vNeeded) contentWidth -= (SCROLLBAR_THICKNESS + 2);
         if (hNeeded) contentHeight -= (SCROLLBAR_THICKNESS + 2);
 
-        double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
-        int scissorX = (int) (this.x * scale);
-        int scissorY = (int) (MinecraftClient.getInstance().getWindow().getFramebufferHeight() - ((this.y + this.height) * scale));
-        int scissorWidth = (int) (this.width * scale);
-        int scissorHeight = (int) (this.height * scale);
-        com.mojang.blaze3d.systems.RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+        if (this.internalScissoringEnabled) {
+            double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
+            int scissorX = (int) (this.x * scale);
+            int scissorY = (int) (MinecraftClient.getInstance().getWindow().getFramebufferHeight() - ((this.y + this.height) * scale));
+            int scissorWidth = (int) (this.width * scale);
+            int scissorHeight = (int) (this.height * scale);
+            com.mojang.blaze3d.systems.RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+        }
 
         if (getText().isEmpty() && !this.focused && this.placeholderText != null && !this.placeholderText.isEmpty()) {
             // Draw placeholder text, respecting horizontal scroll
@@ -386,14 +397,16 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             }
         }
 
-        com.mojang.blaze3d.systems.RenderSystem.disableScissor();
+        if (this.internalScissoringEnabled) {
+            com.mojang.blaze3d.systems.RenderSystem.disableScissor();
+        }
 
         // Draw scrollbars
         if (this.scrollingEnabled && vNeeded) renderVScrollbar(matrices, contentX, contentY, contentHeight);
         if (this.scrollingEnabled && hNeeded) renderHScrollbar(matrices, contentX, contentY, contentWidth, contentHeight);
     }
 
-    private void renderVScrollbar(MatrixStack matrices, int contentX, int contentY, int contentHeight) {
+    protected void renderVScrollbar(MatrixStack matrices, int contentX, int contentY, int contentHeight) {
         int scrollbarX = this.x + this.width - SCROLLBAR_THICKNESS - 2;
         int trackHeight = contentHeight;
         int maxScroll = getMaxScrollV();
@@ -404,7 +417,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         fill(matrices, scrollbarX, this.y + 5 + (int) thumbY, scrollbarX + SCROLLBAR_THICKNESS, this.y + 5 + (int) (thumbY + thumbHeight), thumbColor);
     }
 
-    private void renderHScrollbar(MatrixStack matrices, int contentX, int contentY, int contentWidth, int contentHeight) {
+    protected void renderHScrollbar(MatrixStack matrices, int contentX, int contentY, int contentWidth, int contentHeight) {
         int scrollbarY = this.y + this.height - SCROLLBAR_THICKNESS - 2;
         // compute max horizontal content width
         int maxLinePixel = getMaxLinePixelWidth();
@@ -555,7 +568,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return false;
     }
 
-    private int absoluteIndexFromMouse(double mouseX, double mouseY) {
+    protected int absoluteIndexFromMouse(double mouseX, double mouseY) {
         int padding = 5;
         int contentX = this.x + padding;
         int contentY = this.y + padding;
@@ -741,7 +754,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return false;
     }
 
-    private void ensureCursorVisible() {
+    protected void ensureCursorVisible() {
         int padding = 5;
         int contentX = this.x + padding;
         int contentY = this.y + padding;
@@ -766,15 +779,15 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     }
 
     // ---------- Scroll metrics ----------
-    private int getMaxScrollV() {
+    protected int getMaxScrollV() {
         return Math.max(0, (this.lines.size() * textRenderer.fontHeight) - (height - 10 - (isScrollbarNeededH() ? (SCROLLBAR_THICKNESS + 2) : 0)));
     }
 
-    private boolean isScrollbarNeededV() {
+    protected boolean isScrollbarNeededV() {
         return (this.lines.size() * textRenderer.fontHeight) > (height - 10);
     }
 
-    private int getMaxLinePixelWidth() {
+    protected int getMaxLinePixelWidth() {
         int max = 0;
         for (String s : lines) {
             int w = textRenderer.getWidth(s);
@@ -783,18 +796,18 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return max;
     }
 
-    private int getMaxScrollH() {
+    protected int getMaxScrollH() {
         int padding = 5;
         int contentWidth = this.width - padding * 2 - (isScrollbarNeededV() ? (SCROLLBAR_THICKNESS + 2) : 0);
         int maxLine = getMaxLinePixelWidth();
         return Math.max(0, maxLine - contentWidth);
     }
 
-    private boolean isScrollbarNeededH() {
+    protected boolean isScrollbarNeededH() {
         return getMaxLinePixelWidth() > (this.width - 10 - (isScrollbarNeededV() ? (SCROLLBAR_THICKNESS + 2) : 0));
     }
 
-    private void clampScroll() {
+    protected void clampScroll() {
         if (allowVerticalScroll) {
             double maxV = getMaxScrollV();
             if (this.scrollY > maxV) this.scrollY = maxV;
@@ -814,7 +827,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     // ---------- Cursor & selection movement ----------
     // move cursor absolute with correct selection anchor behavior
-    private void moveCursorToAbsolute(int newAbs, boolean keepSelection) {
+    protected void moveCursorToAbsolute(int newAbs, boolean keepSelection) {
         newAbs = Math.max(0, Math.min(newAbs, getTotalLength()));
         int oldAbs = getAbsoluteIndex(cursorY, cursorX);
         if (keepSelection) {
@@ -835,7 +848,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         ensureCursorVisible();
     }
 
-    private int moveWordBackAbsolute(int abs) {
+    protected int moveWordBackAbsolute(int abs) {
         if (abs <= 0) return 0;
         int[] lc = getLineColFromAbsolute(abs);
         int line = lc[0], col = lc[1];
@@ -851,7 +864,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return getAbsoluteIndex(line, pos);
     }
 
-    private int moveWordForwardAbsolute(int abs) {
+    protected int moveWordForwardAbsolute(int abs) {
         if (abs >= getTotalLength()) return getTotalLength();
         int[] lc = getLineColFromAbsolute(abs);
         int line = lc[0], col = lc[1];
