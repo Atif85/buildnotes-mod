@@ -29,30 +29,12 @@ public class EditBuildScreen extends ScrollableScreen {
     private final Map<CustomField, MultiLineTextFieldWidget> customFieldWidgets = new LinkedHashMap<>();
 
     private MultiLineTextFieldWidget lastFocusedTextField;
+    private DarkButtonWidget globalToggleButton;
 
     public EditBuildScreen(Screen parent, Build build) {
         super(new TranslatableText("gui.buildnotes.edit_build_title")); // Create a new key e.g., "Editing Build"
         this.parent = parent;
         this.build = build;
-    }
-
-    @Override
-    public void setFocused(Element focused) {
-        super.setFocused(focused);
-        if (focused instanceof MultiLineTextFieldWidget widget) {
-            this.lastFocusedTextField = widget;
-        }
-    }
-
-    @Override
-    protected int getTopMargin() { return 20; }
-
-    @Override
-    protected int getBottomMargin() { return 70; } // More space for two rows of buttons
-
-    private void rebuild() {
-        saveBuild();
-        this.client.setScreen(new EditBuildScreen(this.parent, this.build));
     }
 
     @Override
@@ -71,11 +53,11 @@ public class EditBuildScreen extends ScrollableScreen {
         int bottomRowStartX = (this.width - totalBottomRowWidth) / 2;
         int bottomRowY = this.height - buttonHeight - bottomPadding;
 
-        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX, bottomRowY, buttonWidth, buttonHeight, new LiteralText("Save"), button -> saveAndClose()));
+        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX, bottomRowY, buttonWidth, buttonHeight, new LiteralText("Save"), button -> saveBuild()));
         this.addDrawableChild(new DarkButtonWidget(bottomRowStartX + buttonWidth + buttonSpacing, bottomRowY, buttonWidth, buttonHeight, new LiteralText("Back"), button -> saveAndClose()));
 
         // --- Top Button Row ---
-        int totalTopRowWidth = (buttonWidth * 4) + (buttonSpacing * 3);
+        int totalTopRowWidth = (buttonWidth * 5) + (buttonSpacing * 4);
         int topRowStartX = (this.width - totalTopRowWidth) / 2;
         int topRowY = bottomRowY - buttonHeight - 5;
 
@@ -85,6 +67,11 @@ public class EditBuildScreen extends ScrollableScreen {
         this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing) * 3, topRowY, buttonWidth, buttonHeight, new LiteralText("Add Field"),
                 button -> this.client.setScreen(new RequestFieldTitleScreen(this, this::addCustomField))
         ));
+
+        this.globalToggleButton = this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing) * 4, topRowY, buttonWidth, buttonHeight, getGlobalButtonText(), button -> {
+            build.setGlobal(!build.isGlobal());
+            this.globalToggleButton.setMessage(getGlobalButtonText());
+        }));
 
         this.setInitialFocus(this.nameField);
     }
@@ -101,7 +88,7 @@ public class EditBuildScreen extends ScrollableScreen {
         final int labelHeight = 12;
 
         // --- Name Widget ---
-        this.nameField = new MultiLineTextFieldWidget(this.textRenderer, contentX, yPos, contentWidth, 25, build.getName(), "Build Name", 1, false);
+        this.nameField = new MultiLineTextFieldWidget(this.textRenderer, contentX, yPos + 5, contentWidth, 25, build.getName(), "Build Name", 1, false);
         this.nameField.setInternalScissoring(false);
         addScrollableWidget(this.nameField);
         yPos += 25 + panelSpacing;
@@ -154,6 +141,29 @@ public class EditBuildScreen extends ScrollableScreen {
     }
 
     @Override
+    public void setFocused(Element focused) {
+        super.setFocused(focused);
+        if (focused instanceof MultiLineTextFieldWidget widget) {
+            this.lastFocusedTextField = widget;
+        }
+    }
+
+    @Override
+    protected int getTopMargin() { return 20; }
+
+    @Override
+    protected int getBottomMargin() { return 70; } // More space for two rows of buttons
+
+    private void rebuild() {
+        saveBuild();
+        this.client.setScreen(new EditBuildScreen(this.parent, this.build));
+    }
+
+    private LiteralText getGlobalButtonText() {
+        return new LiteralText("Scope: " + (build.isGlobal() ? "Global" : "World"));
+    }
+
+    @Override
     protected void renderContent(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -200,13 +210,13 @@ public class EditBuildScreen extends ScrollableScreen {
         build.setCoordinates(coordsField.getText());
         build.setDimension(dimensionField.getText());
         build.setDescription(descriptionField.getText());
-        build.setcredits(designerField.getText());
+        build.setCredits(designerField.getText());
 
         for (Map.Entry<CustomField, MultiLineTextFieldWidget> entry : customFieldWidgets.entrySet()) {
             entry.getKey().setContent(entry.getValue().getText());
         }
         build.updateTimestamp();
-        DataManager.getInstance().saveBuilds();
+        DataManager.getInstance().saveBuild(this.build);
     }
 
     private void saveAndClose() {
@@ -256,6 +266,7 @@ public class EditBuildScreen extends ScrollableScreen {
 
     @Override
     public void close() {
+        saveBuild();
         this.client.keyboard.setRepeatEvents(false);
         this.client.setScreen(this.parent);
     }

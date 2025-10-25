@@ -109,8 +109,8 @@ public abstract class AbstractListWidget<E extends EntryListWidget.Entry<E>> ext
         RenderSystem.defaultBlendFunc();
 
         // Top fade overlay
-        int left = (this.width - getRowWidth()) / 2;
-        int right = left + getRowWidth();
+        int left = this.left;
+        int right = this.right;
         int topY = this.top;
         drawVerticalGradient(matrices, left, topY, right, topY + FADE_HEIGHT,
                 0x60000000, 0x00000000);  // semi-transparent black to transparent

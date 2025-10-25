@@ -14,6 +14,7 @@ public class Build {
     private String credits;
     private final List<CustomField> customFields;
     private long lastModified;
+    private boolean isGlobal;
 
     public Build(String name, String coordinates, String dimension, String description, String credits) {
         this.id = UUID.randomUUID();
@@ -23,6 +24,7 @@ public class Build {
         this.description = description;
         this.credits = credits;
         this.customFields = new ArrayList<>();
+        this.isGlobal = false;
         this.updateTimestamp();
     }
 
@@ -39,11 +41,13 @@ public class Build {
     public String getCredits() { return credits; }
     public List<CustomField> getCustomFields() { return customFields; }
     public long getLastModified() { return lastModified; }
+    public boolean isGlobal() { return isGlobal; }
 
     // --- Setters ---
     public void setName(String name) { this.name = name; }
     public void setCoordinates(String coordinates) { this.coordinates = coordinates; }
     public void setDimension(String dimension) { this.dimension = dimension; }
     public void setDescription(String description) { this.description = description; }
-    public void setcredits(String credits) { this.credits = credits; }
+    public void setCredits(String credits) { this.credits = credits; }
+    public void setGlobal(boolean global) { isGlobal = global; }
 }

@@ -64,7 +64,7 @@ public class ViewNoteScreen extends Screen {
         this.titleArea = new ReadOnlyMultiLineTextFieldWidget(
                 this.textRenderer,
                 contentX,
-                topMargin,
+                topMargin + 5,
                 contentWidth,
                 titlePanelHeight,
                 this.note.getTitle(),
@@ -93,9 +93,7 @@ public class ViewNoteScreen extends Screen {
 
     private void confirmDelete() {
         Runnable onConfirm = () -> {
-            DataManager dataManager = DataManager.getInstance();
-            dataManager.getNotes().removeIf(n -> n.getId().equals(this.note.getId()));
-            dataManager.saveNotes();
+            DataManager.getInstance().deleteNote(this.note);
             this.client.setScreen(new MainScreen(TabType.NOTES));
         };
         Runnable onCancel = () -> this.client.setScreen(this);

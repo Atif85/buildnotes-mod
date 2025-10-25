@@ -6,11 +6,16 @@ import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.TabButtonWidget;
 import net.atif.buildnotes.gui.widget.list.BuildListWidget;
 import net.atif.buildnotes.gui.widget.list.NoteListWidget;
+import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MainScreen extends Screen {
 
@@ -24,6 +29,8 @@ public class MainScreen extends Screen {
 
     private NoteListWidget noteListWidget;
     private BuildListWidget buildListWidget;
+    private MultiLineTextFieldWidget searchField;
+    private String searchTerm = "";
 
     private TabType currentTab;
 
@@ -40,8 +47,8 @@ public class MainScreen extends Screen {
         // --- TABS ---
         int tabWidth = 80;
         int tabHeight = 20;
-        int topMargin = 60; // Space for title and tabs
-        int bottomMargin = 60; // Space for action buttons
+        int topMargin = 40; // Space for title and tabs
+        int bottomMargin = 85; // Space for action buttons
 
 
         this.notesTab = this.addDrawableChild(new TabButtonWidget(
@@ -57,12 +64,24 @@ public class MainScreen extends Screen {
         ));
 
         // --- LIST WIDGETS ---
-        this.noteListWidget = new NoteListWidget(this, this.client, this.width, this.height, topMargin, this.height - bottomMargin, 28);
-        this.buildListWidget = new BuildListWidget(this, this.client, this.width, this.height, topMargin, this.height - bottomMargin, 28);
+        this.noteListWidget = new NoteListWidget(this, this.client, this.width, this.height, topMargin, this.height - bottomMargin, 38);
+        this.buildListWidget = new BuildListWidget(this, this.client, this.width, this.height, topMargin, this.height - bottomMargin, 38);
 
         this.addSelectableChild(this.noteListWidget);
         this.addSelectableChild(this.buildListWidget);
 
+        // --- SEARCH BAR & LABEL ---
+        int searchFieldWidth = 160;
+        int searchBarHeight = 20;
+        int searchFieldX = (this.width - searchFieldWidth) / 2;
+
+        int listBottomY = this.height - bottomMargin;
+        int buttonsTopY = this.height - 40;
+        int searchBarY = listBottomY + (buttonsTopY - listBottomY - searchBarHeight) / 2;
+
+        this.searchField = new MultiLineTextFieldWidget(this.textRenderer, searchFieldX, searchBarY, searchFieldWidth, searchBarHeight, "", "Search...", 1, false);
+        this.searchField.setChangedListener(this::onSearchTermChanged);
+        this.addSelectableChild(this.searchField);
 
         // --- ACTION BUTTONS ---
         int buttonWidth = 80;
@@ -109,6 +128,37 @@ public class MainScreen extends Screen {
         ));
 
         selectTab(this.currentTab);
+        this.setInitialFocus(this.searchField);
+    }
+
+    private void onSearchTermChanged(String newTerm) {
+        this.searchTerm = newTerm.toLowerCase().trim();
+        updateLists();
+    }
+
+    private void updateLists() {
+        if (currentTab == TabType.NOTES) {
+            List<Note> allNotes = DataManager.getInstance().getNotes();
+            if (!searchTerm.isEmpty()) {
+                List<Note> filteredNotes = allNotes.stream()
+                        .filter(note -> note.getTitle().toLowerCase().contains(searchTerm))
+                        .collect(Collectors.toList());
+                noteListWidget.setNotes(filteredNotes);
+            } else {
+                noteListWidget.setNotes(allNotes);
+            }
+        } else {
+            List<Build> allBuilds = DataManager.getInstance().getBuilds();
+            if (!searchTerm.isEmpty()) {
+                List<Build> filteredBuilds = allBuilds.stream()
+                        .filter(build -> build.getName().toLowerCase().contains(searchTerm))
+                        .collect(Collectors.toList());
+                buildListWidget.setBuilds(filteredBuilds);
+            } else {
+                buildListWidget.setBuilds(allBuilds);
+            }
+        }
+        updateActionButtons();
     }
 
     private void selectTab(TabType tab) {
@@ -123,6 +173,10 @@ public class MainScreen extends Screen {
 
         noteListWidget.setSelected(null);
         buildListWidget.setSelected(null);
+
+        this.searchField.setText("");
+
+        updateLists();
 
         if (isNotes) {
             noteListWidget.setNotes(DataManager.getInstance().getNotes());
@@ -177,14 +231,13 @@ public class MainScreen extends Screen {
     private void confirmDelete() {
         DataManager dataManager = DataManager.getInstance();
         Runnable onCancel = () -> { this.client.setScreen(this); };
-        
+
         if (currentTab == TabType.NOTES) {
             Note sel = this.noteListWidget.getSelectedNote();
             if (sel == null) return;
 
             this.client.setScreen(new ConfirmScreen(this, new LiteralText("Delete note \"" + sel.getTitle() + "\"?"), () -> {
-                dataManager.getNotes().removeIf(n -> n.getId().equals(sel.getId()));
-                dataManager.saveNotes();
+                dataManager.deleteNote(sel);
                 this.noteListWidget.setNotes(dataManager.getNotes());
                 this.client.setScreen(this); // return to main screen
             }, onCancel ));
@@ -193,23 +246,19 @@ public class MainScreen extends Screen {
             if (sel == null) return;
 
             this.client.setScreen(new ConfirmScreen(this, new LiteralText("Delete build \"" + sel.getName() + "\"?"), () -> {
-                dataManager.getBuilds().removeIf(b -> b.getId().equals(sel.getId()));
-                dataManager.saveBuilds();
+                dataManager.deleteBuild(sel);
                 this.buildListWidget.setBuilds(dataManager.getBuilds());
                 this.client.setScreen(this);
             }, onCancel ));
         }
     }
 
-
     private void addEntry() {
         if (currentTab == TabType.NOTES) {
             Note newNote = new Note("New Note", ""); // Create a new, empty note
-            DataManager.getInstance().getNotes().add(newNote);
             this.client.setScreen(new EditNoteScreen(this, newNote));
         } else {
             Build newBuild = new Build("New Build", "", "", "", ""); // Create a new, empty build
-            DataManager.getInstance().getBuilds().add(newBuild); // Add it to the list
             this.client.setScreen(new EditBuildScreen(this, newBuild)); // Open the edit screen immediately
         }
     }
@@ -225,10 +274,11 @@ public class MainScreen extends Screen {
             buildListWidget.render(matrices, mouseX, mouseY, delta);
         }
 
-        // drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 5, 0xFFFFFF);
+        fill(matrices, this.searchField.x - 2, this.searchField.y, this.searchField.x + this.searchField.width + 2, this.searchField.y + this.searchField.height, 0x77000000);
+        this.searchField.render(matrices, mouseX, mouseY, delta);
         super.render(matrices, mouseX, mouseY, delta);
     }
-    
+
     @Override
     public void close() {
         this.client.keyboard.setRepeatEvents(false);

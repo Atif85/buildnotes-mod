@@ -42,7 +42,7 @@ public class ViewBuildScreen extends ScrollableScreen {
         // --- TITLE WIDGET ---
         int titlePanelHeight = 25;
         ReadOnlyMultiLineTextFieldWidget titleArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos, contentWidth, titlePanelHeight,
+                this.textRenderer, contentX, yPos + 5, contentWidth, titlePanelHeight,
                 this.title.getString(), 1, false
         );
         titleArea.setInternalScissoring(false);
@@ -125,7 +125,8 @@ public class ViewBuildScreen extends ScrollableScreen {
                 new TranslatableText("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
 
         this.addDrawableChild(new DarkButtonWidget(buttonsStartX + buttonWidth + buttonSpacing, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.edit_button"), button -> new EditBuildScreen(this.parent, this.build)));
+                new TranslatableText("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditBuildScreen(this.parent, this.build)))
+        );
 
         this.addDrawableChild(new DarkButtonWidget(buttonsStartX + (buttonWidth + buttonSpacing) * 2, buttonsY, buttonWidth, buttonHeight,
                 new TranslatableText("gui.buildnotes.delete_button"),button -> confirmDelete()));
@@ -179,8 +180,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
     private void confirmDelete() {
         Runnable onConfirm = () -> {
-            DataManager.getInstance().getBuilds().removeIf(b -> b.getId().equals(this.build.getId()));
-            DataManager.getInstance().saveBuilds();
+            DataManager.getInstance().deleteBuild(this.build);
             this.client.setScreen(new MainScreen(TabType.BUILDS));
         };
         Runnable onCancel = () -> this.client.setScreen(this);

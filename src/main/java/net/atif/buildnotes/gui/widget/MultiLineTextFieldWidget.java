@@ -17,16 +17,17 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static net.minecraft.client.gui.DrawableHelper.fill;
 
 public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     private final TextRenderer textRenderer;
-    protected final int x;
+    public final int x;
     public final int y;
-    protected final int width;
-    protected final int height;
+    public final int width;
+    public final int height;
     protected final int maxLines;
 
     protected final boolean scrollingEnabled;
@@ -70,6 +71,8 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     private boolean internalScissoringEnabled = true;
 
+    private Consumer<String> changedListener = s -> {};
+
     public MultiLineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, String initialText) {
         this(textRenderer, x, y, width, height, initialText,"", Integer.MAX_VALUE, true);
     }
@@ -96,6 +99,16 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         this.allowHorizontalScroll = true;
 
         setText(initialText);
+    }
+
+    public void setChangedListener(Consumer<String> listener) {
+        this.changedListener = listener;
+    }
+
+    private void onChanged() {
+        if (this.changedListener != null) {
+            this.changedListener.accept(this.getText());
+        }
     }
 
     public void setInternalScissoring(boolean enabled) {
@@ -246,6 +259,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         };
 
         undoManager.perform(action);
+        onChanged();
     }
 
     // In MultiLineTextFieldWidget.java
@@ -311,6 +325,8 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             }
         };
         undoManager.perform(action);
+
+        onChanged();
     }
 
     // ---------- Rendering ----------
@@ -592,10 +608,12 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
         if (ctrl && keyCode == GLFW.GLFW_KEY_Z) {
             undoManager.undo();
+            onChanged();
             return true;
         }
         if (ctrl && keyCode == GLFW.GLFW_KEY_Y) {
             undoManager.redo();
+            onChanged();
             return true;
         }
 
@@ -670,6 +688,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                     this.lines.set(this.cursorY, before + after);
                     setCursor(cursorX - 1, cursorY);
                 }
+                onChanged();
                 return true;
             }
             case GLFW.GLFW_KEY_DELETE -> {
@@ -695,6 +714,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                     String after = line.substring(cursorX + 1);
                     this.lines.set(this.cursorY, before + after);
                 }
+                onChanged();
                 return true;
             }
             case GLFW.GLFW_KEY_UP -> {
@@ -939,4 +959,5 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     public SelectionType getType() { return this.focused ? SelectionType.FOCUSED : SelectionType.NONE; }
     @Override
     public void appendNarrations(NarrationMessageBuilder builder) { /* Not needed */ }
+
 }
