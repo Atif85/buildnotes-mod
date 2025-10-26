@@ -13,6 +13,8 @@ public class Build {
     private String description;
     private String credits;
     private final List<CustomField> customFields;
+    private List<String> imageFileNames;
+
     private long lastModified;
     private boolean isGlobal;
 
@@ -24,6 +26,8 @@ public class Build {
         this.description = description;
         this.credits = credits;
         this.customFields = new ArrayList<>();
+        this.imageFileNames = new ArrayList<>();
+
         this.isGlobal = false;
         this.updateTimestamp();
     }
@@ -40,6 +44,15 @@ public class Build {
     public String getDescription() { return description; }
     public String getCredits() { return credits; }
     public List<CustomField> getCustomFields() { return customFields; }
+
+    public List<String> getImageFileNames() {
+        if (this.imageFileNames == null) {
+            // If Gson created an object from old JSON, this list will be null.
+            // We fix it here, on the first time it's ever requested.
+            this.imageFileNames = new ArrayList<>();
+        }
+        return this.imageFileNames;
+    }
     public long getLastModified() { return lastModified; }
     public boolean isGlobal() { return isGlobal; }
 

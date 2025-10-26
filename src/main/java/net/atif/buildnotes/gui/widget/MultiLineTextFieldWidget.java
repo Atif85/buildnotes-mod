@@ -235,7 +235,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             sb.append(lines.get(i));
             sb.append('\n');
         }
-        sb.append(lines.get(eLC[0]).substring(0, eLC[1]));
+        sb.append(lines.get(eLC[0]), 0, eLC[1]);
         return sb.toString();
     }
 
@@ -424,11 +424,10 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     protected void renderVScrollbar(MatrixStack matrices, int contentX, int contentY, int contentHeight) {
         int scrollbarX = this.x + this.width - SCROLLBAR_THICKNESS - 2;
-        int trackHeight = contentHeight;
         int maxScroll = getMaxScrollV();
         float contentPixelHeight = lines.size() * textRenderer.fontHeight;
-        float thumbHeight = Math.max(10, (trackHeight / contentPixelHeight) * trackHeight);
-        float thumbY = (float) ((scrollY / (double) Math.max(1, maxScroll)) * (trackHeight - thumbHeight));
+        float thumbHeight = Math.max(10, (contentHeight / contentPixelHeight) * contentHeight);
+        float thumbY = (float) ((scrollY / (double) Math.max(1, maxScroll)) * (contentHeight - thumbHeight));
         int thumbColor = isDraggingVScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
         fill(matrices, scrollbarX, this.y + 5 + (int) thumbY, scrollbarX + SCROLLBAR_THICKNESS, this.y + 5 + (int) (thumbY + thumbHeight), thumbColor);
     }
@@ -437,10 +436,9 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         int scrollbarY = this.y + this.height - SCROLLBAR_THICKNESS - 2;
         // compute max horizontal content width
         int maxLinePixel = getMaxLinePixelWidth();
-        int visible = contentWidth;
         if (maxLinePixel <= 0) return;
-        float thumbWidth = Math.max(10, (visible / (float) maxLinePixel) * visible);
-        float thumbX = (float) ((scrollX / (double) Math.max(1, getMaxScrollH())) * (visible - thumbWidth));
+        float thumbWidth = Math.max(10, (contentWidth / (float) maxLinePixel) * contentWidth);
+        float thumbX = (float) ((scrollX / (double) Math.max(1, getMaxScrollH())) * (contentWidth - thumbWidth));
         int thumbColor = isDraggingHScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
         fill(matrices, contentX + (int) thumbX, scrollbarY, contentX + (int) (thumbX + thumbWidth), scrollbarY + SCROLLBAR_THICKNESS, thumbColor);
     }
@@ -789,7 +787,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
         // horizontal - ensure the caret's pixel location (within the line) is visible
         String line = lines.get(cursorY);
-        int caretPixel = (int) Math.round(textRenderer.getWidth(line.substring(0, cursorX)));
+        int caretPixel = textRenderer.getWidth(line.substring(0, cursorX));
         if (caretPixel - scrollX < 0) {
             scrollX = caretPixel;
         } else if (caretPixel - scrollX > contentWidth - 4) {
@@ -917,7 +915,9 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         } else {
             String firstPart = lines.get(sLC[0]).substring(0, sLC[1]);
             String lastPart = lines.get(eLC[0]).substring(eLC[1]);
-            for (int i = eLC[0]; i > sLC[0]; i--) lines.remove(i);
+            if (eLC[0] >= sLC[0] + 1) {
+                lines.subList(sLC[0] + 1, eLC[0] + 1).clear();
+            }
             lines.set(sLC[0], firstPart + lastPart);
         }
         setCursorFromAbsolute(startAbsolute);

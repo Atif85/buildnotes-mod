@@ -7,7 +7,6 @@ import net.atif.buildnotes.Buildnotes;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.WorldSavePath;
-import org.apache.logging.log4j.util.PropertySource;
 
 import java.io.File;
 import java.io.FileReader;
@@ -58,9 +57,7 @@ public class DataManager {
         if (worldPath != null) {
             worldNotes = loadNotes(worldPath);
         }
-        List<Note> combined = Stream.concat(worldNotes.stream(), globalNotes.stream()).collect(Collectors.toList());
-        combined.sort(Comparator.comparingLong(Note::getLastModified).reversed());
-        return combined;
+        return Stream.concat(worldNotes.stream(), globalNotes.stream()).sorted(Comparator.comparingLong(Note::getLastModified).reversed()).collect(Collectors.toList());
     }
 
     public void saveNote(Note noteToSave) {
@@ -81,7 +78,6 @@ public class DataManager {
         }
     }
 
-    // NEW METHOD for deleting a single note
     public void deleteNote(Note noteToDelete) {
         List<Note> allNotes = getNotes();
         allNotes.removeIf(n -> n.getId().equals(noteToDelete.getId()));
@@ -118,7 +114,7 @@ public class DataManager {
             List<Note> loadedNotes = GSON.fromJson(reader, type);
             return loadedNotes != null ? loadedNotes : new ArrayList<>();
         } catch (IOException e) {
-            Buildnotes.LOGGER.warn("Could not load notes from " + path.toString() + ", creating new list...");
+            Buildnotes.LOGGER.warn("Could not load notes from " + path + ", creating new list...");
             return new ArrayList<>();
         }
     }
@@ -130,10 +126,8 @@ public class DataManager {
         if (worldPath != null) {
             worldBuilds = loadBuilds(worldPath);
         }
-        List<Build> combined = Stream.concat(worldBuilds.stream(), globalBuilds.stream()).collect(Collectors.toList());
         // Sort by last modified timestamp, descending (newest first)
-        combined.sort(Comparator.comparingLong(Build::getLastModified).reversed());
-        return combined;
+        return Stream.concat(worldBuilds.stream(), globalBuilds.stream()).sorted(Comparator.comparingLong(Build::getLastModified).reversed()).collect(Collectors.toList());
     }
 
     public void saveBuild(Build buildToSave) {
@@ -163,6 +157,24 @@ public class DataManager {
         Path worldPath = getWorldSpecificPath();
         if (worldPath != null) {
             writeBuildsToFile(worldBuilds, worldPath);
+        }
+
+        try {
+            Path imageDir = FabricLoader.getInstance().getConfigDir()
+                    .resolve(MOD_DATA_SUBFOLDER)
+                    .resolve("images")
+                    .resolve(buildToDelete.getId().toString());
+
+            if (Files.exists(imageDir)) {
+                // Recursively delete the directory and its contents
+                try (Stream<Path> walk = Files.walk(imageDir)) {
+                    walk.sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                }
+            }
+        } catch (IOException e) {
+            Buildnotes.LOGGER.error("Failed to delete image directory for build: {}", buildToDelete.getId(), e);
         }
     }
 

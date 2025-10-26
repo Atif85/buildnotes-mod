@@ -25,6 +25,11 @@ dependencies {
 
     modImplementation "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
     include "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
+
+    implementation 'org.lwjgl:lwjgl-tinyfd:3.3.1'
+    runtimeOnly "org.lwjgl:lwjgl-tinyfd:3.3.1:natives-windows"
+    runtimeOnly "org.lwjgl:lwjgl-tinyfd:3.3.1:natives-linux"
+    runtimeOnly "org.lwjgl:lwjgl-tinyfd:3.3.1:natives-macos"
 }
 
 processResources {

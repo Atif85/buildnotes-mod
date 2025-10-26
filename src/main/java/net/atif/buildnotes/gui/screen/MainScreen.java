@@ -9,7 +9,6 @@ import net.atif.buildnotes.gui.widget.list.NoteListWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
@@ -230,7 +229,7 @@ public class MainScreen extends Screen {
 
     private void confirmDelete() {
         DataManager dataManager = DataManager.getInstance();
-        Runnable onCancel = () -> { this.client.setScreen(this); };
+        Runnable onCancel = () -> this.client.setScreen(this);
 
         if (currentTab == TabType.NOTES) {
             Note sel = this.noteListWidget.getSelectedNote();

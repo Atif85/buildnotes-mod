@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
@@ -7,16 +8,35 @@ import net.atif.buildnotes.gui.TabType;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ViewBuildScreen extends ScrollableScreen {
 
     private final Screen parent;
     private final Build build;
+
+    private record ImageData(Identifier textureId, int width, int height) {
+    }
+
+    private int currentImageIndex = 0;
+    private final Map<String, ImageData> textureCache = new HashMap<>();
+    private DarkButtonWidget prevImageButton;
+    private DarkButtonWidget nextImageButton;
 
     public ViewBuildScreen(Screen parent, Build build) {
         super(new LiteralText(build.getName()));
@@ -73,6 +93,11 @@ public class ViewBuildScreen extends ScrollableScreen {
         addScrollableWidget(dimensionArea);
         yPos += smallFieldHeight + panelSpacing;
 
+        if (!build.getImageFileNames().isEmpty()) {
+            int galleryHeight = (int) (contentWidth * (9.0 / 16.0)); // 16:9 aspect ratio
+            yPos += galleryHeight + panelSpacing;
+        }
+
         // --- DESCRIPTION WIDGET ---
         int descriptionHeight = 80;
         ReadOnlyMultiLineTextFieldWidget descriptionArea = new ReadOnlyMultiLineTextFieldWidget(
@@ -110,7 +135,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
     @Override
     protected void init() {
-        super.init(); // This will call initContent() from the parent class
+        super.init();
 
         // These buttons are fixed and not part of the scrollable content
         int buttonWidth = 80;
@@ -122,14 +147,29 @@ public class ViewBuildScreen extends ScrollableScreen {
         int buttonsY = this.height - buttonHeight - bottomPadding;
 
         this.addDrawableChild(new DarkButtonWidget(buttonsStartX, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
+                new TranslatableText("gui.buildnotes.delete_button"),button -> confirmDelete()));
 
         this.addDrawableChild(new DarkButtonWidget(buttonsStartX + buttonWidth + buttonSpacing, buttonsY, buttonWidth, buttonHeight,
                 new TranslatableText("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditBuildScreen(this.parent, this.build)))
         );
 
         this.addDrawableChild(new DarkButtonWidget(buttonsStartX + (buttonWidth + buttonSpacing) * 2, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.delete_button"),button -> confirmDelete()));
+                new TranslatableText("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
+
+
+        if (!build.getImageFileNames().isEmpty()) {
+            int contentWidth = (int) (this.width * 0.6);
+            int contentX = (this.width - contentWidth) / 2;
+            int galleryHeight = (int) (contentWidth * (9.0 / 16.0));
+            int galleryY = getTopMargin() + 25 + 5 + 20 + 5; // Y pos after title and coords
+            int navButtonY = galleryY + (galleryHeight - 20) / 2;
+
+            prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, new LiteralText("<"), b -> switchImage(-1));
+            nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, new LiteralText(">"), b -> switchImage(1));
+            addScrollableWidget(prevImageButton);
+            addScrollableWidget(nextImageButton);
+            updateNavButtons();
+        }
     }
 
     @Override
@@ -159,6 +199,48 @@ public class ViewBuildScreen extends ScrollableScreen {
         this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
         yPos += smallFieldHeight + panelSpacing;
 
+        if (!build.getImageFileNames().isEmpty()) {
+            int galleryBoxHeight = (int) (contentWidth * (9.0 / 16.0));
+            fill(matrices, contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
+
+            ImageData data = getImageDataForCurrentImage();
+            if (data != null && data.textureId != null) {
+                RenderSystem.setShaderTexture(0, data.textureId);
+                RenderSystem.enableBlend();
+
+                // --- ASPECT RATIO LOGIC ---
+                int boxWidth = contentWidth - 4;
+                int boxHeight = galleryBoxHeight - 4;
+                float imageAspect = (float) data.width / (float) data.height;
+                float boxAspect = (float) boxWidth / (float) boxHeight;
+
+                int renderWidth = boxWidth;
+                int renderHeight = boxHeight;
+
+                if (imageAspect > boxAspect) {
+                    // Image is wider than the box, scale by width
+                    renderHeight = (int) (boxWidth / imageAspect);
+                } else {
+                    // Image is taller than or same as the box, scale by height
+                    renderWidth = (int) (boxHeight * imageAspect);
+                }
+
+                int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
+                int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
+
+                DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
+                RenderSystem.disableBlend();
+            } else {
+                drawCenteredText(matrices, textRenderer, new LiteralText("Error loading image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+            }
+
+            String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
+            int counterWidth = textRenderer.getWidth(counter);
+            textRenderer.draw(matrices, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF);
+
+            yPos += galleryBoxHeight + panelSpacing;
+        }
+
         // --- DYNAMIC CONTENT ---
         int descriptionHeight = 80;
         this.textRenderer.draw(matrices, new LiteralText("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
@@ -178,6 +260,56 @@ public class ViewBuildScreen extends ScrollableScreen {
         }
     }
 
+
+    private void switchImage(int direction) {
+        int newIndex = this.currentImageIndex + direction;
+        if (newIndex >= 0 && newIndex < build.getImageFileNames().size()) {
+            this.currentImageIndex = newIndex;
+            updateNavButtons();
+        }
+    }
+
+    private void updateNavButtons() {
+        if (prevImageButton != null) {
+            prevImageButton.active = currentImageIndex > 0;
+        }
+        if (nextImageButton != null) {
+            nextImageButton.active = currentImageIndex < build.getImageFileNames().size() - 1;
+        }
+    }
+
+    private ImageData getImageDataForCurrentImage() {
+        if (build.getImageFileNames().isEmpty()) return null;
+
+        String fileName = build.getImageFileNames().get(currentImageIndex);
+        if (textureCache.containsKey(fileName)) {
+            return textureCache.get(fileName);
+        }
+
+        try {
+            Path imagePath = FabricLoader.getInstance().getConfigDir()
+                    .resolve("buildnotes")
+                    .resolve("images")
+                    .resolve(build.getId().toString())
+                    .resolve(fileName);
+
+            if (Files.exists(imagePath)) {
+                try (InputStream stream = Files.newInputStream(imagePath)) {
+                    NativeImage image = NativeImage.read(stream);
+                    NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
+                    Identifier textureId = this.client.getTextureManager().registerDynamicTexture("buildnotes_image_" + build.getId() + "_" + fileName.hashCode(), texture);
+
+                    ImageData data = new ImageData(textureId, image.getWidth(), image.getHeight());
+                    textureCache.put(fileName, data);
+                    return data;
+                }
+            }
+        } catch (Exception e) {
+            textureCache.put(fileName, null); // Cache failure
+        }
+        return null;
+    }
+
     private void confirmDelete() {
         Runnable onConfirm = () -> {
             DataManager.getInstance().deleteBuild(this.build);
@@ -189,6 +321,12 @@ public class ViewBuildScreen extends ScrollableScreen {
 
     @Override
     public void close() {
+        textureCache.values().forEach(data -> {
+            if (data != null && data.textureId != null) {
+                client.getTextureManager().destroyTexture(data.textureId);
+            }
+        });
         this.client.setScreen(this.parent);
     }
+
 }

@@ -75,7 +75,7 @@ public class EditNoteScreen extends Screen {
         int bottomRowY = this.height - buttonHeight - bottomPadding;
 
         this.addDrawableChild(new DarkButtonWidget(bottomRowStartX, bottomRowY, buttonWidth, buttonHeight, new LiteralText("Save"), button -> saveNote()));
-        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX + buttonWidth + buttonSpacing, bottomRowY, buttonWidth, buttonHeight, new LiteralText("Back"), button -> saveAndClose()));
+        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX + buttonWidth + buttonSpacing, bottomRowY, buttonWidth, buttonHeight, new TranslatableText("gui.buildnotes.close_button"), button -> saveAndClose()));
 
         // Top Button Row
         int totalTopRowWidth = (buttonWidth * 3) + (buttonSpacing * 2);
