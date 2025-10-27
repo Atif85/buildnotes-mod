@@ -2,7 +2,7 @@ package net.atif.buildnotes.gui.screen;
 
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
-import net.atif.buildnotes.gui.TabType;
+import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;

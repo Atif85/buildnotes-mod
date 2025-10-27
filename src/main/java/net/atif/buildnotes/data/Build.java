@@ -50,7 +50,6 @@ public class Build extends BaseEntry {
     }
 
     public long getLastModified() { return super.getLastModified(); }
-    public boolean isGlobal() { return super.isGlobal(); }
 
     // --- Setters ---
     public void setName(String name) { this.name = name; }
@@ -58,5 +57,4 @@ public class Build extends BaseEntry {
     public void setDimension(String dimension) { this.dimension = dimension; }
     public void setDescription(String description) { this.description = description; }
     public void setCredits(String credits) { this.credits = credits; }
-    public void setGlobal(boolean global) { super.setGlobal(global); }
 }

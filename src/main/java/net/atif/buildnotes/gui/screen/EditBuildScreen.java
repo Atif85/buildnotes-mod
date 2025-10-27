@@ -1,13 +1,16 @@
 package net.atif.buildnotes.gui.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
+import net.atif.buildnotes.data.Scope;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
+
 import net.fabricmc.loader.api.FabricLoader;
+
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
@@ -16,11 +19,14 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
+
+import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
@@ -30,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -47,7 +54,7 @@ public class EditBuildScreen extends ScrollableScreen {
     private MultiLineTextFieldWidget nameField, coordsField, dimensionField, descriptionField, designerField;
     private final Map<CustomField, MultiLineTextFieldWidget> customFieldWidgets = new LinkedHashMap<>();
     private MultiLineTextFieldWidget lastFocusedTextField;
-    private DarkButtonWidget globalToggleButton;
+    private DarkButtonWidget scopeToggleButton;
 
     public EditBuildScreen(Screen parent, Build build) {
         super(new TranslatableText("gui.buildnotes.edit_build_title"), parent);
@@ -58,35 +65,37 @@ public class EditBuildScreen extends ScrollableScreen {
     protected void init() {
         super.init(); // calls initContent()
 
+// --- BOTTOM BUTTON ROW ---
         int buttonsY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
-
-        // Bottom 2 buttons (Save / Close)
-        UIHelper.createBottomButtonRow(this, buttonsY, 2, x -> {
-            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 2)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
-            if (idx == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Save"), button -> saveBuild()));
+        List<Text> bottomTexts = List.of(new LiteralText("Save"), new TranslatableText("gui.buildnotes.close_button"));
+        UIHelper.createBottomButtonRow(this, buttonsY, bottomTexts, (index, x, width) -> {
+            if (index == 0) {
+                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(0), button -> saveBuild()));
             } else {
-                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new TranslatableText("gui.buildnotes.close_button"), button -> saveAndClose()));
+                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> saveAndClose()));
             }
         });
 
-        // Top row (6 buttons)
+// --- TOP BUTTON ROW ---
         int topRowY = buttonsY - UIHelper.BUTTON_HEIGHT - 5;
-        UIHelper.createBottomButtonRow(this, topRowY, 6, x -> {
-            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 6)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
-            switch (idx) {
-                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Coords"), b -> insertCoords()));
-                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Dimension"), b -> insertDimension()));
-                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Biome"), b -> insertBiome()));
-                case 3 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Add Images"), b -> openImageSelectionDialog()));
-                case 4 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Add Field"), b -> {
+        List<Text> topTexts = List.of(
+                new LiteralText("Coords"), new LiteralText("Dimension"), new LiteralText("Biome"),
+                new LiteralText("Add Images"), new LiteralText("Add Field"), getScopeButtonText()
+        );
+        UIHelper.createBottomButtonRow(this, topRowY, topTexts, (index, x, width) -> {
+            switch (index) {
+                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(0), b -> insertCoords()));
+                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(1), b -> insertDimension()));
+                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(2), b -> insertBiome()));
+                case 3 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(3), b -> openImageSelectionDialog()));
+                case 4 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(4), b -> {
                     saveBuild();
                     this.open(new RequestFieldTitleScreen(this, this::addCustomField));
                 }));
                 case 5 -> {
-                    this.globalToggleButton = this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, getGlobalButtonText(), button -> {
-                        build.setGlobal(!build.isGlobal());
-                        this.globalToggleButton.setMessage(getGlobalButtonText());
+                    this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(5), button -> {
+                        cycleScope();
+                        this.init(this.client, this.width, this.height);
                     }));
                 }
             }
@@ -411,8 +420,28 @@ public class EditBuildScreen extends ScrollableScreen {
         rebuild();
     }
 
-    private LiteralText getGlobalButtonText() {
-        return new LiteralText("Scope: " + (build.isGlobal() ? "Global" : "World"));
+    private void cycleScope() {
+        Scope currentScope = build.getScope();
+        if (ClientSession.isOnServer() && ClientSession.hasEditPermission()) {
+            if (currentScope == Scope.WORLD) build.setScope(Scope.GLOBAL);
+            else if (currentScope == Scope.GLOBAL) build.setScope(Scope.SERVER);
+            else build.setScope(Scope.WORLD);
+        } else {
+            build.setScope(currentScope == Scope.WORLD ? Scope.GLOBAL : Scope.WORLD);
+        }
+    }
+
+    private LiteralText getScopeButtonText() {
+        String scopeName;
+        Scope currentScope = build.getScope();
+        if (currentScope == Scope.GLOBAL) {
+            scopeName = "Global";
+        } else if (currentScope == Scope.SERVER) {
+            scopeName = "Server (Shared)";
+        } else {
+            scopeName = this.client != null && this.client.isIntegratedServerRunning() ? "World" : "Per-Server";
+        }
+        return new LiteralText("Scope: " + scopeName);
     }
 
     @Override

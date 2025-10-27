@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
-import net.atif.buildnotes.gui.TabType;
+import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;

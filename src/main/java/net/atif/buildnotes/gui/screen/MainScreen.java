@@ -1,7 +1,7 @@
 package net.atif.buildnotes.gui.screen;
 
 import net.atif.buildnotes.data.*;
-import net.atif.buildnotes.gui.TabType;
+import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.TabButtonWidget;
@@ -9,9 +9,7 @@ import net.atif.buildnotes.gui.widget.list.BuildListWidget;
 import net.atif.buildnotes.gui.widget.list.NoteListWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 

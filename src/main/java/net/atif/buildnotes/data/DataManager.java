@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.atif.buildnotes.Buildnotes;
+import net.atif.buildnotes.client.ClientCache;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.WorldSavePath;
@@ -18,15 +19,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DataManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path GLOBAL_PATH = FabricLoader.getInstance().getConfigDir();
+    private static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
     private static final String NOTES_FILE_NAME = "notes.json";
     private static final String BUILDS_FILE_NAME = "builds.json";
     private static final String MOD_DATA_SUBFOLDER = "buildnotes";
+    private static final String PER_SERVER_SUBFOLDER = "servers";
 
     private static DataManager instance;
 
@@ -39,168 +42,161 @@ public class DataManager {
         return instance;
     }
 
-    private Path getWorldSpecificPath() {
+    // --- Path Helper Methods ---
+    private Path getGlobalPath() { return CONFIG_DIR.resolve(MOD_DATA_SUBFOLDER); }
+    private Path getSinglePlayerWorldPath() {
         MinecraftClient client = MinecraftClient.getInstance();
-        // Check if we are in a single-player world
         if (client.isIntegratedServerRunning() && client.getServer() != null) {
-            // This is the correct, robust way to get the world's save directory
             return client.getServer().getSavePath(WorldSavePath.ROOT).resolve(MOD_DATA_SUBFOLDER);
         }
-        // If not in a world (e.g., on the main menu), return null
         return null;
     }
-
-    public List<Note> getNotes() {
-        List<Note> globalNotes = loadNotes(GLOBAL_PATH.resolve(MOD_DATA_SUBFOLDER));
-        Path worldPath = getWorldSpecificPath();
-        List<Note> worldNotes = new ArrayList<>();
-        if (worldPath != null) {
-            worldNotes = loadNotes(worldPath);
+    private Path getPerServerPath() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.getCurrentServerEntry() != null) {
+            String serverAddress = client.getCurrentServerEntry().address;
+            String sanitizedAddress = serverAddress.replace(":", "_").replaceAll("[^a-zA-Z0-9_.-]", "_");
+            return getGlobalPath().resolve(PER_SERVER_SUBFOLDER).resolve(sanitizedAddress);
         }
-        return Stream.concat(worldNotes.stream(), globalNotes.stream()).sorted(Comparator.comparingLong(Note::getLastModified).reversed()).collect(Collectors.toList());
+        return null;
+    }
+    private Path getLocalPath() {
+        Path spPath = getSinglePlayerWorldPath();
+        return spPath != null ? spPath : getPerServerPath();
+    }
+
+    // --- Generic Load/Write Methods ---
+    private <T> List<T> loadFromFile(Path path, String fileName, Type type) {
+        if (path == null) return new ArrayList<>();
+        File file = path.resolve(fileName).toFile();
+        if (!file.exists()) return new ArrayList<>();
+        try (FileReader reader = new FileReader(file)) {
+            List<T> loadedData = GSON.fromJson(reader, type);
+            return loadedData != null ? loadedData : new ArrayList<>();
+        } catch (IOException e) {
+            Buildnotes.LOGGER.warn("Could not load from " + file.getAbsolutePath() + ", creating new list...", e);
+            return new ArrayList<>();
+        }
+    }
+    private <T> void writeToFile(List<T> data, Path path, String fileName) {
+        if (path == null) return;
+        try {
+            Files.createDirectories(path);
+            try (FileWriter writer = new FileWriter(path.resolve(fileName).toFile())) {
+                GSON.toJson(data, writer);
+            }
+        } catch (IOException e) {
+            Buildnotes.LOGGER.error("Could not save to " + path.resolve(fileName).toString(), e);
+        }
+    }
+
+    // --- Private Delete Helpers to prevent duplication ---
+
+    private void deleteNoteFromLocalFiles(UUID id) {
+        // Delete from Global
+        Path globalPath = getGlobalPath();
+        List<Note> globalNotes = loadFromFile(globalPath, NOTES_FILE_NAME, new TypeToken<ArrayList<Note>>() {}.getType());
+        if (globalNotes.removeIf(n -> n.getId().equals(id))) {
+            writeToFile(globalNotes, globalPath, NOTES_FILE_NAME);
+        }
+        // Delete from World/Per-Server
+        Path localPath = getLocalPath();
+        List<Note> localNotes = loadFromFile(localPath, NOTES_FILE_NAME, new TypeToken<ArrayList<Note>>() {}.getType());
+        if (localNotes.removeIf(n -> n.getId().equals(id))) {
+            writeToFile(localNotes, localPath, NOTES_FILE_NAME);
+        }
+    }
+
+    private void deleteBuildFromLocalFiles(UUID id) {
+        // Delete from Global
+        Path globalPath = getGlobalPath();
+        List<Build> globalBuilds = loadFromFile(globalPath, BUILDS_FILE_NAME, new TypeToken<ArrayList<Build>>() {}.getType());
+        if (globalBuilds.removeIf(b -> b.getId().equals(id))) {
+            writeToFile(globalBuilds, globalPath, BUILDS_FILE_NAME);
+        }
+        // Delete from World/Per-Server
+        Path localPath = getLocalPath();
+        List<Build> localBuilds = loadFromFile(localPath, BUILDS_FILE_NAME, new TypeToken<ArrayList<Build>>() {}.getType());
+        if (localBuilds.removeIf(b -> b.getId().equals(id))) {
+            writeToFile(localBuilds, localPath, BUILDS_FILE_NAME);
+        }
+    }
+
+    // --- Note Management ---
+    public List<Note> getNotes() {
+        List<Note> globalNotes = loadFromFile(getGlobalPath(), NOTES_FILE_NAME, new TypeToken<ArrayList<Note>>() {}.getType());
+        List<Note> localNotes = loadFromFile(getLocalPath(), NOTES_FILE_NAME, new TypeToken<ArrayList<Note>>() {}.getType());
+        List<Note> serverNotes = ClientCache.getNotes();
+        return Stream.of(globalNotes, localNotes, serverNotes).flatMap(List::stream)
+                .sorted(Comparator.comparingLong(Note::getLastModified).reversed()).collect(Collectors.toList());
     }
 
     public void saveNote(Note noteToSave) {
-        List<Note> allNotes = getNotes();
-        // Remove old version if it exists
-        allNotes.removeIf(n -> n.getId().equals(noteToSave.getId()));
-        allNotes.add(noteToSave); // Add the new/updated version
-
-        // Split notes into global and world-specific lists
-        List<Note> globalNotes = allNotes.stream().filter(Note::isGlobal).collect(Collectors.toList());
-        List<Note> worldNotes = allNotes.stream().filter(n -> !n.isGlobal()).collect(Collectors.toList());
-
-        // Save them to their respective files
-        writeNotesToFile(globalNotes, GLOBAL_PATH.resolve(MOD_DATA_SUBFOLDER));
-        Path worldPath = getWorldSpecificPath();
-        if (worldPath != null) {
-            writeNotesToFile(worldNotes, worldPath);
+        if (noteToSave.getScope() == Scope.SERVER) {
+            // TODO: Send C2S_SaveNotePacket to the server
+            Buildnotes.LOGGER.info("Attempted to save a SERVER scope note. Networking not yet implemented.");
+            return;
         }
+
+        // First, delete the note from all possible locations to prevent duplication
+        deleteNoteFromLocalFiles(noteToSave.getId());
+
+        // Now, save the note to its new correct location
+        Path path = noteToSave.getScope() == Scope.GLOBAL ? getGlobalPath() : getLocalPath();
+        Type type = new TypeToken<ArrayList<Note>>() {}.getType();
+        List<Note> notes = loadFromFile(path, NOTES_FILE_NAME, type);
+        notes.add(noteToSave);
+        writeToFile(notes, path, NOTES_FILE_NAME);
     }
 
     public void deleteNote(Note noteToDelete) {
-        List<Note> allNotes = getNotes();
-        allNotes.removeIf(n -> n.getId().equals(noteToDelete.getId()));
-
-        List<Note> globalNotes = allNotes.stream().filter(Note::isGlobal).collect(Collectors.toList());
-        List<Note> worldNotes = allNotes.stream().filter(n -> !n.isGlobal()).collect(Collectors.toList());
-
-        writeNotesToFile(globalNotes, GLOBAL_PATH.resolve(MOD_DATA_SUBFOLDER));
-        Path worldPath = getWorldSpecificPath();
-        if (worldPath != null) {
-            writeNotesToFile(worldNotes, worldPath);
+        if (noteToDelete.getScope() == Scope.SERVER) {
+            // TODO: Send C2S_DeleteNotePacket to the server
+            Buildnotes.LOGGER.info("Attempted to delete a SERVER scope note. Networking not yet implemented.");
+            return;
         }
+        deleteNoteFromLocalFiles(noteToDelete.getId());
     }
 
-
-    private void writeNotesToFile(List<Note> notes, Path path) {
-        try {
-            Files.createDirectories(path);
-            try (FileWriter writer = new FileWriter(path.resolve(NOTES_FILE_NAME).toFile())) {
-                GSON.toJson(notes, writer);
-            }
-        } catch (IOException e) {
-            Buildnotes.LOGGER.error("Could not save notes to " + path.toString(), e);
-        }
-    }
-
-    private List<Note> loadNotes(Path path) {
-        File notesFile = path.resolve(NOTES_FILE_NAME).toFile();
-        if (!notesFile.exists()) {
-            return new ArrayList<>();
-        }
-        try (FileReader reader = new FileReader(notesFile)) {
-            Type type = new TypeToken<ArrayList<Note>>() {}.getType();
-            List<Note> loadedNotes = GSON.fromJson(reader, type);
-            return loadedNotes != null ? loadedNotes : new ArrayList<>();
-        } catch (IOException e) {
-            Buildnotes.LOGGER.warn("Could not load notes from " + path + ", creating new list...");
-            return new ArrayList<>();
-        }
-    }
-
+    // --- Build Management ---
     public List<Build> getBuilds() {
-        List<Build> globalBuilds = loadBuilds(GLOBAL_PATH.resolve(MOD_DATA_SUBFOLDER));
-        Path worldPath = getWorldSpecificPath();
-        List<Build> worldBuilds = new ArrayList<>();
-        if (worldPath != null) {
-            worldBuilds = loadBuilds(worldPath);
-        }
-        // Sort by last modified timestamp, descending (newest first)
-        return Stream.concat(worldBuilds.stream(), globalBuilds.stream()).sorted(Comparator.comparingLong(Build::getLastModified).reversed()).collect(Collectors.toList());
+        List<Build> globalBuilds = loadFromFile(getGlobalPath(), BUILDS_FILE_NAME, new TypeToken<ArrayList<Build>>() {}.getType());
+        List<Build> localBuilds = loadFromFile(getLocalPath(), BUILDS_FILE_NAME, new TypeToken<ArrayList<Build>>() {}.getType());
+        List<Build> serverBuilds = ClientCache.getBuilds();
+        return Stream.of(globalBuilds, localBuilds, serverBuilds).flatMap(List::stream)
+                .sorted(Comparator.comparingLong(Build::getLastModified).reversed()).collect(Collectors.toList());
     }
 
     public void saveBuild(Build buildToSave) {
-        List<Build> allBuilds = getBuilds();
-        allBuilds.removeIf(b -> b.getId().equals(buildToSave.getId()));
-        allBuilds.add(buildToSave);
-
-        List<Build> globalBuilds = allBuilds.stream().filter(Build::isGlobal).collect(Collectors.toList());
-        List<Build> worldBuilds = allBuilds.stream().filter(b -> !b.isGlobal()).collect(Collectors.toList());
-
-        writeBuildsToFile(globalBuilds, GLOBAL_PATH.resolve(MOD_DATA_SUBFOLDER));
-        Path worldPath = getWorldSpecificPath();
-        if (worldPath != null) {
-            writeBuildsToFile(worldBuilds, worldPath);
+        if (buildToSave.getScope() == Scope.SERVER) {
+            // TODO: Send C2S_SaveBuildPacket to the server
+            Buildnotes.LOGGER.info("Attempted to save a SERVER scope build. Networking not yet implemented.");
+            return;
         }
+        deleteBuildFromLocalFiles(buildToSave.getId());
+        Path path = buildToSave.getScope() == Scope.GLOBAL ? getGlobalPath() : getLocalPath();
+        Type type = new TypeToken<ArrayList<Build>>() {}.getType();
+        List<Build> builds = loadFromFile(path, BUILDS_FILE_NAME, type);
+        builds.add(buildToSave);
+        writeToFile(builds, path, BUILDS_FILE_NAME);
     }
 
-    // NEW METHOD for deleting a single build
     public void deleteBuild(Build buildToDelete) {
-        List<Build> allBuilds = getBuilds();
-        allBuilds.removeIf(b -> b.getId().equals(buildToDelete.getId()));
-
-        List<Build> globalBuilds = allBuilds.stream().filter(Build::isGlobal).collect(Collectors.toList());
-        List<Build> worldBuilds = allBuilds.stream().filter(b -> !b.isGlobal()).collect(Collectors.toList());
-
-        writeBuildsToFile(globalBuilds, GLOBAL_PATH.resolve(MOD_DATA_SUBFOLDER));
-        Path worldPath = getWorldSpecificPath();
-        if (worldPath != null) {
-            writeBuildsToFile(worldBuilds, worldPath);
+        if (buildToDelete.getScope() == Scope.SERVER) {
+            // TODO: Send C2S_DeleteBuildPacket to the server
+            Buildnotes.LOGGER.info("Attempted to delete a SERVER scope build. Networking not yet implemented.");
+            return;
         }
-
+        deleteBuildFromLocalFiles(buildToDelete.getId());
         try {
-            Path imageDir = FabricLoader.getInstance().getConfigDir()
-                    .resolve(MOD_DATA_SUBFOLDER)
-                    .resolve("images")
-                    .resolve(buildToDelete.getId().toString());
-
+            Path imageDir = CONFIG_DIR.resolve(MOD_DATA_SUBFOLDER).resolve("images").resolve(buildToDelete.getId().toString());
             if (Files.exists(imageDir)) {
-                // Recursively delete the directory and its contents
                 try (Stream<Path> walk = Files.walk(imageDir)) {
-                    walk.sorted(Comparator.reverseOrder())
-                            .map(Path::toFile)
-                            .forEach(File::delete);
+                    walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
                 }
             }
         } catch (IOException e) {
             Buildnotes.LOGGER.error("Failed to delete image directory for build: {}", buildToDelete.getId(), e);
-        }
-    }
-
-    private void writeBuildsToFile(List<Build> builds, Path path) {
-        try {
-            Files.createDirectories(path);
-            try (FileWriter writer = new FileWriter(path.resolve(BUILDS_FILE_NAME).toFile())) {
-                GSON.toJson(builds, writer);
-            }
-        } catch (IOException e) {
-            Buildnotes.LOGGER.error("Could not save builds to " + path.toString(), e);
-        }
-    }
-
-    private List<Build> loadBuilds(Path path) {
-        File buildsFile = path.resolve(BUILDS_FILE_NAME).toFile();
-        if (!buildsFile.exists()) {
-            return new ArrayList<>();
-        }
-        try (FileReader reader = new FileReader(buildsFile)) {
-            Type type = new TypeToken<ArrayList<Build>>() {}.getType();
-            List<Build> loadedBuilds = GSON.fromJson(reader, type);
-            return loadedBuilds != null ? loadedBuilds : new ArrayList<>();
-        } catch (IOException e) {
-            Buildnotes.LOGGER.warn("Could not load builds from " + path.toString() + ", creating new list...");
-            return new ArrayList<>();
         }
     }
 }

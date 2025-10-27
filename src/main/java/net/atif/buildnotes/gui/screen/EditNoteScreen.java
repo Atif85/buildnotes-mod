@@ -1,7 +1,9 @@
 package net.atif.buildnotes.gui.screen;
 
+import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.data.Scope;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
@@ -9,9 +11,12 @@ import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
+
+import java.util.List;
 
 public class EditNoteScreen extends BaseScreen {
 
@@ -19,8 +24,7 @@ public class EditNoteScreen extends BaseScreen {
 
     private MultiLineTextFieldWidget titleField;
     private MultiLineTextFieldWidget contentField;
-
-    private DarkButtonWidget globalToggleButton;
+    private DarkButtonWidget scopeToggleButton;
 
     public EditNoteScreen(Screen parent, Note note) {
         super(new TranslatableText("gui.buildnotes.edit_note_title"), parent); // A new translation key could be "Editing Note"
@@ -63,41 +67,63 @@ public class EditNoteScreen extends BaseScreen {
 
         // --- TOP BUTTON ROW (3) ---
         int topRowY = this.height - (UIHelper.BUTTON_HEIGHT + UIHelper.BOTTOM_PADDING) - UIHelper.BUTTON_HEIGHT - 5;
-        UIHelper.createBottomButtonRow(this, topRowY, 3, x -> {
-            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
-            switch (idx) {
-                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new LiteralText("Coords"), b -> insertCoords()));
-                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new LiteralText("Biome"), b -> insertBiome()));
+        List<Text> topButtonTexts = List.of(new LiteralText("Coords"), new LiteralText("Biome"), getScopeButtonText());
+
+        UIHelper.createBottomButtonRow(this, topRowY, topButtonTexts, (index, x, width) -> { // Note the new 'width' parameter
+            switch (index) {
+                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
+                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
                 case 2 -> {
-                    this.globalToggleButton = this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                            getGlobalButtonText(), b -> {
-                        note.setGlobal(!note.isGlobal());
-                        this.globalToggleButton.setMessage(getGlobalButtonText());
+                    this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
+                        cycleScope();
+                        // We now just update the button text, no need to rebuild the whole screen
+                        b.setMessage(getScopeButtonText());
+                        // Re-init to recalculate button positions and sizes
+                        this.init(this.client, this.width, this.height);
                     }));
                 }
             }
         });
 
-        // --- BOTTOM BUTTON ROW (2) ---
+// --- BOTTOM BUTTON ROW ---
         int bottomRowY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
-        UIHelper.createBottomButtonRow(this, bottomRowY, 2, x -> {
-            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 2)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
-            if (idx == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new LiteralText("Save"), button -> saveNote()));
+        List<Text> bottomButtonTexts = List.of(new LiteralText("Save"), new TranslatableText("gui.buildnotes.close_button"));
+        UIHelper.createBottomButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
+            if (index == 0) {
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(0), button -> saveNote()));
             } else {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.close_button"), button -> saveAndClose()));
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(1), button -> saveAndClose()));
             }
         });
 
         this.setInitialFocus(this.titleField);
     }
 
-    private LiteralText getGlobalButtonText() {
-        return new LiteralText("Scope: " + (note.isGlobal() ? "Global" : "World"));
+    private void cycleScope() {
+        Scope currentScope = note.getScope();
+        if (ClientSession.isOnServer() && ClientSession.hasEditPermission()) {
+            // Cycle through all three: WORLD -> GLOBAL -> SERVER -> WORLD
+            if (currentScope == Scope.WORLD) note.setScope(Scope.GLOBAL);
+            else if (currentScope == Scope.GLOBAL) note.setScope(Scope.SERVER);
+            else note.setScope(Scope.WORLD);
+        } else {
+            // Cycle between WORLD and GLOBAL
+            note.setScope(currentScope == Scope.WORLD ? Scope.GLOBAL : Scope.WORLD);
+        }
+    }
+
+    private LiteralText getScopeButtonText() {
+        String scopeName;
+        Scope currentScope = note.getScope();
+        if (currentScope == Scope.GLOBAL) {
+            scopeName = "Global";
+        } else if (currentScope == Scope.SERVER) {
+            scopeName = "Server (Shared)";
+        } else {
+            // For WORLD scope, the name depends on the context
+            scopeName = this.client != null && this.client.isIntegratedServerRunning() ? "World" : "Per-Server";
+        }
+        return new LiteralText("Scope: " + scopeName);
     }
 
     private void saveNote() {

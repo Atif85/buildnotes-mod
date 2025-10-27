@@ -2,6 +2,8 @@ package net.atif.buildnotes.gui.widget.list;
 
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.gui.screen.MainScreen;
+import net.atif.buildnotes.data.Scope;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -70,11 +72,19 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
             // Line 3: Date/Time with new label
             client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
 
-            // "Global" Indicator on the right
-            if (build.isGlobal()) {
-                Text globalText = new LiteralText("Global").formatted(Formatting.AQUA);
-                int globalWidth = client.textRenderer.getWidth(globalText);
-                client.textRenderer.draw(matrices, globalText, x + entryWidth - globalWidth - 7, y + 2, 0xFFFFFF);
+            // --- NEW SCOPE INDICATOR ---
+            Text scopeText = null;
+            if (build.getScope() != null) { // Add null check for safety
+                switch (build.getScope()) {
+                    case GLOBAL -> scopeText = new LiteralText("Global").formatted(Formatting.AQUA);
+                    case SERVER -> scopeText = new LiteralText("Server").formatted(Formatting.GREEN);
+                    // We don't draw an indicator for WORLD scope
+                }
+            }
+
+            if (scopeText != null) {
+                int scopeWidth = client.textRenderer.getWidth(scopeText);
+                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF);
             }
         }
 

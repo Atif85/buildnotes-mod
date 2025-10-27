@@ -2,6 +2,8 @@ package net.atif.buildnotes.gui.widget.list;
 
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.screen.MainScreen;
+import net.atif.buildnotes.data.Scope;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -66,22 +68,29 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
         @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            // Line 1: Title
+            // Title
             client.textRenderer.draw(matrices, note.getTitle(), x + 2, y + 2, 0xFFFFFF);
 
-            // Line 2: Content Preview
+            // Content Preview
             Text contentPreview = new LiteralText(firstLine).formatted(Formatting.GRAY);
             String truncated = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
             client.textRenderer.draw(matrices, new LiteralText(truncated), x + 2, y + 12, 0xCCCCCC);
 
-            // Line 3: Date/Time with new label
+            // Date/Time with new label
             client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
 
-            // "Global" Indicator on the right
-            if (note.isGlobal()) {
-                Text globalText = new LiteralText("Global").formatted(Formatting.AQUA);
-                int globalWidth = client.textRenderer.getWidth(globalText);
-                client.textRenderer.draw(matrices, globalText, x + entryWidth - globalWidth - 7, y + 2, 0xFFFFFF);
+            Text scopeText = null;
+            if (note.getScope() != null) { // Add null check for safety
+                switch (note.getScope()) {
+                    case GLOBAL -> scopeText = new LiteralText("Global").formatted(Formatting.AQUA);
+                    case SERVER -> scopeText = new LiteralText("Server").formatted(Formatting.GREEN);
+                    // We don't draw an indicator for WORLD scope to keep the UI clean
+                }
+            }
+
+            if (scopeText != null) {
+                int scopeWidth = client.textRenderer.getWidth(scopeText);
+                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF);
             }
         }
 
