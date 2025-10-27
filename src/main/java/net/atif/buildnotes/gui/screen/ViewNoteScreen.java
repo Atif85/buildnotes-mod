@@ -3,6 +3,7 @@ package net.atif.buildnotes.gui.screen;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.TabType;
+import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 import net.minecraft.client.gui.screen.Screen;
@@ -10,16 +11,15 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 
-public class ViewNoteScreen extends Screen {
+public class ViewNoteScreen extends BaseScreen {
 
-    private final Screen parent;
     private final Note note;
+
     private ReadOnlyMultiLineTextFieldWidget titleArea;
     private ReadOnlyMultiLineTextFieldWidget contentArea;
 
     public ViewNoteScreen(Screen parent, Note note) {
-        super(new LiteralText(note.getTitle()));
-        this.parent = parent;
+        super(new LiteralText(note.getTitle()), parent);
         this.note = note;
     }
 
@@ -27,31 +27,18 @@ public class ViewNoteScreen extends Screen {
     protected void init() {
         super.init();
 
-        int buttonWidth = 80;
-        int buttonHeight = 20;
-        int bottomPadding = 12;
-        int buttonSpacing = 8;
-        int totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-        int buttonsStartX = (this.width - totalButtonWidth) / 2;
-        int buttonsY = this.height - buttonHeight - bottomPadding;
-
-        this.addDrawableChild(new DarkButtonWidget(
-                buttonsStartX, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.delete_button"),
-                button -> confirmDelete()
-        ));
-
-        this.addDrawableChild(new DarkButtonWidget(
-                buttonsStartX + buttonWidth + buttonSpacing, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.edit_button"),
-                button -> this.client.setScreen(new EditNoteScreen(this.parent, this.note))
-        ));
-
-        this.addDrawableChild(new DarkButtonWidget(
-                buttonsStartX + (buttonWidth + buttonSpacing) * 2, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.close_button"),
-                button -> this.client.setScreen(parent)
-        ));
+        int buttonsY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
+        UIHelper.createBottomButtonRow(this, buttonsY, 3, x -> {
+            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
+            switch (idx) {
+                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new TranslatableText("gui.buildnotes.delete_button"), button -> confirmDelete()));
+                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new TranslatableText("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditNoteScreen(this.parent, this.note))));
+                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new TranslatableText("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
+            }
+        });
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -94,10 +81,9 @@ public class ViewNoteScreen extends Screen {
     private void confirmDelete() {
         Runnable onConfirm = () -> {
             DataManager.getInstance().deleteNote(this.note);
-            this.client.setScreen(new MainScreen(TabType.NOTES));
+            open(new MainScreen(TabType.NOTES));
         };
-        Runnable onCancel = () -> this.client.setScreen(this);
-        this.client.setScreen(new ConfirmScreen(this, new LiteralText("Delete note \"" + note.getTitle() + "\"?"), onConfirm, onCancel));
+        UIHelper.showConfirmDialog(this, new LiteralText("Delete note \"" + note.getTitle() + "\"?"), onConfirm);
     }
 
     @Override
@@ -112,14 +98,13 @@ public class ViewNoteScreen extends Screen {
         int bottomMargin = 45;
 
         // --- Title Panel ---
-        fill(matrices, contentX, topMargin, contentX + contentWidth, topMargin + titlePanelHeight, 0x77000000);
+        UIHelper.drawPanel(matrices, contentX, topMargin, contentWidth, titlePanelHeight);
         this.titleArea.render(matrices, mouseX, mouseY, delta);
 
         // --- Content Panel ---
         int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
         int contentPanelBottom = this.height - bottomMargin;
-        fill(matrices, contentX, contentPanelY, contentX + contentWidth, contentPanelBottom, 0x77000000);
-
+        UIHelper.drawPanel(matrices, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
         this.contentArea.render(matrices, mouseX, mouseY, delta);
 
         super.render(matrices, mouseX, mouseY, delta);
@@ -145,10 +130,4 @@ public class ViewNoteScreen extends Screen {
         }
         return false;
     }
-
-    @Override
-    public boolean shouldPause() { return false; }
-
-    @Override
-    public void close() { this.client.setScreen(this.parent); }
 }

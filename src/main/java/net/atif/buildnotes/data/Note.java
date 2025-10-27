@@ -1,46 +1,26 @@
 package net.atif.buildnotes.data;
 
-import java.time.Instant;
-import java.util.UUID;
-
-public class Note {
-    private final UUID id;
+public class Note extends BaseEntry {
     private String title;
     private String content;
-    private long lastModified;
-    private boolean isGlobal;
 
+    // Keep the main constructor you already had
     public Note(String title, String content) {
-        this.id = UUID.randomUUID();
+        super();
         this.title = title;
         this.content = content;
-        this.isGlobal = false;
-        this.updateTimestamp();
     }
 
-    public void updateTimestamp() {
-        this.lastModified = Instant.now().getEpochSecond();
+    // Optional protected no-arg constructor for deserializers (safe)
+    protected Note() {
+        super();
     }
 
     // Getters
-    public UUID getId() { return id; }
     public String getTitle() { return title; }
     public String getContent() { return content; }
-    public long getLastModified() { return lastModified; }
-    public boolean isGlobal() { return isGlobal; }
 
     // Setters
-    public void setTitle(String title) {
-
-        this.title = title;
-    }
-
-    public void setContent(String content) {
-
-        this.content = content;
-    }
-
-    public void setGlobal(boolean global) {
-        isGlobal = global;
-    }
+    public void setTitle(String title) { this.title = title; }
+    public void setContent(String content) { this.content = content; }
 }

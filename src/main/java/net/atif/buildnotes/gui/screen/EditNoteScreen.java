@@ -2,6 +2,7 @@ package net.atif.buildnotes.gui.screen;
 
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 
@@ -12,9 +13,8 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 
-public class EditNoteScreen extends Screen {
+public class EditNoteScreen extends BaseScreen {
 
-    private final Screen parent;
     private final Note note;
 
     private MultiLineTextFieldWidget titleField;
@@ -23,22 +23,20 @@ public class EditNoteScreen extends Screen {
     private DarkButtonWidget globalToggleButton;
 
     public EditNoteScreen(Screen parent, Note note) {
-        super(new TranslatableText("gui.buildnotes.edit_note_title")); // A new translation key could be "Editing Note"
-        this.parent = parent;
+        super(new TranslatableText("gui.buildnotes.edit_note_title"), parent); // A new translation key could be "Editing Note"
         this.note = note;
     }
 
     @Override
     protected void init() {
         super.init();
-        this.client.keyboard.setRepeatEvents(true);
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
         int topMargin = 20;
         int titlePanelHeight = 25;
         int panelSpacing = 5;
-        int bottomMargin = 70; // More space for two rows of buttons
+        int bottomMargin = 70;
 
         // --- Title Text Field ---
         this.titleField = new MultiLineTextFieldWidget(
@@ -63,32 +61,37 @@ public class EditNoteScreen extends Screen {
         );
         this.addSelectableChild(this.contentField);
 
-        // --- ACTION BUTTONS ---
-        int buttonWidth = 80;
-        int buttonHeight = 20;
-        int bottomPadding = 12;
-        int buttonSpacing = 8;
+        // --- TOP BUTTON ROW (3) ---
+        int topRowY = this.height - (UIHelper.BUTTON_HEIGHT + UIHelper.BOTTOM_PADDING) - UIHelper.BUTTON_HEIGHT - 5;
+        UIHelper.createBottomButtonRow(this, topRowY, 3, x -> {
+            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
+            switch (idx) {
+                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new LiteralText("Coords"), b -> insertCoords()));
+                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new LiteralText("Biome"), b -> insertBiome()));
+                case 2 -> {
+                    this.globalToggleButton = this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                            getGlobalButtonText(), b -> {
+                        note.setGlobal(!note.isGlobal());
+                        this.globalToggleButton.setMessage(getGlobalButtonText());
+                    }));
+                }
+            }
+        });
 
-        // Bottom Row
-        int totalBottomRowWidth = (buttonWidth * 2) + buttonSpacing;
-        int bottomRowStartX = (this.width - totalBottomRowWidth) / 2;
-        int bottomRowY = this.height - buttonHeight - bottomPadding;
-
-        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX, bottomRowY, buttonWidth, buttonHeight, new LiteralText("Save"), button -> saveNote()));
-        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX + buttonWidth + buttonSpacing, bottomRowY, buttonWidth, buttonHeight, new TranslatableText("gui.buildnotes.close_button"), button -> saveAndClose()));
-
-        // Top Button Row
-        int totalTopRowWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-        int topRowStartX = (this.width - totalTopRowWidth) / 2;
-        int topRowY = bottomRowY - buttonHeight - 5;
-
-        this.addDrawableChild(new DarkButtonWidget(topRowStartX, topRowY, buttonWidth, buttonHeight, new LiteralText("Coords"), button -> insertCoords()));
-        this.addDrawableChild(new DarkButtonWidget(topRowStartX + buttonWidth + buttonSpacing, topRowY, buttonWidth, buttonHeight, new LiteralText("Biome"), button -> insertBiome()));
-
-        this.globalToggleButton = this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing) * 2, topRowY, buttonWidth, buttonHeight, getGlobalButtonText(), button -> {
-            note.setGlobal(!note.isGlobal());
-            this.globalToggleButton.setMessage(getGlobalButtonText());
-        }));
+        // --- BOTTOM BUTTON ROW (2) ---
+        int bottomRowY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
+        UIHelper.createBottomButtonRow(this, bottomRowY, 2, x -> {
+            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 2)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
+            if (idx == 0) {
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new LiteralText("Save"), button -> saveNote()));
+            } else {
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new TranslatableText("gui.buildnotes.close_button"), button -> saveAndClose()));
+            }
+        });
 
         this.setInitialFocus(this.titleField);
     }
@@ -98,7 +101,6 @@ public class EditNoteScreen extends Screen {
     }
 
     private void saveNote() {
-        // Update the note object with the new text from the widgets
         note.setTitle(this.titleField.getText());
         note.setContent(this.contentField.getText());
         note.updateTimestamp();
@@ -107,7 +109,7 @@ public class EditNoteScreen extends Screen {
 
     private void saveAndClose() {
         saveNote();
-        this.client.setScreen(this.parent);
+        this.close();
     }
 
     private void insertCoords() {
@@ -120,7 +122,7 @@ public class EditNoteScreen extends Screen {
         if (this.client.player == null || this.client.world == null) return;
         BlockPos playerPos = this.client.player.getBlockPos();
         String biomeId = this.client.world.getRegistryManager().get(Registry.BIOME_KEY).getId(this.client.world.getBiome(playerPos).value()).toString();
-        this.contentField.insertText("[" + biomeId + "]");
+        this.contentField.insertText(biomeId);
     }
 
     @Override
@@ -135,14 +137,13 @@ public class EditNoteScreen extends Screen {
         int bottomMargin = 70;
 
         // --- Title Panel ---
-        fill(matrices, contentX, topMargin, contentX + contentWidth, topMargin + titlePanelHeight, 0x77000000);
+        UIHelper.drawPanel(matrices, contentX, topMargin, contentWidth, titlePanelHeight);;
         this.titleField.render(matrices, mouseX, mouseY, delta);
 
         // --- Content Panel ---
         int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
         int contentPanelBottom = this.height - bottomMargin;
-        fill(matrices, contentX, contentPanelY, contentX + contentWidth, contentPanelBottom, 0x77000000);
-        // Manually render our custom widget
+        UIHelper.drawPanel(matrices, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
         this.contentField.render(matrices, mouseX, mouseY, delta);
 
         // Draw screen title
@@ -160,12 +161,6 @@ public class EditNoteScreen extends Screen {
     @Override
     public void close() {
         saveNote();
-        this.client.keyboard.setRepeatEvents(false);
-        this.client.setScreen(this.parent);
-    }
-
-    @Override
-    public boolean shouldPause() {
-        return false;
+        super.close();
     }
 }

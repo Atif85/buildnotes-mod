@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
+import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.fabricmc.loader.api.FabricLoader;
@@ -34,7 +35,6 @@ import java.util.function.Consumer;
 
 public class EditBuildScreen extends ScrollableScreen {
 
-    private final Screen parent;
     private final Build build;
 
     // --- Image Gallery Fields ---
@@ -50,50 +50,53 @@ public class EditBuildScreen extends ScrollableScreen {
     private DarkButtonWidget globalToggleButton;
 
     public EditBuildScreen(Screen parent, Build build) {
-        super(new TranslatableText("gui.buildnotes.edit_build_title"));
-        this.parent = parent;
+        super(new TranslatableText("gui.buildnotes.edit_build_title"), parent);
         this.build = build;
     }
 
     @Override
     protected void init() {
-        this.client.keyboard.setRepeatEvents(true);
-        super.init(); // This calls initContent(), which calculates layout
+        super.init(); // calls initContent()
 
-        // --- FIXED ACTION BUTTONS (Not scrollable) ---
-        int buttonWidth = 80;
-        int buttonHeight = 20;
-        int bottomPadding = 12;
-        int buttonSpacing = 8;
-        int totalBottomRowWidth = (buttonWidth * 2) + buttonSpacing;
-        int bottomRowStartX = (this.width - totalBottomRowWidth) / 2;
-        int bottomRowY = this.height - buttonHeight - bottomPadding;
+        int buttonsY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
 
-        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX, bottomRowY, buttonWidth, buttonHeight, new LiteralText("Save"), button -> saveBuild()));
-        this.addDrawableChild(new DarkButtonWidget(bottomRowStartX + buttonWidth + buttonSpacing, bottomRowY, buttonWidth, buttonHeight, new TranslatableText("gui.buildnotes.close_button"), button -> saveAndClose()));
+        // Bottom 2 buttons (Save / Close)
+        UIHelper.createBottomButtonRow(this, buttonsY, 2, x -> {
+            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 2)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
+            if (idx == 0) {
+                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Save"), button -> saveBuild()));
+            } else {
+                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new TranslatableText("gui.buildnotes.close_button"), button -> saveAndClose()));
+            }
+        });
 
-        int totalTopRowWidth = (buttonWidth * 6) + (buttonSpacing * 5);
-        int topRowStartX = (this.width - totalTopRowWidth) / 2;
-        int topRowY = bottomRowY - buttonHeight - 5;
-        this.addDrawableChild(new DarkButtonWidget(topRowStartX, topRowY, buttonWidth, buttonHeight, new LiteralText("Coords"), button -> insertCoords()));
-        this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing), topRowY, buttonWidth, buttonHeight, new LiteralText("Dimension"), button -> insertDimension()));
-        this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing) * 2, topRowY, buttonWidth, buttonHeight, new LiteralText("Biome"), button -> insertBiome()));
-        this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing) * 3, topRowY, buttonWidth, buttonHeight, new LiteralText("Add Images"), button -> openImageSelectionDialog()));
-        this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing) * 4, topRowY, buttonWidth, buttonHeight, new LiteralText("Add Field"), button -> {
-            saveBuild();
-            this.client.setScreen(new RequestFieldTitleScreen(this, this::addCustomField));
-        }));
-        this.globalToggleButton = this.addDrawableChild(new DarkButtonWidget(topRowStartX + (buttonWidth + buttonSpacing) * 5, topRowY, buttonWidth, buttonHeight, getGlobalButtonText(), button -> {
-            build.setGlobal(!build.isGlobal());
-            this.globalToggleButton.setMessage(getGlobalButtonText());
-        }));
+        // Top row (6 buttons)
+        int topRowY = buttonsY - UIHelper.BUTTON_HEIGHT - 5;
+        UIHelper.createBottomButtonRow(this, topRowY, 6, x -> {
+            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 6)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
+            switch (idx) {
+                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Coords"), b -> insertCoords()));
+                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Dimension"), b -> insertDimension()));
+                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Biome"), b -> insertBiome()));
+                case 3 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Add Images"), b -> openImageSelectionDialog()));
+                case 4 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, new LiteralText("Add Field"), b -> {
+                    saveBuild();
+                    this.open(new RequestFieldTitleScreen(this, this::addCustomField));
+                }));
+                case 5 -> {
+                    this.globalToggleButton = this.addDrawableChild(new DarkButtonWidget(x, topRowY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, getGlobalButtonText(), button -> {
+                        build.setGlobal(!build.isGlobal());
+                        this.globalToggleButton.setMessage(getGlobalButtonText());
+                    }));
+                }
+            }
+        });
 
         // --- IMAGE GALLERY WIDGETS (Scrollable) ---
         if (!build.getImageFileNames().isEmpty()) {
             int contentWidth = (int) (this.width * 0.6);
             int contentX = (this.width - contentWidth) / 2;
             int galleryHeight = (int) (contentWidth * (9.0 / 16.0));
-            // Calculate Y position precisely as done in initContent()
             int galleryY = getTopMargin() + 25 + 5 + 20 + 5;
             int navButtonY = galleryY + (galleryHeight - 20) / 2;
 
@@ -181,15 +184,15 @@ public class EditBuildScreen extends ScrollableScreen {
         final int labelHeight = 12;
 
         // Render backgrounds for Name, Coords, Dimension
-        fill(matrices, contentX, yPos, contentX + contentWidth, yPos + 25, 0x77000000);
+        UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 25);
         yPos += 25 + panelSpacing;
         int smallFieldHeight = 20;
         int fieldWidth = (contentWidth - panelSpacing) / 2;
-        fill(matrices, contentX, yPos, contentX + fieldWidth, yPos + smallFieldHeight, 0x77000000);
-        this.textRenderer.draw(matrices, new LiteralText("Coords: ").formatted(Formatting.GRAY), contentX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
+        UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
+        this.textRenderer.draw(matrices, new LiteralText("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
         int dimensionX = contentX + fieldWidth + panelSpacing;
-        fill(matrices, dimensionX, yPos, dimensionX + fieldWidth, yPos + smallFieldHeight, 0x77000000);
-        this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
+        UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
+        this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
         yPos += smallFieldHeight + panelSpacing;
 
         // --- RENDER IMAGE GALLERY ---
@@ -228,16 +231,16 @@ public class EditBuildScreen extends ScrollableScreen {
         // Render labels and backgrounds for remaining fields
         this.textRenderer.draw(matrices, new LiteralText("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
         yPos += labelHeight;
-        fill(matrices, contentX, yPos, contentX + contentWidth, yPos + 80, 0x77000000);
+        UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 80);
         yPos += 80 + panelSpacing;
         this.textRenderer.draw(matrices, new LiteralText("Designer/Credits:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
         yPos += labelHeight;
-        fill(matrices, contentX, yPos, contentX + contentWidth, yPos + 40, 0x77000000);
+        UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 40);
         yPos += 40 + panelSpacing;
         for (CustomField field : this.build.getCustomFields()) {
             this.textRenderer.draw(matrices, new LiteralText(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
             yPos += labelHeight;
-            fill(matrices, contentX, yPos, contentX + contentWidth, yPos + 40, 0x77000000);
+            UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 40);
             yPos += 40 + panelSpacing;
         }
         drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
@@ -255,10 +258,7 @@ public class EditBuildScreen extends ScrollableScreen {
     private void removeCurrentImage() {
         if (build.getImageFileNames().isEmpty()) return;
         String fileNameToRemove = build.getImageFileNames().get(currentImageIndex);
-        // Deleting files is a destructive action; for now, we just remove the reference.
-        // You could add `Files.deleteIfExists(imagePath)` here if desired.
         build.getImageFileNames().remove(fileNameToRemove);
-        // Adjust index to avoid out of bounds
         if (currentImageIndex >= build.getImageFileNames().size()) {
             currentImageIndex = Math.max(0, build.getImageFileNames().size() - 1);
         }
@@ -266,10 +266,8 @@ public class EditBuildScreen extends ScrollableScreen {
     }
 
     private void updateNavButtons() {
-        if (prevImageButton != null) {
-            prevImageButton.active = currentImageIndex > 0;
-            nextImageButton.active = currentImageIndex < build.getImageFileNames().size() - 1;
-        }
+        if (prevImageButton != null) prevImageButton.active = currentImageIndex > 0;
+        if (nextImageButton != null) nextImageButton.active = currentImageIndex < build.getImageFileNames().size() - 1;
     }
 
     private ImageData getImageDataForCurrentImage() {
@@ -306,16 +304,14 @@ public class EditBuildScreen extends ScrollableScreen {
             }
         });
         saveBuild();
-        this.client.keyboard.setRepeatEvents(false);
-        this.client.setScreen(this.parent);
+        super.close();
     }
 
     private void rebuild() {
         saveBuild();
-        this.client.setScreen(new EditBuildScreen(this.parent, this.build));
+        this.open(new EditBuildScreen(this.parent, this.build));
     }
 
-    // ... (All other methods like saveBuild, saveAndClose, insertText, etc., remain unchanged) ...
     @Override
     protected int getTopMargin() { return 20; }
 
@@ -337,7 +333,7 @@ public class EditBuildScreen extends ScrollableScreen {
 
     private void saveAndClose() {
         saveBuild();
-        this.client.setScreen(parent);
+        this.open(this.parent);
     }
 
     private void insertTextAtLastFocus(String text) {
@@ -428,14 +424,12 @@ public class EditBuildScreen extends ScrollableScreen {
     }
 
     // --- Inner Class for RequestFieldTitleScreen (Unchanged) ---
-    private static class RequestFieldTitleScreen extends Screen {
-        private final Screen parent;
+    private static class RequestFieldTitleScreen extends BaseScreen {
         private final Consumer<String> onConfirm;
         private TextFieldWidget titleField;
 
         protected RequestFieldTitleScreen(Screen parent, Consumer<String> onConfirm) {
-            super(new LiteralText("Enter Field Title"));
-            this.parent = parent;
+            super(new LiteralText("Enter Field Title"), parent);
             this.onConfirm = onConfirm;
         }
 
@@ -449,11 +443,13 @@ public class EditBuildScreen extends ScrollableScreen {
             this.titleField = new TextFieldWidget(this.textRenderer, panelX + 10, panelY + 20, panelW - 20, 20, new LiteralText(""));
             this.addSelectableChild(this.titleField);
 
-            this.addDrawableChild(new DarkButtonWidget(panelX + 10, panelY + 60, 85, 20, new LiteralText("Confirm"), button -> {
+            int buttonsY = panelY + 60;
+            int btnStartX = (this.width - ((85 * 2) + UIHelper.BUTTON_SPACING)) / 2;
+            this.addDrawableChild(new DarkButtonWidget(btnStartX, buttonsY, 85, 20, new LiteralText("Confirm"), button -> {
                 this.onConfirm.accept(this.titleField.getText());
-                this.client.setScreen(this.parent);
+                this.open(this.parent);
             }));
-            this.addDrawableChild(new DarkButtonWidget(panelX + 105, panelY + 60, 85, 20, new LiteralText("Cancel"), button -> this.client.setScreen(parent)));
+            this.addDrawableChild(new DarkButtonWidget(btnStartX + 95, buttonsY, 85, 20, new LiteralText("Cancel"), button -> this.open(parent)));
             this.setInitialFocus(this.titleField);
         }
 
@@ -464,13 +460,10 @@ public class EditBuildScreen extends ScrollableScreen {
             int panelH = 100;
             int panelX = (this.width - panelW) / 2;
             int panelY = (this.height - panelH) / 2;
-            fill(matrices, panelX, panelY, panelX + panelW, panelY + panelH, 0xCC000000);
+            UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
             drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, panelY + 8, 0xFFFFFF);
             this.titleField.render(matrices, mouseX, mouseY, delta);
             super.render(matrices, mouseX, mouseY, delta);
         }
-
-        @Override
-        public boolean shouldPause() { return false; }
     }
 }

@@ -11,9 +11,7 @@ import net.minecraft.text.Text;
 
 import java.util.List;
 
-import static net.minecraft.client.gui.DrawableHelper.fill;
-
-public abstract class ScrollableScreen extends Screen {
+public abstract class ScrollableScreen extends BaseScreen {
 
     protected final List<Element> scrollableWidgets = Lists.newArrayList();
     protected double scrollY = 0.0;
@@ -24,8 +22,8 @@ public abstract class ScrollableScreen extends Screen {
     private static final int SCROLLBAR_WIDTH = 6;
     private static final int SCROLLBAR_PADDING = 2;
 
-    protected ScrollableScreen(Text title) {
-        super(title);
+    protected ScrollableScreen(Text title, Screen parent) {
+        super(title, parent);
     }
 
     protected abstract void initContent();
@@ -42,8 +40,7 @@ public abstract class ScrollableScreen extends Screen {
     }
 
     /**
-     * CORRECTED: The generic type now requires that T extends both Element and Selectable.
-     * This makes the call to addSelectableChild type-safe.
+     * Type-safe addSelectableChild helper for scrollable widgets.
      */
     protected <T extends Element & Selectable> T addScrollableWidget(T widget) {
         this.scrollableWidgets.add(widget);

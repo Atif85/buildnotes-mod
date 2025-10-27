@@ -5,6 +5,7 @@ import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.gui.TabType;
+import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 
@@ -27,7 +28,6 @@ import java.util.Map;
 
 public class ViewBuildScreen extends ScrollableScreen {
 
-    private final Screen parent;
     private final Build build;
 
     private record ImageData(Identifier textureId, int width, int height) {
@@ -39,8 +39,7 @@ public class ViewBuildScreen extends ScrollableScreen {
     private DarkButtonWidget nextImageButton;
 
     public ViewBuildScreen(Screen parent, Build build) {
-        super(new LiteralText(build.getName()));
-        this.parent = parent;
+        super(new LiteralText(build.getName()), parent);
         this.build = build;
     }
 
@@ -137,25 +136,19 @@ public class ViewBuildScreen extends ScrollableScreen {
     protected void init() {
         super.init();
 
-        // These buttons are fixed and not part of the scrollable content
-        int buttonWidth = 80;
-        int buttonHeight = 20;
-        int bottomPadding = 12;
-        int buttonSpacing = 8;
-        int totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-        int buttonsStartX = (this.width - totalButtonWidth) / 2;
-        int buttonsY = this.height - buttonHeight - bottomPadding;
-
-        this.addDrawableChild(new DarkButtonWidget(buttonsStartX, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.delete_button"),button -> confirmDelete()));
-
-        this.addDrawableChild(new DarkButtonWidget(buttonsStartX + buttonWidth + buttonSpacing, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditBuildScreen(this.parent, this.build)))
-        );
-
-        this.addDrawableChild(new DarkButtonWidget(buttonsStartX + (buttonWidth + buttonSpacing) * 2, buttonsY, buttonWidth, buttonHeight,
-                new TranslatableText("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
-
+        // Use UIHelper to create the bottom 3 action buttons
+        int buttonsY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
+        UIHelper.createBottomButtonRow(this, buttonsY, 3, x -> {
+            int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
+            switch (idx) {
+                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new TranslatableText("gui.buildnotes.delete_button"), button -> confirmDelete()));
+                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new TranslatableText("gui.buildnotes.edit_button"), button -> open(new EditBuildScreen(this.parent, this.build))));
+                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        new TranslatableText("gui.buildnotes.close_button"), button -> this.open(this.parent)));
+            }
+        });
 
         if (!build.getImageFileNames().isEmpty()) {
             int contentWidth = (int) (this.width * 0.6);
@@ -191,12 +184,12 @@ public class ViewBuildScreen extends ScrollableScreen {
         int fieldWidth = (contentWidth - panelSpacing) / 2;
 
         // Backgrounds and Labels only
-        fill(matrices, contentX, yPos, contentX + fieldWidth, yPos + smallFieldHeight, 0x77000000);
-        this.textRenderer.draw(matrices, new LiteralText("Coords: ").formatted(Formatting.GRAY), contentX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
+        UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
+        this.textRenderer.draw(matrices, new LiteralText("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
 
         int dimensionX = contentX + fieldWidth + panelSpacing;
-        fill(matrices, dimensionX, yPos, dimensionX + fieldWidth, yPos + smallFieldHeight, 0x77000000);
-        this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
+        UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
+        this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
         yPos += smallFieldHeight + panelSpacing;
 
         if (!build.getImageFileNames().isEmpty()) {
@@ -218,10 +211,8 @@ public class ViewBuildScreen extends ScrollableScreen {
                 int renderHeight = boxHeight;
 
                 if (imageAspect > boxAspect) {
-                    // Image is wider than the box, scale by width
                     renderHeight = (int) (boxWidth / imageAspect);
                 } else {
-                    // Image is taller than or same as the box, scale by height
                     renderWidth = (int) (boxHeight * imageAspect);
                 }
 
@@ -313,10 +304,9 @@ public class ViewBuildScreen extends ScrollableScreen {
     private void confirmDelete() {
         Runnable onConfirm = () -> {
             DataManager.getInstance().deleteBuild(this.build);
-            this.client.setScreen(new MainScreen(TabType.BUILDS));
+            this.open(new MainScreen(TabType.BUILDS));
         };
-        Runnable onCancel = () -> this.client.setScreen(this);
-        this.client.setScreen(new ConfirmScreen(this, new LiteralText("Delete build \"" + build.getName() + "\"?"), onConfirm, onCancel));
+        this.showConfirm(new LiteralText("Delete build \"" + build.getName() + "\"?"), onConfirm);
     }
 
     @Override
@@ -326,7 +316,7 @@ public class ViewBuildScreen extends ScrollableScreen {
                 client.getTextureManager().destroyTexture(data.textureId);
             }
         });
-        this.client.setScreen(this.parent);
+        super.close();
     }
 
 }
