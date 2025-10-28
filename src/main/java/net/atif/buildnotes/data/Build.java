@@ -1,5 +1,7 @@
 package net.atif.buildnotes.data;
 
+import net.minecraft.network.PacketByteBuf;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +27,15 @@ public class Build extends BaseEntry {
         this.imageFileNames = new ArrayList<>();
     }
 
-    // Optional protected no-arg constructor for deserializers (safe)
-    protected Build() {
-        super();
-        this.customFields = new ArrayList<>();
-        this.imageFileNames = new ArrayList<>();
+    private Build(UUID id, long lastModified, Scope scope, String name, String coords, String dim, String desc, String cred, List<String> images, List<CustomField> fields) {
+        super(id, lastModified, scope);
+        this.name = name;
+        this.coordinates = coords;
+        this.dimension = dim;
+        this.description = desc;
+        this.credits = cred;
+        this.imageFileNames = images;
+        this.customFields = fields;
     }
 
     // --- Getters ---
@@ -57,4 +63,32 @@ public class Build extends BaseEntry {
     public void setDimension(String dimension) { this.dimension = dimension; }
     public void setDescription(String description) { this.description = description; }
     public void setCredits(String credits) { this.credits = credits; }
+
+    public void writeToBuf(PacketByteBuf buf) {
+        buf.writeUuid(this.getId());
+        buf.writeLong(this.getLastModified());
+        buf.writeEnumConstant(this.getScope());
+        buf.writeString(this.name);
+        buf.writeString(this.coordinates);
+        buf.writeString(this.dimension);
+        buf.writeString(this.description);
+        buf.writeString(this.credits);
+        buf.writeCollection(this.imageFileNames, PacketByteBuf::writeString);
+        buf.writeCollection(this.customFields, (b, field) -> field.writeToBuf(b));
+    }
+
+    public static Build fromBuf(PacketByteBuf buf) {
+        UUID id = buf.readUuid();
+        long lastModified = buf.readLong();
+        Scope scope = buf.readEnumConstant(Scope.class);
+        String name = buf.readString();
+        String coords = buf.readString();
+        String dim = buf.readString();
+        String desc = buf.readString();
+        String cred = buf.readString();
+        List<String> images = buf.readList(PacketByteBuf::readString);
+        List<CustomField> fields = buf.readList(CustomField::fromBuf);
+
+        return new Build(id, lastModified, scope, name, coords, dim, desc, cred, images, fields);
+    }
 }

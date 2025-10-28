@@ -72,7 +72,7 @@ public class EditBuildScreen extends ScrollableScreen {
             if (index == 0) {
                 this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(0), button -> saveBuild()));
             } else {
-                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> saveAndClose()));
+                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> this.close()));
             }
         });
 
@@ -340,10 +340,6 @@ public class EditBuildScreen extends ScrollableScreen {
         DataManager.getInstance().saveBuild(this.build);
     }
 
-    private void saveAndClose() {
-        saveBuild();
-        this.open(this.parent);
-    }
 
     private void insertTextAtLastFocus(String text) {
         if (this.lastFocusedTextField != null) {

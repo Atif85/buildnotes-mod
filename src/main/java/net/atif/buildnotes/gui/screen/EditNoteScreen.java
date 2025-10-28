@@ -92,7 +92,7 @@ public class EditNoteScreen extends BaseScreen {
             if (index == 0) {
                 this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(0), button -> saveNote()));
             } else {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(1), button -> saveAndClose()));
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(1), button -> this.close()));
             }
         });
 
@@ -133,10 +133,6 @@ public class EditNoteScreen extends BaseScreen {
         DataManager.getInstance().saveNote(this.note);
     }
 
-    private void saveAndClose() {
-        saveNote();
-        this.close();
-    }
 
     private void insertCoords() {
         if (this.client.player == null) return;

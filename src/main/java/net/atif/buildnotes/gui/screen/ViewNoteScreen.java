@@ -81,7 +81,7 @@ public class ViewNoteScreen extends BaseScreen {
     private void confirmDelete() {
         Runnable onConfirm = () -> {
             DataManager.getInstance().deleteNote(this.note);
-            open(new MainScreen(TabType.NOTES));
+            this.close();
         };
         UIHelper.showConfirmDialog(this, new LiteralText("Delete note \"" + note.getTitle() + "\"?"), onConfirm);
     }

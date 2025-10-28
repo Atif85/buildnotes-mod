@@ -86,16 +86,22 @@ public class MainScreen extends BaseScreen {
             }
         });
 
-        selectTab(this.currentTab);
+        refreshData();
         this.setInitialFocus(this.searchField);
     }
 
-    private void onSearchTermChanged(String newTerm) {
-        this.searchTerm = newTerm.toLowerCase().trim();
-        updateLists();
+    public void refreshData() {
+        // This effectively reloads and reapplies the current tab and search filter.
+        selectTab(this.currentTab);
     }
 
-    private void updateLists() {
+
+    private void onSearchTermChanged(String newTerm) {
+        this.searchTerm = newTerm.toLowerCase().trim();
+        refreshListContents();
+    }
+
+    private void refreshListContents() {
         if (currentTab == TabType.NOTES) {
             List<Note> allNotes = DataManager.getInstance().getNotes();
             if (!searchTerm.isEmpty()) {
@@ -133,9 +139,7 @@ public class MainScreen extends BaseScreen {
         noteListWidget.setSelected(null);
         buildListWidget.setSelected(null);
 
-        this.searchField.setText("");
-
-        updateLists();
+        refreshListContents();
 
         if (isNotes) {
             noteListWidget.setNotes(DataManager.getInstance().getNotes());
@@ -194,7 +198,6 @@ public class MainScreen extends BaseScreen {
             if (sel != null)
                 showConfirm(Text.of("Delete note \"" + sel.getTitle() + "\"?"), () -> {
                     dm.deleteNote(sel);
-                    noteListWidget.setNotes(dm.getNotes());
                     open(this);
                 });
         } else {
@@ -202,7 +205,6 @@ public class MainScreen extends BaseScreen {
             if (sel != null)
                 showConfirm(Text.of("Delete build \"" + sel.getName() + "\"?"), () -> {
                     dm.deleteBuild(sel);
-                    buildListWidget.setBuilds(dm.getBuilds());
                     open(this);
                 });
         }

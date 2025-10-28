@@ -304,7 +304,7 @@ public class ViewBuildScreen extends ScrollableScreen {
     private void confirmDelete() {
         Runnable onConfirm = () -> {
             DataManager.getInstance().deleteBuild(this.build);
-            this.open(new MainScreen(TabType.BUILDS));
+            this.close();
         };
         this.showConfirm(new LiteralText("Delete build \"" + build.getName() + "\"?"), onConfirm);
     }

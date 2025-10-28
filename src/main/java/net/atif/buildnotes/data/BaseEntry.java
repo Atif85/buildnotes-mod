@@ -15,6 +15,12 @@ public abstract class BaseEntry {
         this.scope = Scope.WORLD; // Default to WORLD scope
     }
 
+    protected BaseEntry(UUID id, long lastModified, Scope scope) {
+        this.id = id;
+        this.lastModified = lastModified;
+        this.scope = scope;
+    }
+
     public UUID getId() {
         return id;
     }

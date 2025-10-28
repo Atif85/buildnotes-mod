@@ -4,6 +4,7 @@ import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -64,6 +65,15 @@ public class ClientCache {
 
     public static void removeBuild(Build build) {
         serverBuilds.removeIf(b -> b.getId().equals(build.getId()));
+    }
+
+    // More specific removal methods
+    public static void removeNoteById(UUID id) {
+        serverNotes.removeIf(n -> n.getId().equals(id));
+    }
+
+    public static void removeBuildById(UUID id) {
+        serverBuilds.removeIf(b -> b.getId().equals(id));
     }
 
     /**

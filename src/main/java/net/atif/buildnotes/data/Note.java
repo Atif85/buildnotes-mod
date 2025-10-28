@@ -1,5 +1,9 @@
 package net.atif.buildnotes.data;
 
+import net.minecraft.network.PacketByteBuf;
+
+import java.util.UUID;
+
 public class Note extends BaseEntry {
     private String title;
     private String content;
@@ -11,9 +15,10 @@ public class Note extends BaseEntry {
         this.content = content;
     }
 
-    // Optional protected no-arg constructor for deserializers (safe)
-    protected Note() {
-        super();
+    private Note(UUID id, long lastModified, Scope scope, String title, String content) {
+        super(id, lastModified, scope); // Passes the existing data up
+        this.title = title;
+        this.content = content;
     }
 
     // Getters
@@ -23,4 +28,22 @@ public class Note extends BaseEntry {
     // Setters
     public void setTitle(String title) { this.title = title; }
     public void setContent(String content) { this.content = content; }
+
+    public void writeToBuf(PacketByteBuf buf) {
+        buf.writeUuid(this.getId());
+        buf.writeLong(this.getLastModified());
+        buf.writeEnumConstant(this.getScope());
+        buf.writeString(this.title);
+        buf.writeString(this.content);
+    }
+
+    public static Note fromBuf(PacketByteBuf buf) {
+        UUID id = buf.readUuid();
+        long lastModified = buf.readLong();
+        Scope scope = buf.readEnumConstant(Scope.class);
+        String title = buf.readString();
+        String content = buf.readString();
+
+        return new Note(id, lastModified, scope, title, content);
+    }
 }

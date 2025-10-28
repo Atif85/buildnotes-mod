@@ -3,10 +3,14 @@ package net.atif.buildnotes.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientCache;
+import net.atif.buildnotes.network.PacketIdentifiers;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.WorldSavePath;
 
 import java.io.File;
@@ -133,15 +137,29 @@ public class DataManager {
 
     public void saveNote(Note noteToSave) {
         if (noteToSave.getScope() == Scope.SERVER) {
-            // TODO: Send C2S_SaveNotePacket to the server
-            Buildnotes.LOGGER.info("Attempted to save a SERVER scope note. Networking not yet implemented.");
+            deleteNoteFromLocalFiles(noteToSave.getId());
+
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            noteToSave.writeToBuf(buf);
+            ClientPlayNetworking.send(PacketIdentifiers.SAVE_NOTE_C2S, buf);
             return;
         }
 
-        // First, delete the note from all possible locations to prevent duplication
-        deleteNoteFromLocalFiles(noteToSave.getId());
+        // --- Handle moving a note AWAY from the server ---
+        // Before saving locally, check if a note with this ID exists in the server cache.
+        final UUID noteId = noteToSave.getId();
+        boolean wasServerNote = ClientCache.getNotes().stream().anyMatch(n -> n.getId().equals(noteId));
 
-        // Now, save the note to its new correct location
+        if (wasServerNote) {
+            // If it was a server note, its new scope is now local.
+            // We must tell the server to delete its copy.
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeUuid(noteId);
+            ClientPlayNetworking.send(PacketIdentifiers.DELETE_NOTE_C2S, buf);
+        }
+
+        deleteNoteFromLocalFiles(noteId);
+
         Path path = noteToSave.getScope() == Scope.GLOBAL ? getGlobalPath() : getLocalPath();
         Type type = new TypeToken<ArrayList<Note>>() {}.getType();
         List<Note> notes = loadFromFile(path, NOTES_FILE_NAME, type);
@@ -151,8 +169,10 @@ public class DataManager {
 
     public void deleteNote(Note noteToDelete) {
         if (noteToDelete.getScope() == Scope.SERVER) {
-            // TODO: Send C2S_DeleteNotePacket to the server
-            Buildnotes.LOGGER.info("Attempted to delete a SERVER scope note. Networking not yet implemented.");
+            // Send a C2S packet to the server
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeUuid(noteToDelete.getId());
+            ClientPlayNetworking.send(PacketIdentifiers.DELETE_NOTE_C2S, buf);
             return;
         }
         deleteNoteFromLocalFiles(noteToDelete.getId());
@@ -169,11 +189,27 @@ public class DataManager {
 
     public void saveBuild(Build buildToSave) {
         if (buildToSave.getScope() == Scope.SERVER) {
-            // TODO: Send C2S_SaveBuildPacket to the server
-            Buildnotes.LOGGER.info("Attempted to save a SERVER scope build. Networking not yet implemented.");
+            deleteBuildFromLocalFiles(buildToSave.getId());
+
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buildToSave.writeToBuf(buf);
+            ClientPlayNetworking.send(PacketIdentifiers.SAVE_BUILD_C2S, buf);
             return;
         }
-        deleteBuildFromLocalFiles(buildToSave.getId());
+        // --- Handle moving a build AWAY from the server ---
+        final UUID buildId = buildToSave.getId();
+        boolean wasServerBuild = ClientCache.getBuilds().stream().anyMatch(b -> b.getId().equals(buildId));
+
+        if (wasServerBuild) {
+            // If it was a server build, tell the server to delete its copy.
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeUuid(buildId);
+            ClientPlayNetworking.send(PacketIdentifiers.DELETE_BUILD_C2S, buf);
+        }
+
+        // This is the original logic for saving locally.
+        deleteBuildFromLocalFiles(buildId);
+
         Path path = buildToSave.getScope() == Scope.GLOBAL ? getGlobalPath() : getLocalPath();
         Type type = new TypeToken<ArrayList<Build>>() {}.getType();
         List<Build> builds = loadFromFile(path, BUILDS_FILE_NAME, type);
@@ -183,8 +219,10 @@ public class DataManager {
 
     public void deleteBuild(Build buildToDelete) {
         if (buildToDelete.getScope() == Scope.SERVER) {
-            // TODO: Send C2S_DeleteBuildPacket to the server
-            Buildnotes.LOGGER.info("Attempted to delete a SERVER scope build. Networking not yet implemented.");
+            // Send a C2S packet to the server
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeUuid(buildToDelete.getId());
+            ClientPlayNetworking.send(PacketIdentifiers.DELETE_BUILD_C2S, buf);
             return;
         }
         deleteBuildFromLocalFiles(buildToDelete.getId());
