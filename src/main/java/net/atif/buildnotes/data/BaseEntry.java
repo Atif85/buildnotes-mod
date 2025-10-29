@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public abstract class BaseEntry {
 
-    private final UUID id;
+    private UUID id;
     private long lastModified;
     private Scope scope;
 

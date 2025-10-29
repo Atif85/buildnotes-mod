@@ -4,7 +4,7 @@
 	"version": "${version}",
 
 	"name": "Build Notes ",
-	"description": "An in-game mod for tracking projects, builds, and other important information.",
+	"description": "An in-game mod for tracking projects, builds, and creating notes.",
 
 	"authors": [
 		"Atif"
@@ -12,7 +12,7 @@
 
 	"contact": {
 		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/Atif85/buildnotes-mod"
 	},
 
 	"license": "MIT",
@@ -35,8 +35,7 @@
 		"fabricloader": ">=0.17.3",
 		"minecraft": "~1.18.2",
 		"java": ">=17",
-		"fabric-api": "*",
-        "cloth-config": ">=6.5.133"
+		"fabric-api": "*"
 	},
 	"suggests": {}
 }
