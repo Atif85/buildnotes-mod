@@ -1,6 +1,8 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.atif.buildnotes.Buildnotes;
+import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
@@ -24,17 +26,19 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ViewBuildScreen extends ScrollableScreen {
 
     private final Build build;
 
-    private record ImageData(Identifier textureId, int width, int height) {
-    }
-
+    private record ImageData(Identifier textureId, int width, int height) {}
     private int currentImageIndex = 0;
     private final Map<String, ImageData> textureCache = new HashMap<>();
+    private final Set<String> downloadingImages = new HashSet<>();
+
     private DarkButtonWidget prevImageButton;
     private DarkButtonWidget nextImageButton;
 
@@ -165,91 +169,95 @@ public class ViewBuildScreen extends ScrollableScreen {
         }
     }
 
-    @Override
-    protected void renderContent(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        int contentWidth = (int) (this.width * 0.6);
-        int contentX = (this.width - contentWidth) / 2;
-        int yPos = getTopMargin();
+        @Override
+        protected void renderContent(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+            int contentWidth = (int) (this.width * 0.6);
+            int contentX = (this.width - contentWidth) / 2;
+            int yPos = getTopMargin();
 
-        final int panelSpacing = 5;
-        final int labelHeight = 12;
+            final int panelSpacing = 5;
+            final int labelHeight = 12;
 
-        // --- TITLE ---
-        int titlePanelHeight = 25;
-        fill(matrices, contentX, yPos, contentX + contentWidth, yPos + titlePanelHeight, 0x77000000);
-        yPos += titlePanelHeight + panelSpacing;
+            // --- TITLE ---
+            int titlePanelHeight = 25;
+            fill(matrices, contentX, yPos, contentX + contentWidth, yPos + titlePanelHeight, 0x77000000);
+            yPos += titlePanelHeight + panelSpacing;
 
-        // --- COORDS & DIMENSION ---
-        int smallFieldHeight = 20;
-        int fieldWidth = (contentWidth - panelSpacing) / 2;
+            // --- COORDS & DIMENSION ---
+            int smallFieldHeight = 20;
+            int fieldWidth = (contentWidth - panelSpacing) / 2;
 
-        // Backgrounds and Labels only
-        UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
-        this.textRenderer.draw(matrices, new LiteralText("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            // Backgrounds and Labels only
+            UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
+            this.textRenderer.draw(matrices, new LiteralText("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
 
-        int dimensionX = contentX + fieldWidth + panelSpacing;
-        UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
-        this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
-        yPos += smallFieldHeight + panelSpacing;
+            int dimensionX = contentX + fieldWidth + panelSpacing;
+            UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
+            this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            yPos += smallFieldHeight + panelSpacing;
 
-        if (!build.getImageFileNames().isEmpty()) {
-            int galleryBoxHeight = (int) (contentWidth * (9.0 / 16.0));
-            fill(matrices, contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
+            if (!build.getImageFileNames().isEmpty()) {
+                int galleryBoxHeight = (int) (contentWidth * (9.0 / 16.0));
+                fill(matrices, contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
 
-            ImageData data = getImageDataForCurrentImage();
-            if (data != null && data.textureId != null) {
-                RenderSystem.setShaderTexture(0, data.textureId);
-                RenderSystem.enableBlend();
-
-                // --- ASPECT RATIO LOGIC ---
-                int boxWidth = contentWidth - 4;
-                int boxHeight = galleryBoxHeight - 4;
-                float imageAspect = (float) data.width / (float) data.height;
-                float boxAspect = (float) boxWidth / (float) boxHeight;
-
-                int renderWidth = boxWidth;
-                int renderHeight = boxHeight;
-
-                if (imageAspect > boxAspect) {
-                    renderHeight = (int) (boxWidth / imageAspect);
+                String currentImageName = build.getImageFileNames().get(currentImageIndex);
+                if (downloadingImages.contains(currentImageName)) {
+                    drawCenteredText(matrices, textRenderer, new LiteralText("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                 } else {
-                    renderWidth = (int) (boxHeight * imageAspect);
+                    ImageData data = getImageDataForCurrentImage();
+                    if (data != null && data.textureId != null) {
+                        RenderSystem.setShaderTexture(0, data.textureId);
+                        RenderSystem.enableBlend();
+
+                        // --- ASPECT RATIO LOGIC ---
+                        int boxWidth = contentWidth - 4;
+                        int boxHeight = galleryBoxHeight - 4;
+                        float imageAspect = (float) data.width / (float) data.height;
+                        float boxAspect = (float) boxWidth / (float) boxHeight;
+
+                        int renderWidth = boxWidth;
+                        int renderHeight = boxHeight;
+
+                        if (imageAspect > boxAspect) {
+                            renderHeight = (int) (boxWidth / imageAspect);
+                        } else {
+                            renderWidth = (int) (boxHeight * imageAspect);
+                        }
+
+                        int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
+                        int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
+
+                        DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
+                        RenderSystem.disableBlend();
+                    } else {
+                        drawCenteredText(matrices, textRenderer, new LiteralText("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                    }
                 }
+                String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
+                int counterWidth = textRenderer.getWidth(counter);
+                textRenderer.draw(matrices, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF);
 
-                int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
-                int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
-
-                DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
-                RenderSystem.disableBlend();
-            } else {
-                drawCenteredText(matrices, textRenderer, new LiteralText("Error loading image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                yPos += galleryBoxHeight + panelSpacing;
             }
 
-            String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
-            int counterWidth = textRenderer.getWidth(counter);
-            textRenderer.draw(matrices, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF);
+            // --- DYNAMIC CONTENT ---
+            int descriptionHeight = 80;
+            this.textRenderer.draw(matrices, new LiteralText("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+            fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + descriptionHeight, 0x77000000);
+            yPos += descriptionHeight + labelHeight + panelSpacing;
 
-            yPos += galleryBoxHeight + panelSpacing;
+            int creditsHeight = 40;
+            this.textRenderer.draw(matrices, new LiteralText("Credits:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+            fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + creditsHeight, 0x77000000);
+            yPos += creditsHeight + labelHeight + panelSpacing;
+
+            for (CustomField field : build.getCustomFields()) {
+                int fieldHeight = 40;
+                this.textRenderer.draw(matrices, new LiteralText(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+                fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + fieldHeight, 0x77000000);
+                yPos += fieldHeight + labelHeight + panelSpacing;
+            }
         }
-
-        // --- DYNAMIC CONTENT ---
-        int descriptionHeight = 80;
-        this.textRenderer.draw(matrices, new LiteralText("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
-        fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + descriptionHeight, 0x77000000);
-        yPos += descriptionHeight + labelHeight + panelSpacing;
-
-        int creditsHeight = 40;
-        this.textRenderer.draw(matrices, new LiteralText("Credits:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
-        fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + creditsHeight, 0x77000000);
-        yPos += creditsHeight + labelHeight + panelSpacing;
-
-        for (CustomField field : build.getCustomFields()) {
-            int fieldHeight = 40;
-            this.textRenderer.draw(matrices, new LiteralText(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
-            fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + fieldHeight, 0x77000000);
-            yPos += fieldHeight + labelHeight + panelSpacing;
-        }
-    }
 
 
     private void switchImage(int direction) {
@@ -294,6 +302,19 @@ public class ViewBuildScreen extends ScrollableScreen {
                     textureCache.put(fileName, data);
                     return data;
                 }
+            } else {
+                // Image does NOT exist, request it from the server
+                if (!downloadingImages.contains(fileName)) {
+                    Buildnotes.LOGGER.info("[CLIENT LOG 1] Local image not found for '{}'. Requesting from server.", fileName);
+                    downloadingImages.add(fileName);
+                    ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
+                        // This is the CALLBACK! It runs when the download is finished.
+                        this.client.execute(() -> {
+                            downloadingImages.remove(fileName);
+                        });
+                    });
+                }
+                return null; // Return null to signal that it's loading
             }
         } catch (Exception e) {
             textureCache.put(fileName, null); // Cache failure
@@ -307,6 +328,10 @@ public class ViewBuildScreen extends ScrollableScreen {
             this.close();
         };
         this.showConfirm(new LiteralText("Delete build \"" + build.getName() + "\"?"), onConfirm);
+    }
+
+    private void rebuild() {
+        this.open(new ViewBuildScreen(this.parent, this.build));
     }
 
     @Override

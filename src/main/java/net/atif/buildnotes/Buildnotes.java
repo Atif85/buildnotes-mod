@@ -6,6 +6,7 @@ import net.atif.buildnotes.network.PacketIdentifiers;
 import net.atif.buildnotes.network.ServerPacketHandler;
 import net.atif.buildnotes.server.PermissionManager;
 import net.atif.buildnotes.server.ServerDataManager;
+import net.atif.buildnotes.server.ServerImageTransferManager;
 import net.atif.buildnotes.server.command.BuildNotesCommands;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -57,12 +58,19 @@ public class Buildnotes implements ModInitializer {
             LOGGER.info("Sent handshake packet to " + player.getName().getString());
         });
 
+        // Register the disconnect event for cleaning up image transfers
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            ServerImageTransferManager.onPlayerDisconnect(handler.player.getUuid());
+        });
+
         // Register C2S packet handlers
         ServerPlayNetworking.registerGlobalReceiver(PacketIdentifiers.REQUEST_DATA_C2S, ServerPacketHandler::handleRequestInitialData);
         ServerPlayNetworking.registerGlobalReceiver(PacketIdentifiers.SAVE_NOTE_C2S, ServerPacketHandler::handleSaveNote);
-        // ADDED: Register handlers for other actions
+        // Register handlers for other actions
         ServerPlayNetworking.registerGlobalReceiver(PacketIdentifiers.SAVE_BUILD_C2S, ServerPacketHandler::handleSaveBuild);
         ServerPlayNetworking.registerGlobalReceiver(PacketIdentifiers.DELETE_NOTE_C2S, ServerPacketHandler::handleDeleteNote);
         ServerPlayNetworking.registerGlobalReceiver(PacketIdentifiers.DELETE_BUILD_C2S, ServerPacketHandler::handleDeleteBuild);
+        ServerPlayNetworking.registerGlobalReceiver(PacketIdentifiers.UPLOAD_IMAGE_CHUNK_C2S, ServerPacketHandler::handleImageChunkUpload);
+        ServerPlayNetworking.registerGlobalReceiver(PacketIdentifiers.REQUEST_IMAGE_C2S, ServerPacketHandler::handleImageRequest);
     }
 }

@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientCache;
+import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.network.PacketIdentifiers;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
@@ -69,6 +70,13 @@ public class DataManager {
         return spPath != null ? spPath : getPerServerPath();
     }
 
+    private Path getLocalImagePath(UUID buildId) {
+        return FabricLoader.getInstance().getConfigDir()
+                .resolve(MOD_DATA_SUBFOLDER)
+                .resolve("images")
+                .resolve(buildId.toString());
+    }
+
     // --- Generic Load/Write Methods ---
     private <T> List<T> loadFromFile(Path path, String fileName, Type type) {
         if (path == null) return new ArrayList<>();
@@ -78,7 +86,7 @@ public class DataManager {
             List<T> loadedData = GSON.fromJson(reader, type);
             return loadedData != null ? loadedData : new ArrayList<>();
         } catch (IOException e) {
-            Buildnotes.LOGGER.warn("Could not load from " + file.getAbsolutePath() + ", creating new list...", e);
+            Buildnotes.LOGGER.warn("Could not load from {}, creating new list...", file.getAbsolutePath(), e);
             return new ArrayList<>();
         }
     }
@@ -90,7 +98,7 @@ public class DataManager {
                 GSON.toJson(data, writer);
             }
         } catch (IOException e) {
-            Buildnotes.LOGGER.error("Could not save to " + path.resolve(fileName).toString(), e);
+            Buildnotes.LOGGER.error("Could not save to {}", path.resolve(fileName), e);
         }
     }
 
@@ -100,7 +108,7 @@ public class DataManager {
         // Delete from Global
         Path globalPath = getGlobalPath();
         List<Note> globalNotes = loadFromFile(globalPath, NOTES_FILE_NAME, new TypeToken<ArrayList<Note>>() {}.getType());
-        if (globalNotes.removeIf(n -> n.getId().equals(id))) {
+        if (globalNotes.removeIf(n -> n .getId().equals(id))) {
             writeToFile(globalNotes, globalPath, NOTES_FILE_NAME);
         }
         // Delete from World/Per-Server
@@ -189,8 +197,26 @@ public class DataManager {
 
     public void saveBuild(Build buildToSave) {
         if (buildToSave.getScope() == Scope.SERVER) {
+            // 1. Delete any local copies to handle scope changes
             deleteBuildFromLocalFiles(buildToSave.getId());
 
+            // 2. Identify which of the build's images exist locally and need to be uploaded.
+            List<Path> imagesToUpload = new ArrayList<>();
+            // Use the new helper method to get the directory for this build's images
+            Path imageDir = getLocalImagePath(buildToSave.getId());
+            for (String filename : buildToSave.getImageFileNames()) {
+                Path localPath = imageDir.resolve(filename);
+                if (Files.exists(localPath)) {
+                    imagesToUpload.add(localPath);
+                }
+                }
+
+            // 3. Schedule them for upload. The Transfer Manager will handle the background process.
+            if (!imagesToUpload.isEmpty()) {
+                ClientImageTransferManager.scheduleUploads(buildToSave.getId(), imagesToUpload);
+            }
+
+            // 4. Send the main build metadata packet immediately.
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
             buildToSave.writeToBuf(buf);
             ClientPlayNetworking.send(PacketIdentifiers.SAVE_BUILD_C2S, buf);

@@ -5,6 +5,7 @@ import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.server.ServerDataManager;
+import net.atif.buildnotes.server.ServerImageTransferManager;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
@@ -43,10 +44,10 @@ public class ServerPacketHandler {
             Buildnotes.SERVER_DATA_MANAGER.saveNote(receivedNote);
 
             // Broadcast the update to all players
-            PacketByteBuf responseBuf = new PacketByteBuf(Unpooled.buffer());
-            receivedNote.writeToBuf(responseBuf);
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                ServerPlayNetworking.send(p, PacketIdentifiers.UPDATE_NOTE_S2C, responseBuf);
+                PacketByteBuf copy = new PacketByteBuf(Unpooled.buffer());
+                receivedNote.writeToBuf(copy);
+                ServerPlayNetworking.send(p, PacketIdentifiers.UPDATE_NOTE_S2C, copy);
             }
         });
     }
@@ -59,10 +60,10 @@ public class ServerPacketHandler {
 
             Buildnotes.SERVER_DATA_MANAGER.saveBuild(receivedBuild);
 
-            PacketByteBuf responseBuf = new PacketByteBuf(Unpooled.buffer());
-            receivedBuild.writeToBuf(responseBuf);
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                ServerPlayNetworking.send(p, PacketIdentifiers.UPDATE_BUILD_S2C, responseBuf);
+                PacketByteBuf copy = new PacketByteBuf(Unpooled.buffer());
+                receivedBuild.writeToBuf(copy);
+                ServerPlayNetworking.send(p, PacketIdentifiers.UPDATE_BUILD_S2C, copy);
             }
         });
     }
@@ -96,6 +97,27 @@ public class ServerPacketHandler {
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
                 ServerPlayNetworking.send(p, PacketIdentifiers.DELETE_BUILD_S2C, responseBuf);
             }
+        });
+    }
+
+    public static void handleImageChunkUpload(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+        UUID buildId = buf.readUuid();
+        String filename = buf.readString();
+        int totalChunks = buf.readVarInt();
+        int chunkIndex = buf.readVarInt();
+        byte[] data = buf.readByteArray();
+
+        // Must execute on the server thread to ensure thread safety with the map
+        server.execute(() -> ServerImageTransferManager.handleChunk(player, buildId, filename, totalChunks, chunkIndex, data));
+    }
+
+    public static void handleImageRequest(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+        UUID buildId = buf.readUuid();
+        String filename = buf.readString();
+
+        server.execute(() -> {
+            // This now needs to be implemented: a method to read and send an image from the server
+            Buildnotes.SERVER_DATA_MANAGER.sendImageToPlayer(player, buildId, filename);
         });
     }
 }

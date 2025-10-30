@@ -27,7 +27,7 @@ public class EditNoteScreen extends BaseScreen {
     private DarkButtonWidget scopeToggleButton;
 
     public EditNoteScreen(Screen parent, Note note) {
-        super(new TranslatableText("gui.buildnotes.edit_note_title"), parent); // A new translation key could be "Editing Note"
+        super(new TranslatableText("gui.buildnotes.edit_note_title"), parent);
         this.note = note;
     }
 
@@ -50,7 +50,7 @@ public class EditNoteScreen extends BaseScreen {
                 contentWidth,
                 titlePanelHeight,
                 note.getTitle(),
-                "Enter Title Here",
+                new TranslatableText("gui.buildnotes.placeholder.title").getString(),
                 1, false
         );
         this.addSelectableChild(this.titleField);
@@ -61,13 +61,17 @@ public class EditNoteScreen extends BaseScreen {
         this.contentField = new MultiLineTextFieldWidget(
                 this.textRenderer, contentX, contentPanelY, contentWidth,
                 contentPanelBottom - contentPanelY, note.getContent(),
-                "Enter Text Here ", Integer.MAX_VALUE, true
+                new TranslatableText("gui.buildnotes.placeholder.note_content").getString(), Integer.MAX_VALUE, true
         );
         this.addSelectableChild(this.contentField);
 
         // --- TOP BUTTON ROW (3) ---
         int topRowY = this.height - (UIHelper.BUTTON_HEIGHT + UIHelper.BOTTOM_PADDING) - UIHelper.BUTTON_HEIGHT - 5;
-        List<Text> topButtonTexts = List.of(new LiteralText("Coords"), new LiteralText("Biome"), getScopeButtonText());
+        List<Text> topButtonTexts = List.of(
+                new TranslatableText("gui.buildnotes.edit.coords"),
+                new TranslatableText("gui.buildnotes.edit.biome"),
+                getScopeButtonText()
+        );
 
         UIHelper.createBottomButtonRow(this, topRowY, topButtonTexts, (index, x, width) -> { // Note the new 'width' parameter
             switch (index) {
@@ -75,19 +79,20 @@ public class EditNoteScreen extends BaseScreen {
                 case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
                 case 2 -> {
                     this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
+                        saveNote();
                         cycleScope();
-                        // We now just update the button text, no need to rebuild the whole screen
-                        b.setMessage(getScopeButtonText());
-                        // Re-init to recalculate button positions and sizes
                         this.init(this.client, this.width, this.height);
                     }));
                 }
             }
         });
 
-// --- BOTTOM BUTTON ROW ---
+        // --- BOTTOM BUTTON ROW ---
         int bottomRowY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
-        List<Text> bottomButtonTexts = List.of(new LiteralText("Save"), new TranslatableText("gui.buildnotes.close_button"));
+        List<Text> bottomButtonTexts = List.of(
+                new TranslatableText("gui.buildnotes.save_button"),
+                new TranslatableText("gui.buildnotes.close_button")
+        );
         UIHelper.createBottomButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
             if (index == 0) {
                 this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(0), button -> saveNote()));
@@ -112,18 +117,19 @@ public class EditNoteScreen extends BaseScreen {
         }
     }
 
-    private LiteralText getScopeButtonText() {
-        String scopeName;
+    private Text getScopeButtonText() {
+        Text scopeName;
         Scope currentScope = note.getScope();
         if (currentScope == Scope.GLOBAL) {
-            scopeName = "Global";
+            scopeName = new TranslatableText("gui.buildnotes.edit.scope.global");
         } else if (currentScope == Scope.SERVER) {
-            scopeName = "Server (Shared)";
+            scopeName = new TranslatableText("gui.buildnotes.edit.scope.server");
         } else {
-            // For WORLD scope, the name depends on the context
-            scopeName = this.client != null && this.client.isIntegratedServerRunning() ? "World" : "Per-Server";
+            scopeName = this.client != null && this.client.isIntegratedServerRunning()
+                    ? new TranslatableText("gui.buildnotes.edit.scope.world")
+                    : new TranslatableText("gui.buildnotes.edit.scope.per_server");
         }
-        return new LiteralText("Scope: " + scopeName);
+        return new TranslatableText("gui.buildnotes.edit.scope_button", scopeName);
     }
 
     private void saveNote() {
@@ -169,8 +175,7 @@ public class EditNoteScreen extends BaseScreen {
         this.contentField.render(matrices, mouseX, mouseY, delta);
 
         // Draw screen title
-        drawCenteredText(matrices, this.textRenderer, new LiteralText("Editing Note"), this.width / 2, 8, 0xFFFFFF);
-
+        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
         super.render(matrices, mouseX, mouseY, delta);
     }
 

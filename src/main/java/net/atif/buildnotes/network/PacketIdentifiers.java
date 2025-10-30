@@ -20,12 +20,9 @@ public class PacketIdentifiers {
     public static final Identifier DELETE_NOTE_C2S = new Identifier(Buildnotes.MOD_ID, "delete_note_c2s");
     public static final Identifier DELETE_BUILD_C2S = new Identifier(Buildnotes.MOD_ID, "delete_build_c2s");
 
-
     // Image Transfer Packets
-    // Client to Server: Here is the data for an image I want to save.
-    public static final Identifier UPLOAD_IMAGE_C2S = new Identifier(Buildnotes.MOD_ID, "upload_image_c2s");
-    // Client to Server: I don't have this image, please send it to me.
+    public static final Identifier UPLOAD_IMAGE_CHUNK_C2S = new Identifier(Buildnotes.MOD_ID, "upload_image_chunk_c2s");
     public static final Identifier REQUEST_IMAGE_C2S = new Identifier(Buildnotes.MOD_ID, "request_image_c2s");
-    // Server to Client: Here is the image data you requested.
-    public static final Identifier IMAGE_DATA_S2C = new Identifier(Buildnotes.MOD_ID, "image_data_s2c");
+    public static final Identifier IMAGE_CHUNK_S2C = new Identifier(Buildnotes.MOD_ID, "image_chunk_s2c");
+    public static final Identifier IMAGE_NOT_FOUND_S2C = new Identifier(Buildnotes.MOD_ID, "image_not_found_s2c");
 }

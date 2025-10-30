@@ -141,12 +141,6 @@ public class MainScreen extends BaseScreen {
 
         refreshListContents();
 
-        if (isNotes) {
-            noteListWidget.setNotes(DataManager.getInstance().getNotes());
-        } else {
-            buildListWidget.setBuilds(DataManager.getInstance().getBuilds());
-        }
-
         updateActionButtons();
     }
 

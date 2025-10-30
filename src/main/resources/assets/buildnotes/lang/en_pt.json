@@ -1,0 +1,53 @@
+{
+  "key.buildnotes.opengui": "Open the Captain's Log",
+  "category.buildnotes.main": "Captain's Log",
+
+  "gui.buildnotes.main_title": "The Captain's Log",
+  "gui.buildnotes.notes_tab": "Scrawlin's",
+  "gui.buildnotes.builds_tab": "Creations",
+
+  "gui.buildnotes.add_button": "Add a Tale",
+  "gui.buildnotes.edit_button": "Mend Yer Words",
+  "gui.buildnotes.delete_button": "Scuttle It",
+  "gui.buildnotes.open_button": "Lay Eyes On",
+  "gui.buildnotes.close_button": "Batten Down",
+  "gui.buildnotes.save_button": "Stash the Goods",
+  "gui.buildnotes.cancel_button": "Belay That",
+  "gui.buildnotes.confirm_button": "Aye!",
+
+  "gui.buildnotes.edit_note_title": "Mendin' a Scrawlin'",
+  "gui.buildnotes.edit_build_title": "Improvin' a Creation",
+
+  "gui.buildnotes.edit.coords": "X Marks the Spot",
+  "gui.buildnotes.edit.dimension": "Realm",
+  "gui.buildnotes.edit.biome": "Climate",
+  "gui.buildnotes.edit.add_images": "Add Portraits",
+  "gui.buildnotes.edit.add_field": "Add a Detail",
+  "gui.buildnotes.edit.remove_field": "X",
+  "gui.buildnotes.edit.scope_button": "Reach: %s",
+  "gui.buildnotes.edit.scope.global": "The Seven Seas",
+  "gui.buildnotes.edit.scope.server": "Ship's Crew (Shared)",
+  "gui.buildnotes.edit.scope.world": "This Land",
+  "gui.buildnotes.edit.scope.per_server": "Per Ship",
+
+  "gui.buildnotes.placeholder.title": "Give it a Name, Matey",
+  "gui.buildnotes.placeholder.note_content": "Scribe Yer Tale Here",
+  "gui.buildnotes.placeholder.build_name": "Creation's Name",
+  "gui.buildnotes.placeholder.coords": "X, Y, Z",
+  "gui.buildnotes.placeholder.dimension": "e.g., minecraft:the_high_seas",
+  "gui.buildnotes.placeholder.description": "Creation's Legend",
+  "gui.buildnotes.placeholder.credits": "Master Builder",
+
+  "gui.buildnotes.gallery.previous": "<",
+  "gui.buildnotes.gallery.next": ">",
+  "gui.buildnotes.gallery.delete": "X",
+  "gui.buildnotes.gallery.loading": "Loadin' portrait...",
+  "gui.buildnotes.gallery.error": "Arr! Portrait be lost at sea",
+
+  "gui.buildnotes.label.coords": "Spot:",
+  "gui.buildnotes.label.dimension": "Realm:",
+  "gui.buildnotes.label.description": "The Legend:",
+  "gui.buildnotes.label.credits": "Master Builder:",
+
+  "gui.buildnotes.prompt.field_title": "Name this Detail"
+}

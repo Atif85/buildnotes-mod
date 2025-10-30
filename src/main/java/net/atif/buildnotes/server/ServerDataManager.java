@@ -3,10 +3,17 @@ package net.atif.buildnotes.server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
+import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.network.NetworkConstants;
+import net.atif.buildnotes.network.PacketIdentifiers;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.WorldSavePath;
 
 import java.io.FileReader;
@@ -18,6 +25,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 // NOTE: This class is SERVER-ONLY. It does not use any client-side classes.
 public class ServerDataManager {
@@ -90,5 +98,53 @@ public class ServerDataManager {
         if (builds.removeIf(b -> b.getId().equals(buildId))) {
             writeToFile(BUILDS_FILE_NAME, builds);
         }
+    }
+
+    public Path getImageStoragePath(UUID buildId) {
+        return this.storagePath.resolve("images").resolve(buildId.toString());
+    }
+
+    // The logic to read and send an image file
+    public void sendImageToPlayer(ServerPlayerEntity player, UUID buildId, String filename) {
+        // Read the file off-thread but schedule actual packet sends on the server thread.
+        CompletableFuture.runAsync(() -> {
+            Path imagePath = getImageStoragePath(buildId).resolve(filename);
+            if (Files.notExists(imagePath)) {
+                Buildnotes.LOGGER.warn("Player {} requested non-existent image '{}' for build {}", player.getName().getString(), filename, buildId);
+
+                // Prepare the packet buffer now, then send on the server thread.
+                PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+                buf.writeUuid(buildId);
+                buf.writeString(filename);
+
+                ServerPlayNetworking.send(player, PacketIdentifiers.IMAGE_NOT_FOUND_S2C, buf);
+
+                return;
+            }
+
+            try {
+                byte[] fullData = Files.readAllBytes(imagePath);
+                int totalChunks = (int) Math.ceil((double) fullData.length / NetworkConstants.CHUNK_SIZE);
+
+                for (int i = 0; i < totalChunks; i++) {
+                    int offset = i * NetworkConstants.CHUNK_SIZE;
+                    int length = Math.min(NetworkConstants.CHUNK_SIZE, fullData.length - offset);
+                    byte[] chunkData = new byte[length];
+                    System.arraycopy(fullData, offset, chunkData, 0, length);
+
+                    PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+                    buf.writeUuid(buildId);
+                    buf.writeString(filename);
+                    buf.writeVarInt(totalChunks);
+                    buf.writeVarInt(i);
+                    buf.writeByteArray(chunkData);
+                    ServerPlayNetworking.send(player, PacketIdentifiers.IMAGE_CHUNK_S2C, buf);
+                }
+                Buildnotes.LOGGER.info("Sent image '{}' ({} chunks) to player {}", filename, totalChunks, player.getName().getString());
+
+            } catch (IOException e) {
+                Buildnotes.LOGGER.error("Failed to read and send image {} for build {}", filename, buildId, e);
+            }
+        });
     }
 }

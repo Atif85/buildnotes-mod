@@ -40,6 +40,8 @@ public class BuildnotesClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.UPDATE_BUILD_S2C, ClientPacketHandler::handleUpdateBuild);
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.DELETE_NOTE_S2C, ClientPacketHandler::handleDeleteNote);
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.DELETE_BUILD_S2C, ClientPacketHandler::handleDeleteBuild);
+        ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.IMAGE_CHUNK_S2C, ClientPacketHandler::handleImageChunk);
+        ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.IMAGE_NOT_FOUND_S2C, ClientPacketHandler::handleImageNotFound);
 
         // Register disconnect event to clear server-side cache
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {

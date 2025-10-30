@@ -1,0 +1,53 @@
+{
+  "key.buildnotes.opengui": "打开建筑笔记",
+  "category.buildnotes.main": "建筑笔记",
+
+  "gui.buildnotes.main_title": "建筑笔记",
+  "gui.buildnotes.notes_tab": "笔记",
+  "gui.buildnotes.builds_tab": "建筑",
+
+  "gui.buildnotes.add_button": "添加",
+  "gui.buildnotes.edit_button": "编辑",
+  "gui.buildnotes.delete_button": "删除",
+  "gui.buildnotes.open_button": "打开",
+  "gui.buildnotes.close_button": "关闭",
+  "gui.buildnotes.save_button": "保存",
+  "gui.buildnotes.cancel_button": "取消",
+  "gui.buildnotes.confirm_button": "确认",
+
+  "gui.buildnotes.edit_note_title": "编辑笔记",
+  "gui.buildnotes.edit_build_title": "编辑建筑",
+
+  "gui.buildnotes.edit.coords": "坐标",
+  "gui.buildnotes.edit.dimension": "维度",
+  "gui.buildnotes.edit.biome": "生物群系",
+  "gui.buildnotes.edit.add_images": "添加图片",
+  "gui.buildnotes.edit.add_field": "添加字段",
+  "gui.buildnotes.edit.remove_field": "X",
+  "gui.buildnotes.edit.scope_button": "范围: %s",
+  "gui.buildnotes.edit.scope.global": "全局",
+  "gui.buildnotes.edit.scope.server": "服务器 (共享)",
+  "gui.buildnotes.edit.scope.world": "世界",
+  "gui.buildnotes.edit.scope.per_server": "每个服务器",
+
+  "gui.buildnotes.placeholder.title": "在此输入标题",
+  "gui.buildnotes.placeholder.note_content": "在此输入文本",
+  "gui.buildnotes.placeholder.build_name": "建筑名称",
+  "gui.buildnotes.placeholder.coords": "X, Y, Z",
+  "gui.buildnotes.placeholder.dimension": "例如, minecraft:overworld",
+  "gui.buildnotes.placeholder.description": "建筑描述",
+  "gui.buildnotes.placeholder.credits": "设计者/贡献者",
+
+  "gui.buildnotes.gallery.previous": "<",
+  "gui.buildnotes.gallery.next": ">",
+  "gui.buildnotes.gallery.delete": "X",
+  "gui.buildnotes.gallery.loading": "正在加载图片...",
+  "gui.buildnotes.gallery.error": "加载图片出错",
+
+  "gui.buildnotes.label.coords": "坐标:",
+  "gui.buildnotes.label.dimension": "维度:",
+  "gui.buildnotes.label.description": "描述:",
+  "gui.buildnotes.label.credits": "设计者/贡献者:",
+
+  "gui.buildnotes.prompt.field_title": "输入字段标题"
+}
