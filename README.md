@@ -2,7 +2,7 @@
 
 A lightweight in-game notetaking and build tracking mod for Minecraft, built for the Fabric loader. BuildNotes provides a seamless way to document your ideas, track build progress, and share information without ever leaving the game. It works in singleplayer and can be installed on a server for shared, collaborative notes.
 
-![Screenshot Placeholder]()
+<img width="1280" height="1024" alt="2025-10-26_20 15 54" src="https://github.com/user-attachments/assets/515a8fd0-9d3f-470d-a823-41273c9bcd24" />
 
 ## Features
 
@@ -41,18 +41,21 @@ When installed on a Fabric server, BuildNotes offers a complete permission syste
 
 ## Screenshots
 
-| Main Screen | Note Editor | Build Editor |
-| :---: | :---: | :---: |
-| ![Main Screen]() | ![Note Editor]() | ![Build Editor]() |
+**Main Screen**
+<img width="1280" height="1024" alt="2025-10-26_20 15 54" src="https://github.com/user-attachments/assets/1df3da2d-43d0-45df-b5e0-0afe665e7ce8" />
 
+**Note Editor**
+ <img width="1280" height="1024" alt="2025-10-26_20 15 43" src="https://github.com/user-attachments/assets/03031642-37ef-4fb0-aee5-58279ac3eb20" />
+
+**Build Editor**
+ <img width="1280" height="1024" alt="2025-10-26_20 15 14" src="https://github.com/user-attachments/assets/a66f3033-e3f6-41c2-b0cb-657365f6a654" />
 
 ## Download
 
 You can download the latest version of BuildNotes from:
 
-*   **[Modrinth (Link Here)]**
-*   **[CurseForge (Link Here)]**
-
+*   **[[Modrinth](https://modrinth.com/mod/buildnotes)]**
+*   **[[CurseForge](https://www.curseforge.com/minecraft/mc-mods/buildnotes)]**
 
 ## Dependencies
 
