@@ -7,8 +7,7 @@ import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 public class ViewNoteScreen extends BaseScreen {
 
@@ -18,7 +17,7 @@ public class ViewNoteScreen extends BaseScreen {
     private ReadOnlyMultiLineTextFieldWidget contentArea;
 
     public ViewNoteScreen(Screen parent, Note note) {
-        super(new LiteralText(note.getTitle()), parent);
+        super(Text.translatable(note.getTitle()), parent);
         this.note = note;
     }
 
@@ -31,11 +30,11 @@ public class ViewNoteScreen extends BaseScreen {
             int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (idx) {
                 case 0 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.delete_button"), button -> confirmDelete()));
+                        Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete()));
                 case 1 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditNoteScreen(this.parent, this.note))));
+                        Text.translatable("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditNoteScreen(this.parent, this.note))));
                 case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
+                        Text.translatable("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
             }
         });
 
@@ -82,7 +81,7 @@ public class ViewNoteScreen extends BaseScreen {
             DataManager.getInstance().deleteNote(this.note);
             this.close();
         };
-        UIHelper.showConfirmDialog(this, new LiteralText("Delete note \"" + note.getTitle() + "\"?"), onConfirm);
+        UIHelper.showConfirmDialog(this, Text.translatable("Delete note \"" + note.getTitle() + "\"?"), onConfirm);
     }
 
     @Override

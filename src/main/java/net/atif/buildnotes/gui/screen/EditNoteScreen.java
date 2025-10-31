@@ -7,12 +7,9 @@ import net.atif.buildnotes.data.Scope;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
-
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 
@@ -27,7 +24,7 @@ public class EditNoteScreen extends BaseScreen {
     private DarkButtonWidget scopeToggleButton;
 
     public EditNoteScreen(Screen parent, Note note) {
-        super(new TranslatableText("gui.buildnotes.edit_note_title"), parent);
+        super(Text.translatable("gui.buildnotes.edit_note_title"), parent);
         this.note = note;
     }
 
@@ -50,7 +47,7 @@ public class EditNoteScreen extends BaseScreen {
                 contentWidth,
                 titlePanelHeight,
                 note.getTitle(),
-                new TranslatableText("gui.buildnotes.placeholder.title").getString(),
+                Text.translatable("gui.buildnotes.placeholder.title").getString(),
                 1, false
         );
         this.addSelectableChild(this.titleField);
@@ -61,15 +58,15 @@ public class EditNoteScreen extends BaseScreen {
         this.contentField = new MultiLineTextFieldWidget(
                 this.textRenderer, contentX, contentPanelY, contentWidth,
                 contentPanelBottom - contentPanelY, note.getContent(),
-                new TranslatableText("gui.buildnotes.placeholder.note_content").getString(), Integer.MAX_VALUE, true
+                Text.translatable("gui.buildnotes.placeholder.note_content").getString(), Integer.MAX_VALUE, true
         );
         this.addSelectableChild(this.contentField);
 
         // --- TOP BUTTON ROW (3) ---
         int topRowY = this.height - (UIHelper.BUTTON_HEIGHT + UIHelper.BOTTOM_PADDING) - UIHelper.BUTTON_HEIGHT - 5;
         List<Text> topButtonTexts = List.of(
-                new TranslatableText("gui.buildnotes.edit.coords"),
-                new TranslatableText("gui.buildnotes.edit.biome"),
+                Text.translatable("gui.buildnotes.edit.coords"),
+                Text.translatable("gui.buildnotes.edit.biome"),
                 getScopeButtonText()
         );
 
@@ -90,8 +87,8 @@ public class EditNoteScreen extends BaseScreen {
         // --- BOTTOM BUTTON ROW ---
         int bottomRowY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
         List<Text> bottomButtonTexts = List.of(
-                new TranslatableText("gui.buildnotes.save_button"),
-                new TranslatableText("gui.buildnotes.close_button")
+                Text.translatable("gui.buildnotes.save_button"),
+                Text.translatable("gui.buildnotes.close_button")
         );
         UIHelper.createBottomButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
             if (index == 0) {
@@ -121,15 +118,15 @@ public class EditNoteScreen extends BaseScreen {
         Text scopeName;
         Scope currentScope = note.getScope();
         if (currentScope == Scope.GLOBAL) {
-            scopeName = new TranslatableText("gui.buildnotes.edit.scope.global");
+            scopeName = Text.translatable("gui.buildnotes.edit.scope.global");
         } else if (currentScope == Scope.SERVER) {
-            scopeName = new TranslatableText("gui.buildnotes.edit.scope.server");
+            scopeName = Text.translatable("gui.buildnotes.edit.scope.server");
         } else {
             scopeName = this.client != null && this.client.isIntegratedServerRunning()
-                    ? new TranslatableText("gui.buildnotes.edit.scope.world")
-                    : new TranslatableText("gui.buildnotes.edit.scope.per_server");
+                    ? Text.translatable("gui.buildnotes.edit.scope.world")
+                    : Text.translatable("gui.buildnotes.edit.scope.per_server");
         }
-        return new TranslatableText("gui.buildnotes.edit.scope_button", scopeName);
+        return Text.translatable("gui.buildnotes.edit.scope_button", scopeName);
     }
 
     private void saveNote() {

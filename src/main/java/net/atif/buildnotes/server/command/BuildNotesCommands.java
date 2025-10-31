@@ -7,20 +7,23 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.server.PermissionEntry;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class BuildNotesCommands {
 
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             register(dispatcher);
         });
     }
@@ -60,12 +63,12 @@ public class BuildNotesCommands {
 
         // Report successfully added players
         if (!addedPlayers.isEmpty()) {
-            source.sendFeedback(new LiteralText("Added ").append(new LiteralText(String.join(", ", addedPlayers)).formatted(Formatting.GREEN)).append(" to the BuildNotes editor list."), true);
+            source.sendFeedback(Text.literal("Added ").append(Text.literal(String.join(", ", addedPlayers)).formatted(Formatting.GREEN)).append(" to the BuildNotes editor list."), true);
         }
 
         // Report players who were already on the list
         if (!alreadyAllowedPlayers.isEmpty()) {
-            source.sendError(new LiteralText(String.join(", ", alreadyAllowedPlayers) + " were already on the list."));
+            source.sendError(Text.literal(String.join(", ", alreadyAllowedPlayers) + " were already on the list."));
         }
 
         return addedPlayers.size();
@@ -88,12 +91,12 @@ public class BuildNotesCommands {
 
         // Report successfully removed players
         if (!removedPlayers.isEmpty()) {
-            source.sendFeedback(new LiteralText("Removed ").append(new LiteralText(String.join(", ", removedPlayers)).formatted(Formatting.RED)).append(" from the BuildNotes editor list."), true);
+            source.sendFeedback(Text.literal("Removed ").append(Text.literal(String.join(", ", removedPlayers)).formatted(Formatting.RED)).append(" from the BuildNotes editor list."), true);
         }
 
         // Report players who were not on the list to begin with
         if (!notOnListPlayers.isEmpty()) {
-            source.sendError(new LiteralText(String.join(", ", notOnListPlayers) + " were not on the list."));
+            source.sendError(Text.literal(String.join(", ", notOnListPlayers) + " were not on the list."));
         }
 
         return removedPlayers.size();
@@ -104,13 +107,13 @@ public class BuildNotesCommands {
 
         boolean allowAll = Buildnotes.PERMISSION_MANAGER.getAllowAll();
         if (allowAll) {
-            source.sendFeedback(new LiteralText("Note: 'allow_all' is currently TRUE. All players can edit.").formatted(Formatting.GOLD), false);
+            source.sendFeedback(Text.literal("Note: 'allow_all' is currently TRUE. All players can edit.").formatted(Formatting.GOLD), false);
         }
 
         Set<PermissionEntry> allowedPlayers = Buildnotes.PERMISSION_MANAGER.getAllowedPlayers();
 
         if (allowedPlayers.isEmpty()) {
-            source.sendFeedback(new LiteralText("There are no players on the BuildNotes editor list."), false);
+            source.sendFeedback(Text.literal("There are no players on the BuildNotes editor list."), false);
             return 1;
         }
 
@@ -118,7 +121,7 @@ public class BuildNotesCommands {
                 .map(PermissionEntry::getName)
                 .collect(Collectors.joining(", "));
 
-        source.sendFeedback(new LiteralText("BuildNotes Editors: ").formatted(Formatting.YELLOW).append(new LiteralText(playerNames)), false);
+        source.sendFeedback(Text.literal("BuildNotes Editors: ").formatted(Formatting.YELLOW).append(Text.literal(playerNames)), false);
         return allowedPlayers.size();
     }
 
@@ -129,9 +132,9 @@ public class BuildNotesCommands {
         Buildnotes.PERMISSION_MANAGER.setAllowAll(enabled);
 
         if (enabled) {
-            source.sendFeedback(new LiteralText("All players can now edit BuildNotes.").formatted(Formatting.GREEN), true);
+            source.sendFeedback(Text.literal("All players can now edit BuildNotes.").formatted(Formatting.GREEN), true);
         } else {
-            source.sendFeedback(new LiteralText("Only players on the list (and OPs) can edit BuildNotes.").formatted(Formatting.RED), true);
+            source.sendFeedback(Text.literal("Only players on the list (and OPs) can edit BuildNotes.").formatted(Formatting.RED), true);
         }
         return 1;
     }

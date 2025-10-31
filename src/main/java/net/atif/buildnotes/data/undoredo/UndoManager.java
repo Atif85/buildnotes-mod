@@ -35,11 +35,11 @@ public class UndoManager {
         if (!undoStack.isEmpty()) {
             UndoableAction undoableAction = undoStack.pop();
             redoStack.push(undoableAction);
-            undoableAction.action.undo();
+            undoableAction.action().undo();
 
             // Restore the previous cursor/selection state
-            widget.setCursorFromAbsolute(undoableAction.cursorBefore);
-            widget.setSelectionAbsolute(undoableAction.selectionStartBefore, undoableAction.selectionEndBefore);
+            widget.setCursorFromAbsolute(undoableAction.cursorBefore());
+            widget.setSelectionAbsolute(undoableAction.selectionStartBefore(), undoableAction.selectionEndBefore());
         }
     }
 
@@ -50,7 +50,7 @@ public class UndoManager {
         if (!redoStack.isEmpty()) {
             UndoableAction undoableAction = redoStack.pop();
             undoStack.push(undoableAction);
-            undoableAction.action.execute();
+            undoableAction.action().execute();
         }
     }
 }

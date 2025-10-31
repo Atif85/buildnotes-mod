@@ -2,22 +2,21 @@ package net.atif.buildnotes.client;
 
 import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.data.PermissionLevel;
-import net.atif.buildnotes.gui.screen.MainScreen;
 import net.atif.buildnotes.data.TabType;
+import net.atif.buildnotes.gui.screen.MainScreen;
 import net.atif.buildnotes.network.ClientPacketHandler;
 import net.atif.buildnotes.network.PacketIdentifiers;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.PacketByteBuf;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.PacketByteBuf;
 
 @Environment(EnvType.CLIENT)
 public class BuildnotesClient implements ClientModInitializer {

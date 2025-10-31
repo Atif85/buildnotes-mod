@@ -2,20 +2,17 @@ package net.atif.buildnotes.gui.widget.list;
 
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.screen.MainScreen;
-import net.atif.buildnotes.data.Scope;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.List;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry> {
 
@@ -72,9 +69,9 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             client.textRenderer.draw(matrices, note.getTitle(), x + 2, y + 2, 0xFFFFFF);
 
             // Content Preview
-            Text contentPreview = new LiteralText(firstLine).formatted(Formatting.GRAY);
+            Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
             String truncated = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
-            client.textRenderer.draw(matrices, new LiteralText(truncated), x + 2, y + 12, 0xCCCCCC);
+            client.textRenderer.draw(matrices, Text.literal(truncated), x + 2, y + 12, 0xCCCCCC);
 
             // Date/Time with new label
             client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
@@ -82,8 +79,8 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             Text scopeText = null;
             if (note.getScope() != null) { // Add null check for safety
                 switch (note.getScope()) {
-                    case GLOBAL -> scopeText = new LiteralText("Global").formatted(Formatting.AQUA);
-                    case SERVER -> scopeText = new LiteralText("Server").formatted(Formatting.GREEN);
+                    case GLOBAL -> scopeText = Text.literal("Global").formatted(Formatting.AQUA);
+                    case SERVER -> scopeText = Text.literal("Server").formatted(Formatting.GREEN);
                     // We don't draw an indicator for WORLD scope to keep the UI clean
                 }
             }

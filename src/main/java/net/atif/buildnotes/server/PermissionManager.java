@@ -1,10 +1,6 @@
 package net.atif.buildnotes.server;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import net.atif.buildnotes.Buildnotes;
@@ -19,8 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 // NOTE: This class is SERVER-ONLY
 public class PermissionManager {

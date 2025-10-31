@@ -6,19 +6,16 @@ import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
-import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
-
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
@@ -43,7 +40,7 @@ public class ViewBuildScreen extends ScrollableScreen {
     private DarkButtonWidget nextImageButton;
 
     public ViewBuildScreen(Screen parent, Build build) {
-        super(new LiteralText(build.getName()), parent);
+        super(Text.literal(build.getName()), parent);
         this.build = build;
     }
 
@@ -146,11 +143,11 @@ public class ViewBuildScreen extends ScrollableScreen {
             int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (idx) {
                 case 0 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.delete_button"), button -> confirmDelete()));
+                        Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete()));
                 case 1 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.edit_button"), button -> open(new EditBuildScreen(this.parent, this.build))));
+                        Text.translatable("gui.buildnotes.edit_button"), button -> open(new EditBuildScreen(this.parent, this.build))));
                 case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.close_button"), button -> this.open(this.parent)));
+                        Text.translatable("gui.buildnotes.close_button"), button -> this.open(this.parent)));
             }
         });
 
@@ -161,8 +158,8 @@ public class ViewBuildScreen extends ScrollableScreen {
             int galleryY = getTopMargin() + 25 + 5 + 20 + 5; // Y pos after title and coords
             int navButtonY = galleryY + (galleryHeight - 20) / 2;
 
-            prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, new LiteralText("<"), b -> switchImage(-1));
-            nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, new LiteralText(">"), b -> switchImage(1));
+            prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, Text.literal("<"), b -> switchImage(-1));
+            nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, Text.literal(">"), b -> switchImage(1));
             addScrollableWidget(prevImageButton);
             addScrollableWidget(nextImageButton);
             updateNavButtons();
@@ -189,11 +186,11 @@ public class ViewBuildScreen extends ScrollableScreen {
 
             // Backgrounds and Labels only
             UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
-            this.textRenderer.draw(matrices, new LiteralText("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            this.textRenderer.draw(matrices, Text.literal("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
 
             int dimensionX = contentX + fieldWidth + panelSpacing;
             UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
-            this.textRenderer.draw(matrices, new LiteralText("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            this.textRenderer.draw(matrices, Text.literal("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
             yPos += smallFieldHeight + panelSpacing;
 
             if (!build.getImageFileNames().isEmpty()) {
@@ -202,7 +199,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
                 String currentImageName = build.getImageFileNames().get(currentImageIndex);
                 if (downloadingImages.contains(currentImageName)) {
-                    drawCenteredText(matrices, textRenderer, new LiteralText("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                    drawCenteredText(matrices, textRenderer, Text.literal("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                 } else {
                     ImageData data = getImageDataForCurrentImage();
                     if (data != null && data.textureId != null) {
@@ -230,7 +227,7 @@ public class ViewBuildScreen extends ScrollableScreen {
                         DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                         RenderSystem.disableBlend();
                     } else {
-                        drawCenteredText(matrices, textRenderer, new LiteralText("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                        drawCenteredText(matrices, textRenderer, Text.literal("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                     }
                 }
                 String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
@@ -242,18 +239,18 @@ public class ViewBuildScreen extends ScrollableScreen {
 
             // --- DYNAMIC CONTENT ---
             int descriptionHeight = 80;
-            this.textRenderer.draw(matrices, new LiteralText("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+            this.textRenderer.draw(matrices, Text.literal("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
             fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + descriptionHeight, 0x77000000);
             yPos += descriptionHeight + labelHeight + panelSpacing;
 
             int creditsHeight = 40;
-            this.textRenderer.draw(matrices, new LiteralText("Credits:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+            this.textRenderer.draw(matrices, Text.literal("Credits:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
             fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + creditsHeight, 0x77000000);
             yPos += creditsHeight + labelHeight + panelSpacing;
 
             for (CustomField field : build.getCustomFields()) {
                 int fieldHeight = 40;
-                this.textRenderer.draw(matrices, new LiteralText(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+                this.textRenderer.draw(matrices, Text.literal(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
                 fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + fieldHeight, 0x77000000);
                 yPos += fieldHeight + labelHeight + panelSpacing;
             }
@@ -327,7 +324,7 @@ public class ViewBuildScreen extends ScrollableScreen {
             DataManager.getInstance().deleteBuild(this.build);
             this.close();
         };
-        this.showConfirm(new LiteralText("Delete build \"" + build.getName() + "\"?"), onConfirm);
+        this.showConfirm(Text.literal("Delete build \"" + build.getName() + "\"?"), onConfirm);
     }
 
     private void rebuild() {

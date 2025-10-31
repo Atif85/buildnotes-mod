@@ -1,6 +1,6 @@
 package net.atif.buildnotes.gui.helper;
 
-import net.atif.buildnotes.gui.screen.ConfirmScreen; // Or your YesNoScreen implementation
+import net.atif.buildnotes.gui.screen.ConfirmScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;

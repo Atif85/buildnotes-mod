@@ -1,17 +1,17 @@
 package net.atif.buildnotes.gui.screen;
 
-import net.atif.buildnotes.data.*;
+import net.atif.buildnotes.data.Build;
+import net.atif.buildnotes.data.DataManager;
+import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
+import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.atif.buildnotes.gui.widget.TabButtonWidget;
 import net.atif.buildnotes.gui.widget.list.BuildListWidget;
 import net.atif.buildnotes.gui.widget.list.NoteListWidget;
-import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
-
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +34,7 @@ public class MainScreen extends BaseScreen {
     private TabType currentTab;
 
     public MainScreen(TabType startTab) {
-        super(new TranslatableText("gui.buildnotes.main_title"), null);
+        super(Text.translatable("gui.buildnotes.main_title"), null);
         this.currentTab = startTab;
     }
 
@@ -45,9 +45,9 @@ public class MainScreen extends BaseScreen {
         int tabWidth = 80;
         int tabHeight = 20;
         this.notesTab = this.addDrawableChild(new TabButtonWidget((this.width / 2) - tabWidth - 2, 15, tabWidth, tabHeight,
-                new TranslatableText("gui.buildnotes.notes_tab"), b -> selectTab(TabType.NOTES)));
+                Text.translatable("gui.buildnotes.notes_tab"), b -> selectTab(TabType.NOTES)));
         this.buildsTab = this.addDrawableChild(new TabButtonWidget((this.width / 2) + 2, 15, tabWidth, tabHeight,
-                new TranslatableText("gui.buildnotes.builds_tab"), b -> selectTab(TabType.BUILDS)));
+                Text.translatable("gui.buildnotes.builds_tab"), b -> selectTab(TabType.BUILDS)));
 
         // Lists
         int topMargin = 40;
@@ -74,15 +74,15 @@ public class MainScreen extends BaseScreen {
             int index = (x - UIHelper.getCenteredButtonStartX(this.width, 5)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (index) {
                 case 0 -> this.addButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.add_button"), b -> addEntry()));
+                        Text.translatable("gui.buildnotes.add_button"), b -> addEntry()));
                 case 1 -> this.openButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.open_button"), b -> openSelected()));
+                        Text.translatable("gui.buildnotes.open_button"), b -> openSelected()));
                 case 2 -> this.editButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.edit_button"), b -> editSelected()));
+                        Text.translatable("gui.buildnotes.edit_button"), b -> editSelected()));
                 case 3 -> this.deleteButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.delete_button"), b -> confirmDelete()));
+                        Text.translatable("gui.buildnotes.delete_button"), b -> confirmDelete()));
                 case 4 -> this.closeButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        new TranslatableText("gui.buildnotes.close_button"), b -> this.client.setScreen(null)));
+                        Text.translatable("gui.buildnotes.close_button"), b -> this.client.setScreen(null)));
             }
         });
 

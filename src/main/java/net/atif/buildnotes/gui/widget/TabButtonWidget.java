@@ -6,10 +6,6 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
-import java.util.UUID;
-
-import static net.minecraft.client.gui.DrawableHelper.fill;
-
 public class TabButtonWidget extends ButtonWidget {
 
     private boolean isActive = false;
