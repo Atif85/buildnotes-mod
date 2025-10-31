@@ -43,13 +43,13 @@ public class EditBuildScreen extends ScrollableScreen {
     private final Map<String, ImageData> textureCache = new HashMap<>();
     private final Set<String> downloadingImages = new HashSet<>();
 
-    private DarkButtonWidget prevImageButton, nextImageButton, deleteImageButton;
+    private DarkButtonWidget prevImageButton;
+    private DarkButtonWidget nextImageButton;
 
     // --- Standard Fields ---
     private MultiLineTextFieldWidget nameField, coordsField, dimensionField, descriptionField, designerField;
     private final Map<CustomField, MultiLineTextFieldWidget> customFieldWidgets = new LinkedHashMap<>();
     private MultiLineTextFieldWidget lastFocusedTextField;
-    private DarkButtonWidget scopeToggleButton;
 
     public EditBuildScreen(Screen parent, Build build) {
         super(Text.translatable("gui.buildnotes.edit_build_title"), parent);
@@ -94,13 +94,12 @@ public class EditBuildScreen extends ScrollableScreen {
                     saveBuild();
                     this.open(new RequestFieldTitleScreen(this, this::addCustomField));
                 }));
-                case 5 -> {
-                    this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(5), button -> {
-                        saveBuild();
-                        cycleScope();
-                        this.init(this.client, this.width, this.height);
-                    }));
-                }
+                case 5 ->
+                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(5), button -> {
+                            saveBuild();
+                            cycleScope();
+                            this.init(this.client, this.width, this.height);
+                        }));
             }
         });
 
@@ -114,7 +113,7 @@ public class EditBuildScreen extends ScrollableScreen {
 
             prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, Text.translatable("gui.buildnotes.gallery.previous"), b -> switchImage(-1));
             nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, Text.translatable("gui.buildnotes.gallery.next"), b -> switchImage(1));
-            deleteImageButton = new DarkButtonWidget(contentX + contentWidth - 22, galleryY + 2, 20, 20, Text.translatable("gui.buildnotes.gallery.delete"), b -> removeCurrentImage());
+            DarkButtonWidget deleteImageButton = new DarkButtonWidget(contentX + contentWidth - 22, galleryY + 2, 20, 20, Text.translatable("gui.buildnotes.gallery.delete"), b -> removeCurrentImage());
 
             addScrollableWidget(prevImageButton);
             addScrollableWidget(nextImageButton);
@@ -223,10 +222,10 @@ public class EditBuildScreen extends ScrollableScreen {
         int smallFieldHeight = 20;
         int fieldWidth = (contentWidth - panelSpacing) / 2;
         UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
-        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.coords").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.coords").formatted(Formatting.GRAY), contentX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
         int dimensionX = contentX + fieldWidth + panelSpacing;
         UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
-        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.dimension").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.dimension").formatted(Formatting.GRAY), dimensionX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
         yPos += smallFieldHeight + panelSpacing;
 
         if (!build.getImageFileNames().isEmpty()) {
@@ -332,9 +331,7 @@ public class EditBuildScreen extends ScrollableScreen {
                     ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
                         // This is the CALLBACK! It runs when the download is finished.
                         // We must execute on the client thread.
-                        this.client.execute(() -> {
-                            downloadingImages.remove(fileName);
-                        });
+                        this.client.execute(() -> downloadingImages.remove(fileName));
                     });
                 }
                 // Return null for now, the render method will see this and show "Loading..."

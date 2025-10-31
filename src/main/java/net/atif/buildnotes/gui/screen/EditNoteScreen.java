@@ -21,7 +21,6 @@ public class EditNoteScreen extends BaseScreen {
 
     private MultiLineTextFieldWidget titleField;
     private MultiLineTextFieldWidget contentField;
-    private DarkButtonWidget scopeToggleButton;
 
     public EditNoteScreen(Screen parent, Note note) {
         super(Text.translatable("gui.buildnotes.edit_note_title"), parent);

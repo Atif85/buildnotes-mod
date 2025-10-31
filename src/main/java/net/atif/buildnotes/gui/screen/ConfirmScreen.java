@@ -23,9 +23,7 @@ public class ConfirmScreen extends BaseScreen {
     protected void init() {
         super.init();
 
-        int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
-        int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
         int btnY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
