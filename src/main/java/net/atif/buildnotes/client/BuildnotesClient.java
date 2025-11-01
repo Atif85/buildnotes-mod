@@ -32,7 +32,7 @@ public class BuildnotesClient implements ClientModInitializer {
             }
         });
 
-        // ADDED: Register all your S2C packet handlers here
+        // Register all your S2C packet handlers here
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.HANDSHAKE_S2C, this::handleHandshake);
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.INITIAL_SYNC_S2C, ClientPacketHandler::handleInitialSync);
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.UPDATE_NOTE_S2C, ClientPacketHandler::handleUpdateNote);
@@ -47,6 +47,8 @@ public class BuildnotesClient implements ClientModInitializer {
             client.execute(() -> {
                 ClientSession.leaveServer();
                 ClientCache.clear();
+
+                ClientImageTransferManager.clearFailedDownloads();
             });
         });
     }
