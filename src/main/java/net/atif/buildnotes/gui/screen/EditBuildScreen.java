@@ -330,7 +330,6 @@ public class EditBuildScreen extends ScrollableScreen {
                 if (build.getScope() == Scope.SERVER && isDedicatedServer) {
                     // Image does NOT exist, request it from the server
                     if (!downloadingImages.contains(fileName)) {
-                        Buildnotes.LOGGER.info("[CLIENT LOG] Local image not found for '{}'. Requesting from server.", fileName);
                         downloadingImages.add(fileName);
                         ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
                             // This is the CALLBACK! It runs when the download is finished (success or fail).
