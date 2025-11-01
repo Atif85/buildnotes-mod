@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.gui.screen.MainScreen;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -85,7 +86,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
 
         // --- START SCISSORING (clip area so content doesn't render above or below list) ---
@@ -99,8 +100,8 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
 
-        super.render(matrices, mouseX, mouseY, delta);
-        renderCustomScrollbar(matrices); // We call this instead of relying on super's scrollbar
+        super.render(context, mouseX, mouseY, delta);
+        renderCustomScrollbar(context); // We call this instead of relying on super's scrollbar
 
         RenderSystem.disableScissor();  // turn off clipping to draw the fade overlays properly
 
@@ -112,18 +113,18 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         int left = this.left;
         int right = this.right;
         int topY = this.top;
-        drawVerticalGradient(matrices, left, topY, right, topY + FADE_HEIGHT,
+        drawVerticalGradient(context, left, topY, right, topY + FADE_HEIGHT,
                 0x60000000, 0x00000000);  // semi-transparent black to transparent
 
         // Bottom fade overlay
         int bottomY = this.bottom - FADE_HEIGHT;
-        drawVerticalGradient(matrices, left, bottomY, right, this.bottom,
+        drawVerticalGradient(context, left, bottomY, right, this.bottom,
                 0x00000000, 0x60000000); // transparent to semi-transparent black
 
         RenderSystem.disableBlend();
     }
 
-    protected void renderCustomScrollbar(MatrixStack matrices) {
+    protected void renderCustomScrollbar(DrawContext context) {
         int maxScroll = this.getMaxScroll();
         if (maxScroll <= 0) return; // Don't render if not scrollable
 
@@ -135,11 +136,11 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         int thumbColor = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
 
-        fill(matrices, scrollbarX, this.top + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.top + (int) (thumbY + thumbHeight), thumbColor);
+        context.fill(scrollbarX, this.top + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.top + (int) (thumbY + thumbHeight), thumbColor);
     }
 
-    private void drawVerticalGradient(MatrixStack matrices, int x1, int y1, int x2, int y2, int topColor, int bottomColor) {
-        fillGradient(matrices, x1, y1, x2, y2, topColor, bottomColor);
+    private void drawVerticalGradient(DrawContext context, int x1, int y1, int x2, int y2, int topColor, int bottomColor) {
+        context.fillGradient(x1, y1, x2, y2, topColor, bottomColor);
     }
 
     // --- SHARED LAYOUT METHODS ---

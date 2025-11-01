@@ -1,25 +1,22 @@
 package net.atif.buildnotes.gui.widget;
 
+import com.google.common.collect.Lists;
 import net.atif.buildnotes.data.undoredo.TextAction;
 import net.atif.buildnotes.data.undoredo.UndoManager;
-
-import com.google.common.collect.Lists;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-
-import static net.minecraft.client.gui.DrawableHelper.fill;
 
 public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
@@ -331,7 +328,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     // ---------- Rendering ----------
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         int padding = 5;
         int contentX = this.x + padding;
         int contentY = this.y + padding;
@@ -356,7 +353,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         if (getText().isEmpty() && !this.focused && this.placeholderText != null && !this.placeholderText.isEmpty()) {
             // Draw placeholder text, respecting horizontal scroll
             int drawX = contentX - (int) Math.round(scrollX);
-            textRenderer.draw(matrices, this.placeholderText, drawX, contentY, 0xFF808080); // Gray color
+            context.drawText(textRenderer, this.placeholderText, drawX, contentY, 0xFF808080, false); // Gray color
         }
 
         int firstVisibleLine = (int) (scrollY / textRenderer.fontHeight);
@@ -377,7 +374,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                     int sx = contentX + (int) Math.round(textRenderer.getWidth(lines.get(i).substring(0, startCol)) - scrollX);
                     int ex = contentX + (int) Math.round(textRenderer.getWidth(lines.get(i).substring(0, endCol)) - scrollX);
                     int lineYPos = contentY + (i * textRenderer.fontHeight) - (int) scrollY;
-                    fill(matrices, sx, lineYPos, ex, lineYPos + textRenderer.fontHeight, 0x8855AADD);
+                    context.fill(sx, lineYPos, ex, lineYPos + textRenderer.fontHeight, 0x8855AADD);
                 }
             }
         }
@@ -387,7 +384,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             int lineYPos = contentY + (i * textRenderer.fontHeight) - (int) scrollY;
             if (lineYPos > this.y - textRenderer.fontHeight && lineYPos < this.y + this.height) {
                 int drawX = contentX - (int) Math.round(scrollX);
-                this.textRenderer.draw(matrices, this.lines.get(i), drawX, lineYPos, 0xFFFFFF);
+                context.drawText(this.textRenderer, this.lines.get(i), drawX, lineYPos, 0xFFFFFF, false);
             }
         }
 
@@ -409,7 +406,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 int top = caretYPos - paddingTop;
                 int bottom = caretYPos + textRenderer.fontHeight + paddingBottom;
                 // draw 2px wide vertical caret centered at caretPixelX
-                fill(matrices, caretPixelX, top, caretPixelX + 1, bottom, 0xFFFFFFFF);
+                context.fill(caretPixelX, top, caretPixelX + 1, bottom, 0xFFFFFFFF);
             }
         }
 
@@ -418,21 +415,21 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         }
 
         // Draw scrollbars
-        if (this.scrollingEnabled && vNeeded) renderVScrollbar(matrices, contentX, contentY, contentHeight);
-        if (this.scrollingEnabled && hNeeded) renderHScrollbar(matrices, contentX, contentY, contentWidth, contentHeight);
+        if (this.scrollingEnabled && vNeeded) renderVScrollbar(context, contentX, contentY, contentHeight);
+        if (this.scrollingEnabled && hNeeded) renderHScrollbar(context, contentX, contentY, contentWidth, contentHeight);
     }
 
-    protected void renderVScrollbar(MatrixStack matrices, int contentX, int contentY, int contentHeight) {
+    protected void renderVScrollbar(DrawContext context, int contentX, int contentY, int contentHeight) {
         int scrollbarX = this.x + this.width - SCROLLBAR_THICKNESS - 2;
         int maxScroll = getMaxScrollV();
         float contentPixelHeight = lines.size() * textRenderer.fontHeight;
         float thumbHeight = Math.max(10, (contentHeight / contentPixelHeight) * contentHeight);
         float thumbY = (float) ((scrollY / (double) Math.max(1, maxScroll)) * (contentHeight - thumbHeight));
         int thumbColor = isDraggingVScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
-        fill(matrices, scrollbarX, this.y + 5 + (int) thumbY, scrollbarX + SCROLLBAR_THICKNESS, this.y + 5 + (int) (thumbY + thumbHeight), thumbColor);
+        context.fill(scrollbarX, this.y + 5 + (int) thumbY, scrollbarX + SCROLLBAR_THICKNESS, this.y + 5 + (int) (thumbY + thumbHeight), thumbColor);
     }
 
-    protected void renderHScrollbar(MatrixStack matrices, int contentX, int contentY, int contentWidth, int contentHeight) {
+    protected void renderHScrollbar(DrawContext context, int contentX, int contentY, int contentWidth, int contentHeight) {
         int scrollbarY = this.y + this.height - SCROLLBAR_THICKNESS - 2;
         // compute max horizontal content width
         int maxLinePixel = getMaxLinePixelWidth();
@@ -440,7 +437,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         float thumbWidth = Math.max(10, (contentWidth / (float) maxLinePixel) * contentWidth);
         float thumbX = (float) ((scrollX / (double) Math.max(1, getMaxScrollH())) * (contentWidth - thumbWidth));
         int thumbColor = isDraggingHScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
-        fill(matrices, contentX + (int) thumbX, scrollbarY, contentX + (int) (thumbX + thumbWidth), scrollbarY + SCROLLBAR_THICKNESS, thumbColor);
+        context.fill(contentX + (int) thumbX, scrollbarY, contentX + (int) (thumbX + thumbWidth), scrollbarY + SCROLLBAR_THICKNESS, thumbColor);
     }
 
     // ---------- Mouse handling ----------

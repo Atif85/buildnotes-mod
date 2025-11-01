@@ -10,7 +10,7 @@ import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.atif.buildnotes.gui.widget.TabButtonWidget;
 import net.atif.buildnotes.gui.widget.list.BuildListWidget;
 import net.atif.buildnotes.gui.widget.list.NoteListWidget;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 
 import java.util.List;
@@ -215,13 +215,13 @@ public class MainScreen extends BaseScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
 
-        (currentTab == TabType.NOTES ? noteListWidget : buildListWidget).render(matrices, mouseX, mouseY, delta);
+        (currentTab == TabType.NOTES ? noteListWidget : buildListWidget).render(context, mouseX, mouseY, delta);
 
-        UIHelper.drawPanel(matrices, this.searchField.x - 2, this.searchField.y, this.searchField.width + 4, this.searchField.height);
-        this.searchField.render(matrices, mouseX, mouseY, delta);
-        super.render(matrices, mouseX, mouseY, delta);
+        UIHelper.drawPanel(context, this.searchField.x - 2, this.searchField.y, this.searchField.width + 4, this.searchField.height);
+        this.searchField.render(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
     }
 }

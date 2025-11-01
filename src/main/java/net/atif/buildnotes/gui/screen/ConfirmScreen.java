@@ -2,8 +2,8 @@ package net.atif.buildnotes.gui.screen;
 
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public class ConfirmScreen extends BaseScreen {
@@ -39,18 +39,17 @@ public class ConfirmScreen extends BaseScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
         int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
-        UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
+        UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
 
-        this.textRenderer.drawTrimmed(matrices, this.message, panelX + 12, panelY + 12, panelW - 24, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, this.message, panelX + 12, panelY + 12, 0xFFFFFF);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
     }
 }

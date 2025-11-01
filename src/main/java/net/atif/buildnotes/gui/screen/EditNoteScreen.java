@@ -7,8 +7,8 @@ import net.atif.buildnotes.data.Scope;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
@@ -74,8 +74,10 @@ public class EditNoteScreen extends BaseScreen {
 
         UIHelper.createBottomButtonRow(this, topRowY, topButtonTexts, (index, x, width) -> { // Note the new 'width' parameter
             switch (index) {
-                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
-                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
+                case 0 ->
+                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
+                case 1 ->
+                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
                 case 2 -> {
                     this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
                         saveNote();
@@ -154,8 +156,8 @@ public class EditNoteScreen extends BaseScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -165,18 +167,19 @@ public class EditNoteScreen extends BaseScreen {
         int bottomMargin = 70;
 
         // --- Title Panel ---
-        UIHelper.drawPanel(matrices, contentX, topMargin, contentWidth, titlePanelHeight);;
-        this.titleField.render(matrices, mouseX, mouseY, delta);
+        UIHelper.drawPanel(context, contentX, topMargin, contentWidth, titlePanelHeight);
+        ;
+        this.titleField.render(context, mouseX, mouseY, delta);
 
         // --- Content Panel ---
         int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
         int contentPanelBottom = this.height - bottomMargin;
-        UIHelper.drawPanel(matrices, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
-        this.contentField.render(matrices, mouseX, mouseY, delta);
+        UIHelper.drawPanel(context, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
+        this.contentField.render(context, mouseX, mouseY, delta);
 
         // Draw screen title
-        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
-        super.render(matrices, mouseX, mouseY, delta);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        super.render(context, mouseX, mouseY, delta);
     }
 
     // We need to override mouseScrolled to pass the event to our custom widget

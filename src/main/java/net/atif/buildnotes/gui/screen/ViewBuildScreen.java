@@ -1,21 +1,19 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
-import net.atif.buildnotes.data.*;
+import net.atif.buildnotes.data.Scope;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -168,7 +166,7 @@ public class ViewBuildScreen extends ScrollableScreen {
     }
 
         @Override
-        protected void renderContent(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        protected void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
             int contentWidth = (int) (this.width * 0.6);
             int contentX = (this.width - contentWidth) / 2;
             int yPos = getTopMargin();
@@ -178,7 +176,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
             // --- TITLE ---
             int titlePanelHeight = 25;
-            fill(matrices, contentX, yPos, contentX + contentWidth, yPos + titlePanelHeight, 0x77000000);
+            context.fill(contentX, yPos, contentX + contentWidth, yPos + titlePanelHeight, 0x77000000);
             yPos += titlePanelHeight + panelSpacing;
 
             // --- COORDS & DIMENSION ---
@@ -186,21 +184,21 @@ public class ViewBuildScreen extends ScrollableScreen {
             int fieldWidth = (contentWidth - panelSpacing) / 2;
 
             // Backgrounds and Labels only
-            UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
-            this.textRenderer.draw(matrices, Text.literal("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            UIHelper.drawPanel(context, contentX, yPos, fieldWidth, smallFieldHeight);
+            context.drawText(this.textRenderer ,Text.literal("Coords: ").formatted(Formatting.GRAY), contentX + 4, (int)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC, false);
 
             int dimensionX = contentX + fieldWidth + panelSpacing;
-            UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
-            this.textRenderer.draw(matrices, Text.literal("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            UIHelper.drawPanel(context, dimensionX, yPos, fieldWidth, smallFieldHeight);
+            context.drawText(this.textRenderer, Text.literal("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (int)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC, false);
             yPos += smallFieldHeight + panelSpacing;
 
             if (!build.getImageFileNames().isEmpty()) {
                 int galleryBoxHeight = (int) (contentWidth * (9.0 / 16.0));
-                fill(matrices, contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
+                context.fill(contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
 
                 String currentImageName = build.getImageFileNames().get(currentImageIndex);
                 if (downloadingImages.contains(currentImageName)) {
-                    drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                    context.drawCenteredTextWithShadow(textRenderer, Text.literal("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                 } else {
                     ImageData data = getImageDataForCurrentImage();
                     if (data != null && data.textureId != null) {
@@ -225,34 +223,34 @@ public class ViewBuildScreen extends ScrollableScreen {
                         int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
                         int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
 
-                        DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
+                        context.drawTexture(data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                         RenderSystem.disableBlend();
                     } else {
-                        drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                        context.drawCenteredTextWithShadow(textRenderer, Text.literal("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                     }
                 }
                 String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
                 int counterWidth = textRenderer.getWidth(counter);
-                textRenderer.draw(matrices, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF);
+                context.drawText(this.textRenderer, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF, false);
 
                 yPos += galleryBoxHeight + panelSpacing;
             }
 
             // --- DYNAMIC CONTENT ---
             int descriptionHeight = 80;
-            this.textRenderer.draw(matrices, Text.literal("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
-            fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + descriptionHeight, 0x77000000);
+            context.drawText(this.textRenderer, Text.literal("Description:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
+            context.fill(contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + descriptionHeight, 0x77000000);
             yPos += descriptionHeight + labelHeight + panelSpacing;
 
             int creditsHeight = 40;
-            this.textRenderer.draw(matrices, Text.literal("Credits:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
-            fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + creditsHeight, 0x77000000);
+            context.drawText(this.textRenderer, Text.literal("Credits:").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
+            context.fill(contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + creditsHeight, 0x77000000);
             yPos += creditsHeight + labelHeight + panelSpacing;
 
             for (CustomField field : build.getCustomFields()) {
                 int fieldHeight = 40;
-                this.textRenderer.draw(matrices, Text.literal(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
-                fill(matrices, contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + fieldHeight, 0x77000000);
+                context.drawText(this.textRenderer, Text.literal(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
+                context.fill(contentX, yPos + labelHeight, contentX + contentWidth, yPos + labelHeight + fieldHeight, 0x77000000);
                 yPos += fieldHeight + labelHeight + panelSpacing;
             }
         }

@@ -3,6 +3,7 @@ package net.atif.buildnotes.gui.helper;
 import net.atif.buildnotes.gui.screen.ConfirmScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -10,7 +11,6 @@ import net.minecraft.text.Text;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static net.minecraft.client.gui.DrawableHelper.fill;
 
 public class UIHelper {
 
@@ -32,8 +32,8 @@ public class UIHelper {
     /**
      * Draws the standard dark, semi-transparent panel background.
      */
-    public static void drawPanel(MatrixStack matrices, int x, int y, int width, int height) {
-        fill(matrices, x, y, x + width, y + height, 0x77000000);
+    public static void drawPanel(DrawContext context, int x, int y, int width, int height) {
+        context.fill(x, y, x + width, y + height, 0x77000000);
     }
 
     /**

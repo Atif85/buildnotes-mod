@@ -5,6 +5,7 @@ import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -85,8 +86,8 @@ public class ViewNoteScreen extends BaseScreen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderBackground(context);
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -96,16 +97,16 @@ public class ViewNoteScreen extends BaseScreen {
         int bottomMargin = 45;
 
         // --- Title Panel ---
-        UIHelper.drawPanel(matrices, contentX, topMargin, contentWidth, titlePanelHeight);
-        this.titleArea.render(matrices, mouseX, mouseY, delta);
+        UIHelper.drawPanel(context, contentX, topMargin, contentWidth, titlePanelHeight);
+        this.titleArea.render(context, mouseX, mouseY, delta);
 
         // --- Content Panel ---
         int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
         int contentPanelBottom = this.height - bottomMargin;
-        UIHelper.drawPanel(matrices, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
-        this.contentArea.render(matrices, mouseX, mouseY, delta);
+        UIHelper.drawPanel(context, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
+        this.contentArea.render(context, mouseX, mouseY, delta);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override

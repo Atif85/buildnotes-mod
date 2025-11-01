@@ -2,8 +2,8 @@ package net.atif.buildnotes.gui.widget;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public class TabButtonWidget extends ButtonWidget {
@@ -15,7 +15,7 @@ public class TabButtonWidget extends ButtonWidget {
     }
 
     @Override
-    public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
         // Determine the background color based on the button's state
         int color;
         if (this.isActive) {
@@ -30,12 +30,12 @@ public class TabButtonWidget extends ButtonWidget {
         }
 
         // Render the background
-        fill(matrices, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, color);
+        context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, color);
 
         // Render the text
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         int textColor = 0xFFFFFF;
-        drawCenteredTextWithShadow(matrices, textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
+        context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
     }
 
     public boolean isActive() {

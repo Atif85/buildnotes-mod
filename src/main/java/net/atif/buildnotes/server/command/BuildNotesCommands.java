@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
 public class BuildNotesCommands {
 
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            register(dispatcher);
-        });
+        CommandRegistrationCallback.EVENT.register(
+                (dispatcher, registryAccess, environment) -> register(dispatcher)
+        );
     }
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -63,7 +63,7 @@ public class BuildNotesCommands {
 
         // Report successfully added players
         if (!addedPlayers.isEmpty()) {
-            source.sendFeedback(Text.literal("Added ").append(Text.literal(String.join(", ", addedPlayers)).formatted(Formatting.GREEN)).append(" to the BuildNotes editor list."), true);
+            source.sendFeedback(() -> Text.literal("Added ").append(Text.literal(String.join(", ", addedPlayers)).formatted(Formatting.GREEN)).append(" to the BuildNotes editor list."), true);
         }
 
         // Report players who were already on the list
@@ -91,7 +91,7 @@ public class BuildNotesCommands {
 
         // Report successfully removed players
         if (!removedPlayers.isEmpty()) {
-            source.sendFeedback(Text.literal("Removed ").append(Text.literal(String.join(", ", removedPlayers)).formatted(Formatting.RED)).append(" from the BuildNotes editor list."), true);
+            source.sendFeedback(() -> Text.literal("Removed ").append(Text.literal(String.join(", ", removedPlayers)).formatted(Formatting.RED)).append(" from the BuildNotes editor list."), true);
         }
 
         // Report players who were not on the list to begin with
@@ -107,13 +107,13 @@ public class BuildNotesCommands {
 
         boolean allowAll = Buildnotes.PERMISSION_MANAGER.getAllowAll();
         if (allowAll) {
-            source.sendFeedback(Text.literal("Note: 'allow_all' is currently TRUE. All players can edit.").formatted(Formatting.GOLD), false);
+            source.sendFeedback(() -> Text.literal("Note: 'allow_all' is currently TRUE. All players can edit.").formatted(Formatting.GOLD), false);
         }
 
         Set<PermissionEntry> allowedPlayers = Buildnotes.PERMISSION_MANAGER.getAllowedPlayers();
 
         if (allowedPlayers.isEmpty()) {
-            source.sendFeedback(Text.literal("There are no players on the BuildNotes editor list."), false);
+            source.sendFeedback(() -> Text.literal("There are no players on the BuildNotes editor list."), false);
             return 1;
         }
 
@@ -121,7 +121,7 @@ public class BuildNotesCommands {
                 .map(PermissionEntry::getName)
                 .collect(Collectors.joining(", "));
 
-        source.sendFeedback(Text.literal("BuildNotes Editors: ").formatted(Formatting.YELLOW).append(Text.literal(playerNames)), false);
+        source.sendFeedback(() -> Text.literal("BuildNotes Editors: ").formatted(Formatting.YELLOW).append(Text.literal(playerNames)), false);
         return allowedPlayers.size();
     }
 
@@ -132,9 +132,9 @@ public class BuildNotesCommands {
         Buildnotes.PERMISSION_MANAGER.setAllowAll(enabled);
 
         if (enabled) {
-            source.sendFeedback(Text.literal("All players can now edit BuildNotes.").formatted(Formatting.GREEN), true);
+            source.sendFeedback(() -> Text.literal("All players can now edit BuildNotes.").formatted(Formatting.GREEN), true);
         } else {
-            source.sendFeedback(Text.literal("Only players on the list (and OPs) can edit BuildNotes.").formatted(Formatting.RED), true);
+            source.sendFeedback(() -> Text.literal("Only players on the list (and OPs) can edit BuildNotes.").formatted(Formatting.RED), true);
         }
         return 1;
     }

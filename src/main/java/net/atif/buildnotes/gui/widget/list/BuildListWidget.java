@@ -3,6 +3,7 @@ package net.atif.buildnotes.gui.widget.list;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -57,16 +58,16 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
         }
 
         @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             // Line 1: Name
-            client.textRenderer.draw(matrices, build.getName(), x + 2, y + 2, 0xFFFFFF);
+            context.drawText(client.textRenderer, build.getName(), x + 2, y + 2, 0xFFFFFF, false);
 
             // Line 2: Coords
             Text coords = Text.literal("Coords: " + build.getCoordinates()).formatted(Formatting.GRAY);
-            client.textRenderer.draw(matrices, coords, x + 2, y + 12, 0xCCCCCC);
+            context.drawText(client.textRenderer, coords, x + 2, y + 12, 0xCCCCCC, false);
 
             // Line 3: Date/Time with new label
-            client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
+            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC, false);
 
             // --- NEW SCOPE INDICATOR ---
             Text scopeText = null;
@@ -80,7 +81,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
             if (scopeText != null) {
                 int scopeWidth = client.textRenderer.getWidth(scopeText);
-                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF);
+                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF, false);
             }
         }
 

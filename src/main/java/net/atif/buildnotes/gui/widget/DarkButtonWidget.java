@@ -2,6 +2,7 @@ package net.atif.buildnotes.gui.widget;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -13,7 +14,7 @@ public class DarkButtonWidget extends ButtonWidget {
     }
 
     @Override
-    public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
         int color;
         if (!this.active) {
             // disabled less dark
@@ -26,11 +27,11 @@ public class DarkButtonWidget extends ButtonWidget {
             color = 0x77000000;
         }
 
-        fill(matrices, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, color);
+        context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, color);
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         int textColor = this.active ? 0xFFFFFF : 0x888888;
         
-        drawCenteredTextWithShadow(matrices, textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
+        context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
     }
 }

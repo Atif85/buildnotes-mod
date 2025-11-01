@@ -1,7 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
@@ -12,13 +11,12 @@ import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
@@ -213,30 +211,30 @@ public class EditBuildScreen extends ScrollableScreen {
     }
 
     @Override
-    protected void renderContent(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    protected void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
         int yPos = getTopMargin();
         final int panelSpacing = 5;
         final int labelHeight = 12;
 
-        UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 25);
+        UIHelper.drawPanel(context, contentX, yPos, contentWidth, 25);
         yPos += 25 + panelSpacing;
         int smallFieldHeight = 20;
         int fieldWidth = (contentWidth - panelSpacing) / 2;
-        UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
-        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.coords").formatted(Formatting.GRAY), contentX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
+        UIHelper.drawPanel(context, contentX, yPos, fieldWidth, smallFieldHeight);
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.coords").formatted(Formatting.GRAY), contentX + 4, (int)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC, false);
         int dimensionX = contentX + fieldWidth + panelSpacing;
-        UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
-        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.dimension").formatted(Formatting.GRAY), dimensionX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
+        UIHelper.drawPanel(context, dimensionX, yPos, fieldWidth, smallFieldHeight);
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.dimension").formatted(Formatting.GRAY), dimensionX + 4, (int)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC, false);
         yPos += smallFieldHeight + panelSpacing;
 
         if (!build.getImageFileNames().isEmpty()) {
             int galleryBoxHeight = (int) (contentWidth * (9.0 / 16.0));
-            fill(matrices, contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
+            context.fill(contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
             String currentImageName = build.getImageFileNames().get(currentImageIndex);
             if (downloadingImages.contains(currentImageName)) {
-                drawCenteredTextWithShadow(matrices, textRenderer, Text.translatable("gui.buildnotes.gallery.loading").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.loading").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
             } else {
                 ImageData data = getImageDataForCurrentImage();
                 if (data != null && data.textureId != null) {
@@ -255,33 +253,33 @@ public class EditBuildScreen extends ScrollableScreen {
                     }
                     int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
                     int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
-                    DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
+                    context.drawTexture(data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                     RenderSystem.disableBlend();
                 } else {
-                    drawCenteredTextWithShadow(matrices, textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                    context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                 }
             }
             String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
             int counterWidth = textRenderer.getWidth(counter);
-            textRenderer.draw(matrices, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF);
+            context.drawText(this.textRenderer, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF, true);
             yPos += galleryBoxHeight + panelSpacing;
         }
 
-        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.description").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.description").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
         yPos += labelHeight;
-        UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 80);
+        UIHelper.drawPanel(context, contentX, yPos, contentWidth, 80);
         yPos += 80 + panelSpacing;
-        this.textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.credits").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.credits").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
         yPos += labelHeight;
-        UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 40);
+        UIHelper.drawPanel(context, contentX, yPos, contentWidth, 40);
         yPos += 40 + panelSpacing;
         for (CustomField field : this.build.getCustomFields()) {
-            this.textRenderer.draw(matrices, Text.translatable(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF);
+            context.drawText(this.textRenderer, Text.translatable(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
             yPos += labelHeight;
-            UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 40);
+            UIHelper.drawPanel(context, contentX, yPos, contentWidth, 40);
             yPos += 40 + panelSpacing;
         }
-        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
     }
 
     // --- Image Management Logic ---
@@ -406,7 +404,7 @@ public class EditBuildScreen extends ScrollableScreen {
 
     private void insertDimension() {
         if (this.client == null || this.client.player == null) return;
-        String dim = this.client.player.world.getRegistryKey().getValue().toString();
+        String dim = this.client.player.getWorld().getRegistryKey().getValue().toString();
         insertTextAtLastFocus(dim);
     }
 
@@ -532,19 +530,19 @@ public class EditBuildScreen extends ScrollableScreen {
         }
 
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            parent.render(matrices, -1, -1, delta);
+        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+            parent.render(context, -1, -1, delta);
             int panelW = 200;
             int panelH = 100;
             int panelX = (this.width - panelW) / 2;
             int panelY = (this.height - panelH) / 2;
-            UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
+            UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
 
-            drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, panelY + 8, 0xFFFFFF);
+            context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, panelY + 8, 0xFFFFFF);
 
-            this.titleField.render(matrices, mouseX, mouseY, delta);
+            this.titleField.render(context, mouseX, mouseY, delta);
 
-            super.render(matrices, mouseX, mouseY, delta);
+            super.render(context, mouseX, mouseY, delta);
         }
     }
 }
