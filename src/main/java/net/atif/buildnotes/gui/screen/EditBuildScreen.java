@@ -19,11 +19,13 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
@@ -411,7 +413,8 @@ public class EditBuildScreen extends ScrollableScreen {
     private void insertBiome() {
         if (this.client == null || this.client.player == null || this.client.world == null) return;
         BlockPos playerPos = this.client.player.getBlockPos();
-        String biomeId = this.client.world.getRegistryManager().get(Registry.BIOME_KEY).getId(this.client.world.getBiome(playerPos).value()).toString();
+        RegistryEntry<Biome> biomeEntry = this.client.world.getBiome(playerPos);
+        String biomeId = biomeEntry.getKey().map(RegistryKey::getValue).map(Identifier::toString).orElse("minecraft:unknown");
         insertTextAtLastFocus(biomeId);
     }
 

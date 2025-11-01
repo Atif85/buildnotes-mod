@@ -16,9 +16,6 @@ public abstract class BaseScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        if (this.client != null) {
-            this.client.keyboard.setRepeatEvents(true);
-        }
     }
 
     /**
@@ -29,7 +26,6 @@ public abstract class BaseScreen extends Screen {
     @Override
     public void close() {
         if (this.client != null) {
-            this.client.keyboard.setRepeatEvents(false);
             this.client.setScreen(this.parent);
         } else {
             super.close();

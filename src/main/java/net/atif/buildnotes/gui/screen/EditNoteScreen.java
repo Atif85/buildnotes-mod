@@ -9,9 +9,12 @@ import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
 
 import java.util.List;
 
@@ -145,7 +148,8 @@ public class EditNoteScreen extends BaseScreen {
     private void insertBiome() {
         if (this.client.player == null || this.client.world == null) return;
         BlockPos playerPos = this.client.player.getBlockPos();
-        String biomeId = this.client.world.getRegistryManager().get(Registry.BIOME_KEY).getId(this.client.world.getBiome(playerPos).value()).toString();
+        RegistryEntry<Biome> biomeEntry = this.client.world.getBiome(playerPos);
+        String biomeId = biomeEntry.getKey().map(RegistryKey::getValue).map(Identifier::toString).orElse("minecraft:unknown");
         this.contentField.insertText(biomeId);
     }
 
