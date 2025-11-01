@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
+import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
@@ -330,17 +331,20 @@ public class EditBuildScreen extends ScrollableScreen {
                 }
             }
             else {
-                // Image does NOT exist, we need to download it.
-                if (!downloadingImages.contains(fileName)) {
-                    // Only start the download if we haven't already
-                    downloadingImages.add(fileName);
-                    ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
-                        // This is the CALLBACK! It runs when the download is finished.
-                        // We must execute on the client thread.
-                        this.client.execute(() -> {
-                            downloadingImages.remove(fileName);
+                // --- Only request images for SERVER-scoped builds when on a dedicated server ---
+                boolean isDedicatedServer = this.client != null && !this.client.isIntegratedServerRunning();
+                if (build.getScope() == Scope.SERVER && isDedicatedServer) {
+                    // Image does NOT exist, request it from the server
+                    if (!downloadingImages.contains(fileName)) {
+                        Buildnotes.LOGGER.info("[CLIENT LOG] Local image not found for '{}'. Requesting from server.", fileName);
+                        downloadingImages.add(fileName);
+                        ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
+                            // This is the CALLBACK! It runs when the download is finished (success or fail).
+                            this.client.execute(() -> {
+                                downloadingImages.remove(fileName);
+                            });
                         });
-                    });
+                    }
                 }
                 // Return null for now, the render method will see this and show "Loading..."
                 return null;

@@ -3,10 +3,7 @@ package net.atif.buildnotes.gui.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
-import net.atif.buildnotes.data.Build;
-import net.atif.buildnotes.data.CustomField;
-import net.atif.buildnotes.data.DataManager;
-import net.atif.buildnotes.data.TabType;
+import net.atif.buildnotes.data.*;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
@@ -303,16 +300,20 @@ public class ViewBuildScreen extends ScrollableScreen {
                     return data;
                 }
             } else {
-                // Image does NOT exist, request it from the server
-                if (!downloadingImages.contains(fileName)) {
-                    Buildnotes.LOGGER.info("[CLIENT LOG 1] Local image not found for '{}'. Requesting from server.", fileName);
-                    downloadingImages.add(fileName);
-                    ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
-                        // This is the CALLBACK! It runs when the download is finished.
-                        this.client.execute(() -> {
-                            downloadingImages.remove(fileName);
+                // --- Only request images for SERVER-scoped builds when on a dedicated server ---
+                boolean isDedicatedServer = this.client != null && !this.client.isIntegratedServerRunning();
+                if (build.getScope() == Scope.SERVER && isDedicatedServer) {
+                    // Image does NOT exist, request it from the server
+                    if (!downloadingImages.contains(fileName)) {
+                        Buildnotes.LOGGER.info("[CLIENT LOG] Local image not found for '{}'. Requesting from server.", fileName);
+                        downloadingImages.add(fileName);
+                        ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
+                            // This is the CALLBACK! It runs when the download is finished (success or fail).
+                            this.client.execute(() -> {
+                                downloadingImages.remove(fileName);
+                            });
                         });
-                    });
+                    }
                 }
                 return null; // Return null to signal that it's loading
             }

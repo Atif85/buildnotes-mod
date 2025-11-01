@@ -1,6 +1,7 @@
 package net.atif.buildnotes.client;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.network.NetworkConstants;
@@ -44,7 +45,7 @@ public class ClientImageTransferManager {
         public byte[] reassemble() {
             int totalSize = 0;
             for (byte[] chunk : chunks) {
-                if (chunk == null) return null; // Should not happen with correct logic, but a good safeguard
+                if (chunk == null) return null;
                 totalSize += chunk.length;
             }
 
@@ -60,24 +61,34 @@ public class ClientImageTransferManager {
 
     private static final Map<FileKey, ImageAssembler> IN_PROGRESS_DOWNLOADS = Maps.newConcurrentMap();
     private static final Map<FileKey, Runnable> COMPLETION_CALLBACKS = Maps.newConcurrentMap();
-
+    private static final Set<FileKey> FAILED_DOWNLOADS = Sets.newConcurrentHashSet();
 
     // --- UPLOAD HANDLING ---
     private static final Queue<FileKey> UPLOAD_QUEUE = new LinkedList<>();
     private static boolean isUploading = false;
 
+    public static void clearFailedDownloads() {
+        FAILED_DOWNLOADS.clear();
+    }
 
     public static void requestImage(UUID buildId, String filename, Runnable onComplete) {
         try {
             if (buildId == null || filename == null) {
-                Buildnotes.LOGGER.error("[FATAL] requestImage called with null values!");
                 return;
             }
 
             FileKey key = new FileKey(buildId, filename);
 
+            // --- Check if this image has already failed to download ---
+            if (FAILED_DOWNLOADS.contains(key)) {
+                // Don't try again. Immediately run the callback to signal completion.
+                if (onComplete != null) {
+                    onComplete.run();
+                }
+                return;
+            }
+
             if (COMPLETION_CALLBACKS.putIfAbsent(key, onComplete) != null) {
-                Buildnotes.LOGGER.info("[DIAGNOSTIC] Download for '{}' is already in progress. Aborting new network request.", filename);
                 return;
             }
 
@@ -138,10 +149,12 @@ public class ClientImageTransferManager {
         }
     }
 
-    // ADDED: Method to handle a failed download.
+    // Method to handle a failed download.
     public static void onDownloadFailed(UUID buildId, String filename) {
         FileKey key = new FileKey(buildId, filename);
         Buildnotes.LOGGER.warn("Server reported image not found: '{}' for build {}", filename, buildId);
+
+        FAILED_DOWNLOADS.add(key);
 
         // Remove the download from the in-progress map
         IN_PROGRESS_DOWNLOADS.remove(key);
