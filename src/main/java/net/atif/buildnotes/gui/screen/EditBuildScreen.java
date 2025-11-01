@@ -236,7 +236,7 @@ public class EditBuildScreen extends ScrollableScreen {
             fill(matrices, contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
             String currentImageName = build.getImageFileNames().get(currentImageIndex);
             if (downloadingImages.contains(currentImageName)) {
-                drawCenteredText(matrices, textRenderer, Text.translatable("gui.buildnotes.gallery.loading").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                drawCenteredTextWithShadow(matrices, textRenderer, Text.translatable("gui.buildnotes.gallery.loading").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
             } else {
                 ImageData data = getImageDataForCurrentImage();
                 if (data != null && data.textureId != null) {
@@ -258,7 +258,7 @@ public class EditBuildScreen extends ScrollableScreen {
                     DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                     RenderSystem.disableBlend();
                 } else {
-                    drawCenteredText(matrices, textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                    drawCenteredTextWithShadow(matrices, textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                 }
             }
             String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
@@ -281,7 +281,7 @@ public class EditBuildScreen extends ScrollableScreen {
             UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, 40);
             yPos += 40 + panelSpacing;
         }
-        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
     }
 
     // --- Image Management Logic ---
@@ -540,7 +540,7 @@ public class EditBuildScreen extends ScrollableScreen {
             int panelY = (this.height - panelH) / 2;
             UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
 
-            drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, panelY + 8, 0xFFFFFF);
+            drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, panelY + 8, 0xFFFFFF);
 
             this.titleField.render(matrices, mouseX, mouseY, delta);
 

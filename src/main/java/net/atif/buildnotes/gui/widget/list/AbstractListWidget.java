@@ -10,7 +10,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.client.sound.PositionedSoundInstance;
 
-public abstract class AbstractListWidget<E extends EntryListWidget.Entry<E>> extends EntryListWidget<E> {
+public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> extends EntryListWidget<E> {
 
     protected final MainScreen parentScreen;
     private boolean visible = false;
@@ -182,6 +182,9 @@ public abstract class AbstractListWidget<E extends EntryListWidget.Entry<E>> ext
         // not a double-click, register this as the last click
         this.lastClickedEntry = entry;
         this.lastClickTime = now;
+    }
+
+    public static abstract class Entry<E extends Entry<E>> extends EntryListWidget.Entry<E> {
     }
 
 }

@@ -903,6 +903,19 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         return mouseX >= this.x && mouseX < this.x + this.width && mouseY >= this.y && mouseY < this.y + this.height;
     }
 
+    @Override
+    public void setFocused(boolean focused) {
+        // This check prevents redundant logic if the focus state isn't changing.
+        if (this.focused != focused) {
+            this.focused = focused;
+        }
+    }
+
+    @Override
+    public boolean isFocused() {
+        return this.focused;
+    }
+
     public void _deleteTextInternal(int startAbsolute, int endAbsolute) {
         int[] sLC = getLineColFromAbsolute(startAbsolute);
         int[] eLC = getLineColFromAbsolute(endAbsolute);

@@ -175,7 +175,7 @@ public class EditNoteScreen extends BaseScreen {
         this.contentField.render(matrices, mouseX, mouseY, delta);
 
         // Draw screen title
-        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
         super.render(matrices, mouseX, mouseY, delta);
     }
 

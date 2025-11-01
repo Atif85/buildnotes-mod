@@ -49,7 +49,7 @@ public class ConfirmScreen extends BaseScreen {
 
         UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
 
-        this.textRenderer.drawTrimmed(this.message, panelX + 12, panelY + 12, panelW - 24, 0xFFFFFF);
+        this.textRenderer.drawTrimmed(matrices, this.message, panelX + 12, panelY + 12, panelW - 24, 0xFFFFFF);
 
         super.render(matrices, mouseX, mouseY, delta);
     }

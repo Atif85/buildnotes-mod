@@ -3,7 +3,6 @@ package net.atif.buildnotes.gui.widget.list;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -42,7 +41,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
         parentScreen.onBuildSelected(); // Notify the parent screen
     }
 
-    public class BuildEntry extends EntryListWidget.Entry<BuildEntry> {
+    public class BuildEntry extends AbstractListWidget.Entry<BuildEntry> {
         private final Build build;
         private final String formattedDateTime;
 

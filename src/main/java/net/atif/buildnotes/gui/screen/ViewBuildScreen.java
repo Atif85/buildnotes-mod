@@ -200,7 +200,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
                 String currentImageName = build.getImageFileNames().get(currentImageIndex);
                 if (downloadingImages.contains(currentImageName)) {
-                    drawCenteredText(matrices, textRenderer, Text.literal("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                    drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                 } else {
                     ImageData data = getImageDataForCurrentImage();
                     if (data != null && data.textureId != null) {
@@ -228,7 +228,7 @@ public class ViewBuildScreen extends ScrollableScreen {
                         DrawableHelper.drawTexture(matrices, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                         RenderSystem.disableBlend();
                     } else {
-                        drawCenteredText(matrices, textRenderer, Text.literal("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                        drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                     }
                 }
                 String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();

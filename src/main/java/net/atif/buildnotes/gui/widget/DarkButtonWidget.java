@@ -30,6 +30,7 @@ public class DarkButtonWidget extends ButtonWidget {
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         int textColor = this.active ? 0xFFFFFF : 0x888888;
-        drawCenteredText(matrices, textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
+        
+        drawCenteredTextWithShadow(matrices, textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
     }
 }
