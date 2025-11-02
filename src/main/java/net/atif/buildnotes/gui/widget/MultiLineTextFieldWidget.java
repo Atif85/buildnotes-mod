@@ -560,23 +560,26 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        // If shift is down -> horizontal scroll, otherwise vertical
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (!isMouseOver(mouseX, mouseY)) return false;
 
-        boolean shift = Screen.hasShiftDown();
 
-        if (shift && this.allowHorizontalScroll) {
-            this.scrollX -= amount * 10;
+        boolean handled = false;
+        final double scrollMultiplier = 10.0;
+
+        if (this.allowHorizontalScroll && horizontalAmount > 0) {
+            this.scrollX -= horizontalAmount * scrollMultiplier;
             clampScroll();
-            return true;
-        } else if (!shift && this.allowVerticalScroll) {
-            this.scrollY -= amount * 10;
-            clampScroll();
-            return true;
+            handled = true;
         }
 
-        return false;
+        if (this.allowVerticalScroll && verticalAmount > 0) {
+            this.scrollY -= verticalAmount * scrollMultiplier;
+            clampScroll();
+            handled = true;
+        }
+
+        return handled;
     }
 
     protected int absoluteIndexFromMouse(double mouseX, double mouseY) {

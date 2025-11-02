@@ -49,7 +49,7 @@ public abstract class ScrollableScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
 
         int top = getTopMargin();
         int bottom = this.height - getBottomMargin();
@@ -112,7 +112,7 @@ public abstract class ScrollableScreen extends BaseScreen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         int top = getTopMargin();
         int bottom = this.height - getBottomMargin();
 
@@ -121,7 +121,7 @@ public abstract class ScrollableScreen extends BaseScreen {
             double adjustedMouseY = mouseY - top + this.scrollY;
             for (Element widget : this.scrollableWidgets) {
                 if (widget.isMouseOver(mouseX, adjustedMouseY)) {
-                    if (widget.mouseScrolled(mouseX, adjustedMouseY, amount)) {
+                    if (widget.mouseScrolled(mouseX, adjustedMouseY, horizontalAmount, verticalAmount)) {
                         return true;
                     }
                 }
@@ -130,7 +130,7 @@ public abstract class ScrollableScreen extends BaseScreen {
 
         // If no child consumed it, scroll the main panel
         if (mouseY >= top && mouseY < bottom) {
-            this.scrollY -= amount * 10;
+            this.scrollY -= verticalAmount * 10;
             clampScroll();
             return true;
         }

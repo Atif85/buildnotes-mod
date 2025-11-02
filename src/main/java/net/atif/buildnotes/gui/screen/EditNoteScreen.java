@@ -157,7 +157,7 @@ public class EditNoteScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -184,8 +184,8 @@ public class EditNoteScreen extends BaseScreen {
 
     // We need to override mouseScrolled to pass the event to our custom widget
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        return this.contentField.mouseScrolled(mouseX, mouseY, amount) || super.mouseScrolled(mouseX, mouseY, amount);
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        return this.contentField.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount) || super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override

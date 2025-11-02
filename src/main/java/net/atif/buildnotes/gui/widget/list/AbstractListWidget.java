@@ -33,7 +33,6 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         // Disable default backgrounds.
         this.setRenderBackground(false);
-        this.setRenderHorizontalShadows(false);
     }
 
     // --- SHARED VISIBILITY LOGIC ---

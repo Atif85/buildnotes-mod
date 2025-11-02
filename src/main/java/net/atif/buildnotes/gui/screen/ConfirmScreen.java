@@ -40,7 +40,7 @@ public class ConfirmScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
         int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
         int panelX = (this.width - panelW) / 2;

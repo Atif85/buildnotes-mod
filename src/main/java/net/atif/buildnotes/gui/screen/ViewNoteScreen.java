@@ -87,7 +87,7 @@ public class ViewNoteScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -119,13 +119,13 @@ public class ViewNoteScreen extends BaseScreen {
 
     // --- Delegate scrolling to the widget ---
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         // Pass scroll events to the widget under the mouse
         if (this.titleArea.isMouseOver(mouseX, mouseY)) {
-            return this.titleArea.mouseScrolled(mouseX, mouseY, amount);
+            return this.titleArea.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
         }
         if (this.contentArea.isMouseOver(mouseX, mouseY)) {
-            return this.contentArea.mouseScrolled(mouseX, mouseY, amount);
+            return this.contentArea.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
         }
         return false;
     }

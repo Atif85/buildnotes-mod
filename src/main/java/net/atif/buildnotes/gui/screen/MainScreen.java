@@ -216,7 +216,7 @@ public class MainScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        this.renderBackground(context, mouseX, mouseY, delta);
 
         (currentTab == TabType.NOTES ? noteListWidget : buildListWidget).render(context, mouseX, mouseY, delta);
 
