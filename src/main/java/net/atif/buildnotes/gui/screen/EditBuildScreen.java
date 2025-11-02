@@ -219,6 +219,7 @@ public class EditBuildScreen extends ScrollableScreen {
         final int labelHeight = 12;
 
         UIHelper.drawPanel(context, contentX, yPos, contentWidth, 25);
+
         yPos += 25 + panelSpacing;
         int smallFieldHeight = 20;
         int fieldWidth = (contentWidth - panelSpacing) / 2;

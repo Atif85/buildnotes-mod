@@ -15,7 +15,7 @@ public class TabButtonWidget extends ButtonWidget {
     }
 
     @Override
-    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         // Determine the background color based on the button's state
         int color;
         if (this.isActive) {

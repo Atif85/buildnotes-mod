@@ -14,7 +14,7 @@ public class DarkButtonWidget extends ButtonWidget {
     }
 
     @Override
-    public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         int color;
         if (!this.active) {
             // disabled less dark

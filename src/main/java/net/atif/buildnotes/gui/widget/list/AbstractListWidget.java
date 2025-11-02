@@ -7,7 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.EntryListWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.client.sound.PositionedSoundInstance;
 
@@ -28,7 +27,8 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
     public AbstractListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
         // We pass the parent's width and height to the super constructor.
-        super(client, parent.width, parent.height, top, bottom, itemHeight);
+        super(client, parent.width, bottom - top, top, itemHeight);
+
         this.parentScreen = parent;
 
         // Disable default backgrounds.
@@ -63,7 +63,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (this.isDraggingScrollbar) {
-            int trackHeight = this.bottom - this.top;
+            int trackHeight = this.getHeight();
             float maxScroll = this.getMaxScroll();
             float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getMaxPosition());
             float draggableHeight = trackHeight - thumbHeight;
@@ -86,7 +86,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
 
         // --- START SCISSORING (clip area so content doesn't render above or below list) ---
@@ -94,13 +94,13 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         // Convert logical screen coordinates to framebuffer coordinates
         int scissorX = (int) (0 * scale);
-        int scissorY = (int) (this.client.getWindow().getFramebufferHeight() - (this.bottom * scale));
+        int scissorY = (int) (this.client.getWindow().getFramebufferHeight() - (this.getBottom() * scale));
         int scissorWidth = (int) (this.width * scale);
-        int scissorHeight = (int) ((this.bottom - this.top) * scale);
+        int scissorHeight = (int) ((this.getBottom() - this.getY()) * scale);
 
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
 
-        super.render(context, mouseX, mouseY, delta);
+        super.renderWidget(context, mouseX, mouseY, delta);
         renderCustomScrollbar(context); // We call this instead of relying on super's scrollbar
 
         RenderSystem.disableScissor();  // turn off clipping to draw the fade overlays properly
@@ -110,16 +110,14 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         RenderSystem.defaultBlendFunc();
 
         // Top fade overlay
-        int left = this.left;
-        int right = this.right;
-        int topY = this.top;
+        int left = this.getX();
+        int right = this.getRight();
+        int topY = this.getY();
         drawVerticalGradient(context, left, topY, right, topY + FADE_HEIGHT,
                 0x60000000, 0x00000000);  // semi-transparent black to transparent
 
-        // Bottom fade overlay
-        int bottomY = this.bottom - FADE_HEIGHT;
-        drawVerticalGradient(context, left, bottomY, right, this.bottom,
-                0x00000000, 0x60000000); // transparent to semi-transparent black
+        int bottomY = this.getBottom() - FADE_HEIGHT;
+        drawVerticalGradient(context, left, bottomY, right, this.getBottom(), 0x00000000, 0x60000000);
 
         RenderSystem.disableBlend();
     }
@@ -129,14 +127,14 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         if (maxScroll <= 0) return; // Don't render if not scrollable
 
         int scrollbarX = this.getScrollbarPositionX();
-        int trackHeight = this.bottom - this.top;
+        int trackHeight = this.getHeight();
 
         float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getMaxPosition());
         float thumbY = (float)this.getScrollAmount() / (float)(this.getMaxPosition() - trackHeight) * (trackHeight - thumbHeight);
 
         int thumbColor = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
 
-        context.fill(scrollbarX, this.top + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.top + (int) (thumbY + thumbHeight), thumbColor);
+        context.fill(scrollbarX, this.getY() + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.getY() + (int) (thumbY + thumbHeight), thumbColor);
     }
 
     private void drawVerticalGradient(DrawContext context, int x1, int y1, int x2, int y2, int topColor, int bottomColor) {
@@ -160,7 +158,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
     // --- SHARED UTILITY OVERRIDES ---
     @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
+    public void appendClickableNarrations(NarrationMessageBuilder builder) {
         // We don't need narrations for this UI.
     }
 
@@ -180,7 +178,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
             this.lastClickTime = 0L;
             return;
         }
-        // not a double-click, register this as the last click
+        // not a double click, register this as the last click
         this.lastClickedEntry = entry;
         this.lastClickTime = now;
     }
