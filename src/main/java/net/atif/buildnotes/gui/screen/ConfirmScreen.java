@@ -40,7 +40,7 @@ public class ConfirmScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
         int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
         int panelX = (this.width - panelW) / 2;
@@ -49,7 +49,5 @@ public class ConfirmScreen extends BaseScreen {
         UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
 
         context.drawTextWithShadow(this.textRenderer, this.message, panelX + 12, panelY + 12, 0xFFFFFF);
-
-        super.render(context, mouseX, mouseY, delta);
     }
 }

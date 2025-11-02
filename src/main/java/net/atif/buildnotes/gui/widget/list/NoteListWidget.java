@@ -4,7 +4,6 @@ import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -28,7 +27,7 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
     }
 
     public Note getSelectedNote() {
-            NoteEntry entry = getSelectedOrNull();
+        NoteEntry entry = getSelectedOrNull();
         return entry != null ? entry.getNote() : null;
     }
 

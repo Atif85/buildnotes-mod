@@ -157,7 +157,7 @@ public class EditNoteScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -179,7 +179,6 @@ public class EditNoteScreen extends BaseScreen {
 
         // Draw screen title
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
-        super.render(context, mouseX, mouseY, delta);
     }
 
     // We need to override mouseScrolled to pass the event to our custom widget

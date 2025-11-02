@@ -87,7 +87,7 @@ public class ViewNoteScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
         int contentWidth = (int) (this.width * 0.6);
         int contentX = (this.width - contentWidth) / 2;
@@ -105,8 +105,6 @@ public class ViewNoteScreen extends BaseScreen {
         int contentPanelBottom = this.height - bottomMargin;
         UIHelper.drawPanel(context, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
         this.contentArea.render(context, mouseX, mouseY, delta);
-
-        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override

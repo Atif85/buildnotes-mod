@@ -216,12 +216,11 @@ public class MainScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
         (currentTab == TabType.NOTES ? noteListWidget : buildListWidget).render(context, mouseX, mouseY, delta);
 
         UIHelper.drawPanel(context, this.searchField.x - 2, this.searchField.y, this.searchField.width + 4, this.searchField.height);
         this.searchField.render(context, mouseX, mouseY, delta);
-        super.render(context, mouseX, mouseY, delta);
     }
 }
