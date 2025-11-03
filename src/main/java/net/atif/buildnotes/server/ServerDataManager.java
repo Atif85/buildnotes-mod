@@ -3,15 +3,14 @@ package net.atif.buildnotes.server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
-import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.network.NetworkConstants;
-import net.atif.buildnotes.network.PacketIdentifiers;
+import net.atif.buildnotes.network.packet.s2c.ImageChunkS2CPacket;
+import net.atif.buildnotes.network.packet.s2c.ImageNotFoundS2CPacket;
+
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.WorldSavePath;
@@ -112,12 +111,10 @@ public class ServerDataManager {
             if (Files.notExists(imagePath)) {
                 Buildnotes.LOGGER.warn("Player {} requested non-existent image '{}' for build {}", player.getName().getString(), filename, buildId);
 
-                // Prepare the packet buffer now, then send on the server thread.
-                PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-                buf.writeUuid(buildId);
-                buf.writeString(filename);
-
-                ServerPlayNetworking.send(player, PacketIdentifiers.IMAGE_NOT_FOUND_S2C, buf);
+                MinecraftServer server = player.getServer();
+                server.execute(() -> {
+                    ServerPlayNetworking.send(player, new ImageNotFoundS2CPacket(buildId, filename));
+                });
 
                 return;
             }
@@ -132,13 +129,9 @@ public class ServerDataManager {
                     byte[] chunkData = new byte[length];
                     System.arraycopy(fullData, offset, chunkData, 0, length);
 
-                    PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-                    buf.writeUuid(buildId);
-                    buf.writeString(filename);
-                    buf.writeVarInt(totalChunks);
-                    buf.writeVarInt(i);
-                    buf.writeByteArray(chunkData);
-                    ServerPlayNetworking.send(player, PacketIdentifiers.IMAGE_CHUNK_S2C, buf);
+                    MinecraftServer server = player.getServer();
+                    int finalI = i;
+                    server.execute(() -> ServerPlayNetworking.send(player, new ImageChunkS2CPacket(buildId, filename, totalChunks, finalI, chunkData)));
                 }
                 Buildnotes.LOGGER.info("Sent image '{}' ({} chunks) to player {}", filename, totalChunks, player.getName().getString());
 

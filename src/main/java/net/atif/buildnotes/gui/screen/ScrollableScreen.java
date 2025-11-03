@@ -81,12 +81,6 @@ public abstract class ScrollableScreen extends BaseScreen {
         context.getMatrices().pop();
         RenderSystem.disableScissor();
 
-        for (Element child : this.children()) {
-            if (!this.scrollableWidgets.contains(child) && child instanceof Drawable drawable) {
-                drawable.render(context, mouseX, mouseY, delta);
-            }
-        }
-
         renderScrollbar(context);
     }
 

@@ -30,10 +30,6 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         super(client, parent.width, bottom - top, top, itemHeight);
 
         this.parentScreen = parent;
-
-        // Disable default backgrounds.
-        this.setRenderBackground(false);
-        this.setRenderHeader(false,0);
     }
 
     // --- SHARED VISIBILITY LOGIC ---
@@ -45,7 +41,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.visible) return false;
 
-        if (this.isMouseOver(mouseX, mouseY) && mouseX >= this.getScrollbarPositionX() && mouseX < this.getScrollbarPositionX() + SCROLLBAR_WIDTH) {
+        if (this.isMouseOver(mouseX, mouseY) && mouseX >= this.getDefaultScrollbarX() && mouseX < this.getDefaultScrollbarX() + SCROLLBAR_WIDTH) {
             this.isDraggingScrollbar = true;
             this.scrollbarDragStartMouseY = mouseY;
             return true;
@@ -126,7 +122,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         int maxScroll = this.getMaxScroll();
         if (maxScroll <= 0) return; // Don't render if not scrollable
 
-        int scrollbarX = this.getScrollbarPositionX();
+        int scrollbarX = this.getDefaultScrollbarX();
         int trackHeight = this.getHeight();
 
         float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getMaxPosition());
@@ -149,7 +145,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    protected int getScrollbarPositionX() {
+    protected int getDefaultScrollbarX() {
         int listWidth = getRowWidth();
         int xStart = (this.width - listWidth) / 2; // center the list
         return xStart + listWidth + 4; // small padding from edge

@@ -2,13 +2,12 @@ package net.atif.buildnotes.client;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.network.NetworkConstants;
-import net.atif.buildnotes.network.PacketIdentifiers;
+import net.atif.buildnotes.network.packet.c2s.RequestImageC2SPacket;
+import net.atif.buildnotes.network.packet.c2s.UploadImageChunkC2SPacket;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.PacketByteBuf;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -93,10 +92,7 @@ public class ClientImageTransferManager {
             }
 
             Buildnotes.LOGGER.info("Requesting image '{}' for build {}", filename, key.buildId);
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeUuid(buildId);
-            buf.writeString(filename);
-            ClientPlayNetworking.send(PacketIdentifiers.REQUEST_IMAGE_C2S, buf);
+            ClientPlayNetworking.send(new RequestImageC2SPacket(buildId, filename));
 
         } catch (Exception e) {
             Buildnotes.LOGGER.error("[CRITICAL] An unexpected exception occurred inside requestImage!", e);
@@ -208,13 +204,7 @@ public class ClientImageTransferManager {
                     byte[] chunkData = new byte[length];
                     System.arraycopy(fullData, offset, chunkData, 0, length);
 
-                    PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-                    buf.writeUuid(key.buildId);
-                    buf.writeString(key.filename);
-                    buf.writeVarInt(totalChunks);
-                    buf.writeVarInt(i);
-                    buf.writeByteArray(chunkData);
-                    ClientPlayNetworking.send(PacketIdentifiers.UPLOAD_IMAGE_CHUNK_C2S, buf);
+                    ClientPlayNetworking.send(new UploadImageChunkC2SPacket(key.buildId, key.filename, totalChunks, i, chunkData));
                 }
                 Buildnotes.LOGGER.info("Finished sending {} chunks for image '{}'", totalChunks, key.filename);
             } catch (IOException e) {

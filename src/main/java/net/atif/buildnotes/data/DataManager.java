@@ -3,15 +3,16 @@ package net.atif.buildnotes.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientCache;
 import net.atif.buildnotes.client.ClientImageTransferManager;
-import net.atif.buildnotes.network.PacketIdentifiers;
+import net.atif.buildnotes.network.packet.c2s.DeleteBuildC2SPacket;
+import net.atif.buildnotes.network.packet.c2s.DeleteNoteC2SPacket;
+import net.atif.buildnotes.network.packet.c2s.SaveBuildC2SPacket;
+import net.atif.buildnotes.network.packet.c2s.SaveNoteC2SPacket;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.WorldSavePath;
 
 import java.io.File;
@@ -147,9 +148,8 @@ public class DataManager {
         if (noteToSave.getScope() == Scope.SERVER) {
             deleteNoteFromLocalFiles(noteToSave.getId());
 
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            noteToSave.writeToBuf(buf);
-            ClientPlayNetworking.send(PacketIdentifiers.SAVE_NOTE_C2S, buf);
+            // Use the typed packet
+            ClientPlayNetworking.send(new SaveNoteC2SPacket(noteToSave));
             return;
         }
 
@@ -161,9 +161,7 @@ public class DataManager {
         if (wasServerNote) {
             // If it was a server note, its new scope is now local.
             // We must tell the server to delete its copy.
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeUuid(noteId);
-            ClientPlayNetworking.send(PacketIdentifiers.DELETE_NOTE_C2S, buf);
+            ClientPlayNetworking.send(new DeleteNoteC2SPacket(noteId));
         }
 
         deleteNoteFromLocalFiles(noteId);
@@ -178,9 +176,7 @@ public class DataManager {
     public void deleteNote(Note noteToDelete) {
         if (noteToDelete.getScope() == Scope.SERVER) {
             // Send a C2S packet to the server
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeUuid(noteToDelete.getId());
-            ClientPlayNetworking.send(PacketIdentifiers.DELETE_NOTE_C2S, buf);
+            ClientPlayNetworking.send(new DeleteNoteC2SPacket(noteToDelete.getId()));
             return;
         }
         deleteNoteFromLocalFiles(noteToDelete.getId());
@@ -217,9 +213,7 @@ public class DataManager {
             }
 
             // 4. Send the main build metadata packet immediately.
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buildToSave.writeToBuf(buf);
-            ClientPlayNetworking.send(PacketIdentifiers.SAVE_BUILD_C2S, buf);
+            ClientPlayNetworking.send(new SaveBuildC2SPacket(buildToSave));
             return;
         }
         // --- Handle moving a build AWAY from the server ---
@@ -228,9 +222,7 @@ public class DataManager {
 
         if (wasServerBuild) {
             // If it was a server build, tell the server to delete its copy.
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeUuid(buildId);
-            ClientPlayNetworking.send(PacketIdentifiers.DELETE_BUILD_C2S, buf);
+            ClientPlayNetworking.send(new DeleteBuildC2SPacket(buildId));
         }
 
         // This is the original logic for saving locally.
@@ -246,9 +238,7 @@ public class DataManager {
     public void deleteBuild(Build buildToDelete) {
         if (buildToDelete.getScope() == Scope.SERVER) {
             // Send a C2S packet to the server
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeUuid(buildToDelete.getId());
-            ClientPlayNetworking.send(PacketIdentifiers.DELETE_BUILD_C2S, buf);
+            ClientPlayNetworking.send(new DeleteBuildC2SPacket(buildToDelete.getId()));
             return;
         }
         deleteBuildFromLocalFiles(buildToDelete.getId());

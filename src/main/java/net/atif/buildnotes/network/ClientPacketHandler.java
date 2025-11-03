@@ -2,13 +2,14 @@ package net.atif.buildnotes.network;
 
 import net.atif.buildnotes.client.ClientCache;
 import net.atif.buildnotes.client.ClientImageTransferManager;
+import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.screen.MainScreen; // ADDED
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.atif.buildnotes.network.packet.c2s.RequestDataC2SPacket;
+import net.atif.buildnotes.network.packet.s2c.*;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.PacketByteBuf;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,64 +22,51 @@ public class ClientPacketHandler {
         }
     }
 
-    public static void handleInitialSync(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        List<Note> notes = buf.readList(Note::fromBuf);
-        List<Build> builds = buf.readList(Build::fromBuf);
-        client.execute(() -> {
-            ClientCache.setNotes(notes);
-            ClientCache.setBuilds(builds);
-            // After the very first sync, refresh the screen if it's open
-            refreshMainScreen(client);
-        });
+    public static void handleHandshake(MinecraftClient client, HandshakeS2CPacket packet) {
+        final var permission = packet.permission();
+        ClientSession.joinServer(permission);
+        // After joining, immediately request data from the server
+        ClientPlayNetworking.send(new RequestDataC2SPacket());
     }
 
-    public static void handleUpdateNote(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        Note updatedNote = Note.fromBuf(buf);
-        client.execute(() -> {
-            ClientCache.addOrUpdateNote(updatedNote);
-            refreshMainScreen(client);
-        });
+    // --- Typed packet handlers ---
+    public static void handleInitialSync(MinecraftClient client, InitialSyncS2CPacket packet) {
+        List<Note> notes = packet.notes();
+        List<Build> builds = packet.builds();
+        ClientCache.setNotes(notes);
+        ClientCache.setBuilds(builds);
+        refreshMainScreen(client);
     }
 
-    public static void handleUpdateBuild(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        Build updatedBuild = Build.fromBuf(buf);
-        client.execute(() -> {
-            ClientCache.addOrUpdateBuild(updatedBuild);
-            refreshMainScreen(client);
-        });
+    public static void handleUpdateNote(MinecraftClient client, UpdateNoteS2CPacket packet) {
+        Note updatedNote = packet.note();
+        ClientCache.addOrUpdateNote(updatedNote);
+        refreshMainScreen(client);
     }
 
-    public static void handleDeleteNote(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        UUID noteId = buf.readUuid();
-        client.execute(() -> {
-            ClientCache.removeNoteById(noteId);
-            refreshMainScreen(client);
-        });
+    public static void handleUpdateBuild(MinecraftClient client, UpdateBuildS2CPacket packet) {
+        Build updatedBuild = packet.build();
+        ClientCache.addOrUpdateBuild(updatedBuild);
+        refreshMainScreen(client);
     }
 
-    public static void handleDeleteBuild(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        UUID buildId = buf.readUuid();
-        client.execute(() -> {
-            ClientCache.removeBuildById(buildId);
-            refreshMainScreen(client);
-        });
+    public static void handleDeleteNote(MinecraftClient client, DeleteNoteS2CPacket packet) {
+        UUID noteId = packet.noteId();
+        ClientCache.removeNoteById(noteId);
+        refreshMainScreen(client);
     }
 
-    public static void handleImageChunk(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        // Read the data in the same order the server wrote it
-        UUID buildId = buf.readUuid();
-        String filename = buf.readString();
-        int totalChunks = buf.readVarInt();
-        int chunkIndex = buf.readVarInt();
-        byte[] data = buf.readByteArray();
-
-        // Pass the data to the manager on the client thread to ensure thread safety
-        client.execute(() -> ClientImageTransferManager.handleChunk(buildId, filename, totalChunks, chunkIndex, data));
+    public static void handleDeleteBuild(MinecraftClient client, DeleteBuildS2CPacket packet) {
+        UUID buildId = packet.buildId();
+        ClientCache.removeBuildById(buildId);
+        refreshMainScreen(client);
     }
 
-    public static void handleImageNotFound(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        UUID buildId = buf.readUuid();
-        String filename = buf.readString();
-        client.execute(() -> ClientImageTransferManager.onDownloadFailed(buildId, filename));
+    public static void handleImageChunk(MinecraftClient client, ImageChunkS2CPacket packet) {
+        ClientImageTransferManager.handleChunk(packet.buildId(), packet.filename(), packet.totalChunks(), packet.chunkIndex(), packet.data());
+    }
+
+    public static void handleImageNotFound(MinecraftClient client, ImageNotFoundS2CPacket packet) {
+        ClientImageTransferManager.onDownloadFailed(packet.buildId(), packet.filename());
     }
 }

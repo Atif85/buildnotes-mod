@@ -1,16 +1,14 @@
 package net.atif.buildnotes.network;
 
-import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.network.packet.c2s.*;
+import net.atif.buildnotes.network.packet.s2c.*;
 import net.atif.buildnotes.server.ServerDataManager;
 import net.atif.buildnotes.server.ServerImageTransferManager;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import java.util.List;
 import java.util.UUID;
@@ -21,103 +19,75 @@ public class ServerPacketHandler {
         return Buildnotes.PERMISSION_MANAGER.isAllowedToEdit(player);
     }
 
-    public static void handleRequestInitialData(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        server.execute(() -> {
-            // Access SERVER_DATA_MANAGER statically from the main mod class
-            ServerDataManager dataManager = Buildnotes.SERVER_DATA_MANAGER;
-            List<Note> notes = dataManager.getNotes();
-            List<Build> builds = dataManager.getBuilds();
+    // --- Typed packet handlers (C2S) ---
+    public static void handleRequestInitialData(MinecraftServer server, ServerPlayerEntity player, RequestDataC2SPacket packet) {
+        ServerDataManager dataManager = Buildnotes.SERVER_DATA_MANAGER;
+        List<Note> notes = dataManager.getNotes();
+        List<Build> builds = dataManager.getBuilds();
 
-            PacketByteBuf responseBuf = new PacketByteBuf(Unpooled.buffer());
-            responseBuf.writeCollection(notes, (b, n) -> n.writeToBuf(b));
-            responseBuf.writeCollection(builds, (b, B) -> B.writeToBuf(b));
-
-            ServerPlayNetworking.send(player, PacketIdentifiers.INITIAL_SYNC_S2C, responseBuf);
-        });
+        // Send typed S2C packet
+        ServerPlayNetworking.send(player, new InitialSyncS2CPacket(notes, builds));
     }
 
-    public static void handleSaveNote(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        Note receivedNote = Note.fromBuf(buf);
-        server.execute(() -> {
-            if (!hasEditPermission(server, player)) return;
+    public static void handleSaveNote(MinecraftServer server, ServerPlayerEntity player, SaveNoteC2SPacket packet) {
+        Note receivedNote = packet.note();
+        if (!hasEditPermission(server, player)) return;
 
-            Buildnotes.SERVER_DATA_MANAGER.saveNote(receivedNote);
+        Buildnotes.SERVER_DATA_MANAGER.saveNote(receivedNote);
 
-            // Broadcast the update to all players
-            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                PacketByteBuf copy = new PacketByteBuf(Unpooled.buffer());
-                receivedNote.writeToBuf(copy);
-                ServerPlayNetworking.send(p, PacketIdentifiers.UPDATE_NOTE_S2C, copy);
-            }
-        });
+        // Broadcast the update to all players
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            ServerPlayNetworking.send(p, new UpdateNoteS2CPacket(receivedNote));
+        }
     }
 
-    // Handler for saving a build
-    public static void handleSaveBuild(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        Build receivedBuild = Build.fromBuf(buf);
-        server.execute(() -> {
-            if (!hasEditPermission(server, player)) return;
+    public static void handleSaveBuild(MinecraftServer server, ServerPlayerEntity player, SaveBuildC2SPacket packet) {
+        Build receivedBuild = packet.build();
+        if (!hasEditPermission(server, player)) return;
 
-            Buildnotes.SERVER_DATA_MANAGER.saveBuild(receivedBuild);
+        Buildnotes.SERVER_DATA_MANAGER.saveBuild(receivedBuild);
 
-            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                PacketByteBuf copy = new PacketByteBuf(Unpooled.buffer());
-                receivedBuild.writeToBuf(copy);
-                ServerPlayNetworking.send(p, PacketIdentifiers.UPDATE_BUILD_S2C, copy);
-            }
-        });
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            ServerPlayNetworking.send(p, new UpdateBuildS2CPacket(receivedBuild));
+        }
     }
 
-    // Handler for deleting a note
-    public static void handleDeleteNote(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        UUID noteId = buf.readUuid();
-        server.execute(() -> {
-            if (!hasEditPermission(server, player)) return;
+    public static void handleDeleteNote(MinecraftServer server, ServerPlayerEntity player, DeleteNoteC2SPacket packet) {
+        UUID noteId = packet.noteId();
+        if (!hasEditPermission(server, player)) return;
 
-            Buildnotes.SERVER_DATA_MANAGER.deleteNote(noteId);
+        Buildnotes.SERVER_DATA_MANAGER.deleteNote(noteId);
 
-            PacketByteBuf responseBuf = new PacketByteBuf(Unpooled.buffer());
-            responseBuf.writeUuid(noteId);
-            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                ServerPlayNetworking.send(p, PacketIdentifiers.DELETE_NOTE_S2C, responseBuf);
-            }
-        });
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            ServerPlayNetworking.send(p, new DeleteNoteS2CPacket(noteId));
+        }
     }
 
-    // Handler for deleting a build
-    public static void handleDeleteBuild(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        UUID buildId = buf.readUuid();
-        server.execute(() -> {
-            if (!hasEditPermission(server, player)) return;
+    public static void handleDeleteBuild(MinecraftServer server, ServerPlayerEntity player, DeleteBuildC2SPacket packet) {
+        UUID buildId = packet.buildId();
+        if (!hasEditPermission(server, player)) return;
 
-            Buildnotes.SERVER_DATA_MANAGER.deleteBuild(buildId);
+        Buildnotes.SERVER_DATA_MANAGER.deleteBuild(buildId);
 
-            PacketByteBuf responseBuf = new PacketByteBuf(Unpooled.buffer());
-            responseBuf.writeUuid(buildId);
-            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-                ServerPlayNetworking.send(p, PacketIdentifiers.DELETE_BUILD_S2C, responseBuf);
-            }
-        });
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            ServerPlayNetworking.send(p, new DeleteBuildS2CPacket(buildId));
+        }
     }
 
-    public static void handleImageChunkUpload(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        UUID buildId = buf.readUuid();
-        String filename = buf.readString();
-        int totalChunks = buf.readVarInt();
-        int chunkIndex = buf.readVarInt();
-        byte[] data = buf.readByteArray();
+    public static void handleImageChunkUpload(MinecraftServer server, ServerPlayerEntity player, UploadImageChunkC2SPacket packet) {
+        UUID buildId = packet.buildId();
+        String filename = packet.filename();
+        int totalChunks = packet.totalChunks();
+        int chunkIndex = packet.chunkIndex();
+        byte[] data = packet.data();
 
-        // Must execute on the server thread to ensure thread safety with the map
-        server.execute(() -> ServerImageTransferManager.handleChunk(player, buildId, filename, totalChunks, chunkIndex, data));
+        ServerImageTransferManager.handleChunk(player, buildId, filename, totalChunks, chunkIndex, data);
     }
 
-    public static void handleImageRequest(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        UUID buildId = buf.readUuid();
-        String filename = buf.readString();
+    public static void handleImageRequest(MinecraftServer server, ServerPlayerEntity player, RequestImageC2SPacket packet) {
+        UUID buildId = packet.buildId();
+        String filename = packet.filename();
 
-        server.execute(() -> {
-            // This now needs to be implemented: a method to read and send an image from the server
-            Buildnotes.SERVER_DATA_MANAGER.sendImageToPlayer(player, buildId, filename);
-        });
+        Buildnotes.SERVER_DATA_MANAGER.sendImageToPlayer(player, buildId, filename);
     }
 }
