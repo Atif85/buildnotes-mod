@@ -9,7 +9,7 @@ import net.minecraft.util.Identifier;
 import java.util.UUID;
 
 public record DeleteNoteS2CPacket(UUID noteId) implements CustomPayload {
-    public static final CustomPayload.Id<DeleteNoteS2CPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "delete_note_s2c"));
+    public static final CustomPayload.Id<DeleteNoteS2CPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "delete_note_s2c"));
 
     public static final PacketCodec<PacketByteBuf, DeleteNoteS2CPacket> CODEC = CustomPayload.codecOf(
             DeleteNoteS2CPacket::write,

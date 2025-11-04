@@ -8,7 +8,7 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
 public record HandshakeS2CPacket(PermissionLevel permission) implements CustomPayload {
-    public static final CustomPayload.Id<HandshakeS2CPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "handshake_s2c"));
+    public static final CustomPayload.Id<HandshakeS2CPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "handshake_s2c"));
 
     public static final PacketCodec<PacketByteBuf, HandshakeS2CPacket> CODEC = CustomPayload.codecOf(
             HandshakeS2CPacket::write,

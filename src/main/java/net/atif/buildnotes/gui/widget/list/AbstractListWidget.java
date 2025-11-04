@@ -97,9 +97,9 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
 
         super.renderWidget(context, mouseX, mouseY, delta);
-        renderCustomScrollbar(context); // We call this instead of relying on super's scrollbar
+        renderCustomScrollbar(context);
 
-        RenderSystem.disableScissor();  // turn off clipping to draw the fade overlays properly
+        RenderSystem.disableScissor();
 
         // Save the current state
         RenderSystem.enableBlend();
@@ -110,10 +110,11 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         int right = this.getRight();
         int topY = this.getY();
         drawVerticalGradient(context, left, topY, right, topY + FADE_HEIGHT,
-                0x60000000, 0x00000000);  // semi-transparent black to transparent
+                0x60000000, 0x00000000);
 
         int bottomY = this.getBottom() - FADE_HEIGHT;
-        drawVerticalGradient(context, left, bottomY, right, this.getBottom(), 0x00000000, 0x60000000);
+        drawVerticalGradient(context, left, bottomY, right, this.getBottom(),
+                0x00000000, 0x60000000);
 
         RenderSystem.disableBlend();
     }

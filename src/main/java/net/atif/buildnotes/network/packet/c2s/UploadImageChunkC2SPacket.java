@@ -9,7 +9,7 @@ import net.minecraft.util.Identifier;
 import java.util.UUID;
 
 public record UploadImageChunkC2SPacket(UUID buildId, String filename, int totalChunks, int chunkIndex, byte[] data) implements CustomPayload {
-    public static final CustomPayload.Id<UploadImageChunkC2SPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "upload_image_chunk_c2s"));
+    public static final CustomPayload.Id<UploadImageChunkC2SPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "upload_image_chunk_c2s"));
 
     public static final PacketCodec<PacketByteBuf, UploadImageChunkC2SPacket> CODEC = CustomPayload.codecOf(
             UploadImageChunkC2SPacket::write,

@@ -13,7 +13,7 @@ import java.util.UUID;
 public record DeleteNoteC2SPacket(UUID noteId) implements CustomPayload {
 
     // 1. Define the unique ID for this packet
-    public static final CustomPayload.Id<DeleteNoteC2SPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "delete_note_c2s"));
+    public static final CustomPayload.Id<DeleteNoteC2SPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "delete_note_c2s"));
 
     // 2. Define the CODEC which knows how to read/write this packet
     public static final PacketCodec<PacketByteBuf, DeleteNoteC2SPacket> CODEC = CustomPayload.codecOf(

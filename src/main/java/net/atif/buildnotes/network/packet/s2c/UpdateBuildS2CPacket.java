@@ -8,7 +8,7 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
 public record UpdateBuildS2CPacket(Build build) implements CustomPayload {
-    public static final CustomPayload.Id<UpdateBuildS2CPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "update_build_s2c"));
+    public static final CustomPayload.Id<UpdateBuildS2CPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "update_build_s2c"));
 
     public static final PacketCodec<PacketByteBuf, UpdateBuildS2CPacket> CODEC = CustomPayload.codecOf(
             UpdateBuildS2CPacket::write,

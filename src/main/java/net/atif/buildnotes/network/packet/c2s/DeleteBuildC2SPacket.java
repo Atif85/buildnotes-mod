@@ -9,7 +9,7 @@ import net.minecraft.util.Identifier;
 import java.util.UUID;
 
 public record DeleteBuildC2SPacket(UUID buildId) implements CustomPayload {
-    public static final CustomPayload.Id<DeleteBuildC2SPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "delete_build_c2s"));
+    public static final CustomPayload.Id<DeleteBuildC2SPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "delete_build_c2s"));
 
     public static final PacketCodec<PacketByteBuf, DeleteBuildC2SPacket> CODEC = CustomPayload.codecOf(
             DeleteBuildC2SPacket::write,

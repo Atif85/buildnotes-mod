@@ -9,7 +9,7 @@ import net.minecraft.util.Identifier;
 import java.util.UUID;
 
 public record ImageNotFoundS2CPacket(UUID buildId, String filename) implements CustomPayload {
-    public static final CustomPayload.Id<ImageNotFoundS2CPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "image_not_found_s2c"));
+    public static final CustomPayload.Id<ImageNotFoundS2CPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "image_not_found_s2c"));
 
     public static final PacketCodec<PacketByteBuf, ImageNotFoundS2CPacket> CODEC = CustomPayload.codecOf(
             ImageNotFoundS2CPacket::write,

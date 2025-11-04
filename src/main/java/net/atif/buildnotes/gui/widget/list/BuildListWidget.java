@@ -69,7 +69,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
             // Line 3: Date/Time with new label
             context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC, false);
 
-            // --- NEW SCOPE INDICATOR ---
+            // --- SCOPE INDICATOR ---
             Text scopeText = null;
             if (build.getScope() != null) { // Add null check for safety
                 switch (build.getScope()) {

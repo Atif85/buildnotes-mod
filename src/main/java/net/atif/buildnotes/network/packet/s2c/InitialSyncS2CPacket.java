@@ -11,7 +11,7 @@ import net.minecraft.util.Identifier;
 import java.util.List;
 
 public record InitialSyncS2CPacket(List<Note> notes, List<Build> builds) implements CustomPayload {
-    public static final CustomPayload.Id<InitialSyncS2CPacket> ID = new CustomPayload.Id<>(new Identifier(Buildnotes.MOD_ID, "initial_sync_s2c"));
+    public static final CustomPayload.Id<InitialSyncS2CPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "initial_sync_s2c"));
 
     public static final PacketCodec<PacketByteBuf, InitialSyncS2CPacket> CODEC = CustomPayload.codecOf(
             InitialSyncS2CPacket::write,
