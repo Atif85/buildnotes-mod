@@ -10,8 +10,8 @@
   "gui.buildnotes.edit_button": "Edit",
   "gui.buildnotes.delete_button": "Delete",
   "gui.buildnotes.open_button": "Open",
-  "gui.buildnotes.close_button": "Close",
   "gui.buildnotes.save_button": "Save",
+  "gui.buildnotes.close_button": "Close",
   "gui.buildnotes.cancel_button": "Cancel",
   "gui.buildnotes.confirm_button": "Confirm",
 

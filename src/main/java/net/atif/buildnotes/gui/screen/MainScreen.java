@@ -86,6 +86,8 @@ public class MainScreen extends BaseScreen {
             }
         });
 
+        System.out.println(Text.translatable("gui.buildnotes.close_button").getString());
+
         refreshData();
         this.setInitialFocus(this.searchField);
     }
