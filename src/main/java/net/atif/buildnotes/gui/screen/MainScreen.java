@@ -86,8 +86,6 @@ public class MainScreen extends BaseScreen {
             }
         });
 
-        System.out.println(Text.translatable("gui.buildnotes.close_button").getString());
-
         refreshData();
         this.setInitialFocus(this.searchField);
     }
@@ -219,10 +217,10 @@ public class MainScreen extends BaseScreen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-
         (currentTab == TabType.NOTES ? noteListWidget : buildListWidget).render(context, mouseX, mouseY, delta);
 
         UIHelper.drawPanel(context, this.searchField.x - 2, this.searchField.y, this.searchField.width + 4, this.searchField.height);
+
         this.searchField.render(context, mouseX, mouseY, delta);
     }
 }
