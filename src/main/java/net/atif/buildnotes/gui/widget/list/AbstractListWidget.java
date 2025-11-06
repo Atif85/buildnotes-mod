@@ -41,7 +41,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.visible) return false;
 
-        if (this.isMouseOver(mouseX, mouseY) && mouseX >= this.getDefaultScrollbarX() && mouseX < this.getDefaultScrollbarX() + SCROLLBAR_WIDTH) {
+        if (this.isMouseOver(mouseX, mouseY) && mouseX >= this.getScrollbarX() && mouseX < this.getScrollbarX() + SCROLLBAR_WIDTH) {
             this.isDraggingScrollbar = true;
             this.scrollbarDragStartMouseY = mouseY;
             return true;
@@ -60,8 +60,8 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (this.isDraggingScrollbar) {
             int trackHeight = this.getHeight();
-            float maxScroll = this.getMaxScroll();
-            float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getMaxPosition());
+            float maxScroll = this.getMaxScrollY();
+            float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getContentsHeightWithPadding());
             float draggableHeight = trackHeight - thumbHeight;
 
             if (draggableHeight <= 0) return true; // Cannot drag if thumb fills the track
@@ -71,7 +71,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
             // Update scroll amount based on mouse movement since the drag started
             double relativeMouseY = mouseY - this.scrollbarDragStartMouseY;
-            this.setScrollAmount(this.getScrollAmount() + (relativeMouseY * ratio));
+            this.setScrollY(this.getScrollY() + (relativeMouseY * ratio));
 
             // Update the start position for the next frame's calculation
             this.scrollbarDragStartMouseY = mouseY;
@@ -120,14 +120,14 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     protected void renderCustomScrollbar(DrawContext context) {
-        int maxScroll = this.getMaxScroll();
+        int maxScroll = this.getMaxScrollY();
         if (maxScroll <= 0) return; // Don't render if not scrollable
 
-        int scrollbarX = this.getDefaultScrollbarX();
+        int scrollbarX = this.getScrollbarX();
         int trackHeight = this.getHeight();
 
-        float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getMaxPosition());
-        float thumbY = (float)this.getScrollAmount() / (float)(this.getMaxPosition() - trackHeight) * (trackHeight - thumbHeight);
+        float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getContentsHeightWithPadding());
+        float thumbY = (float)this.getScrollY() / (float)(this.getContentsHeightWithPadding() - trackHeight) * (trackHeight - thumbHeight);
 
         int thumbColor = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
 
@@ -146,7 +146,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    protected int getDefaultScrollbarX() {
+    protected int getScrollbarX() {
         int listWidth = getRowWidth();
         int xStart = (this.width - listWidth) / 2; // center the list
         return xStart + listWidth + 4; // small padding from edge

@@ -1,6 +1,7 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
@@ -320,7 +321,10 @@ public class EditBuildScreen extends ScrollableScreen {
                 try (InputStream stream = Files.newInputStream(imagePath)) {
                     NativeImage image = NativeImage.read(stream);
                     NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
-                    Identifier textureId = this.client.getTextureManager().registerDynamicTexture("buildnotes_image_" + build.getId() + "_" + fileName.hashCode(), texture);
+
+                    Identifier textureId = Identifier.of(Buildnotes.MOD_ID, "buildnotes_image_" + build.getId() + "_" + fileName.hashCode());
+                    this.client.getTextureManager().registerTexture(textureId, texture);
+
                     ImageData data = new ImageData(textureId, image.getWidth(), image.getHeight());
                     textureCache.put(fileName, data);
                     return data;
