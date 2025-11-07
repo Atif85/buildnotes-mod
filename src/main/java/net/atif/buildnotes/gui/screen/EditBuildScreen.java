@@ -241,8 +241,6 @@ public class EditBuildScreen extends ScrollableScreen {
             } else {
                 ImageData data = getImageDataForCurrentImage();
                 if (data != null && data.textureId != null) {
-                    RenderSystem.setShaderTexture(0, data.textureId);
-                    RenderSystem.enableBlend();
                     int boxWidth = contentWidth - 4;
                     int boxHeight = galleryBoxHeight - 4;
                     float imageAspect = (float) data.width / (float) data.height;
@@ -257,7 +255,6 @@ public class EditBuildScreen extends ScrollableScreen {
                     int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
                     int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
                     context.drawTexture(RenderLayer::getGuiTextured, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
-                    RenderSystem.disableBlend();
                 } else {
                     context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
                 }
@@ -320,9 +317,10 @@ public class EditBuildScreen extends ScrollableScreen {
             if (Files.exists(imagePath)) {
                 try (InputStream stream = Files.newInputStream(imagePath)) {
                     NativeImage image = NativeImage.read(stream);
-                    NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
 
                     Identifier textureId = Identifier.of(Buildnotes.MOD_ID, "buildnotes_image_" + build.getId() + "_" + fileName.hashCode());
+                    NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> textureId.toString(), image);
+
                     this.client.getTextureManager().registerTexture(textureId, texture);
 
                     ImageData data = new ImageData(textureId, image.getWidth(), image.getHeight());

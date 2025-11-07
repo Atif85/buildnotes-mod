@@ -342,12 +342,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         if (hNeeded) contentHeight -= (SCROLLBAR_THICKNESS + 2);
 
         if (this.internalScissoringEnabled) {
-            double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
-            int scissorX = (int) (this.x * scale);
-            int scissorY = (int) (MinecraftClient.getInstance().getWindow().getFramebufferHeight() - ((this.y + this.height) * scale));
-            int scissorWidth = (int) (this.width * scale);
-            int scissorHeight = (int) (this.height * scale);
-            com.mojang.blaze3d.systems.RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+            context.enableScissor(this.x, this.y, this.x + this.width, this.y + this.height);
         }
 
         if (getText().isEmpty() && !this.focused && this.placeholderText != null && !this.placeholderText.isEmpty()) {
@@ -411,7 +406,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         }
 
         if (this.internalScissoringEnabled) {
-            com.mojang.blaze3d.systems.RenderSystem.disableScissor();
+            context.disableScissor();
         }
 
         // Draw scrollbars

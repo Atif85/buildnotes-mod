@@ -101,22 +101,19 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         RenderSystem.disableScissor();
 
-        // Save the current state
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-
         // Top fade overlay
         int left = this.getX();
         int right = this.getRight();
+
         int topY = this.getY();
-        drawVerticalGradient(context, left, topY, right, topY + FADE_HEIGHT,
+
+        context.fillGradient(left, topY, right, topY + FADE_HEIGHT,
                 0x60000000, 0x00000000);
 
         int bottomY = this.getBottom() - FADE_HEIGHT;
-        drawVerticalGradient(context, left, bottomY, right, this.getBottom(),
+        context.fillGradient(left, bottomY, right, this.getBottom(),
                 0x00000000, 0x60000000);
 
-        RenderSystem.disableBlend();
     }
 
     protected void renderCustomScrollbar(DrawContext context) {
@@ -132,10 +129,6 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         int thumbColor = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
 
         context.fill(scrollbarX, this.getY() + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.getY() + (int) (thumbY + thumbHeight), thumbColor);
-    }
-
-    private void drawVerticalGradient(DrawContext context, int x1, int y1, int x2, int y2, int topColor, int bottomColor) {
-        context.fillGradient(x1, y1, x2, y2, topColor, bottomColor);
     }
 
     // --- SHARED LAYOUT METHODS ---

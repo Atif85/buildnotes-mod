@@ -36,6 +36,7 @@ public class TabButtonWidget extends ButtonWidget {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         int textColor = 0xFFFFFF;
         context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
+        context.draw();
     }
 
     public boolean isActive() {
