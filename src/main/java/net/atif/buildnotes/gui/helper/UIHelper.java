@@ -21,6 +21,12 @@ public class UIHelper {
     public static final int BOTTOM_PADDING = 12;
     public static final int BUTTON_TEXT_PADDING = 10; // Padding for dynamically sized buttons
 
+    // colors
+    public static int panelColor = 0x77000000;
+    // Background gradient colors
+    public static int startColor = 0xC0101010;
+    public static int endColor = 0xD0101010;
+
     /**
      * A functional interface for creating buttons with dynamic placement and size.
      */
@@ -33,7 +39,7 @@ public class UIHelper {
      * Draws the standard dark, semi-transparent panel background.
      */
     public static void drawPanel(MatrixStack matrices, int x, int y, int width, int height) {
-        fill(matrices, x, y, x + width, y + height, 0x77000000);
+        fill(matrices, x, y, x + width, y + height, panelColor);
     }
 
     /**
@@ -89,5 +95,15 @@ public class UIHelper {
      */
     public static void showConfirmDialog(Screen parent, Text message, Runnable onConfirm) {
         MinecraftClient.getInstance().setScreen(new ConfirmScreen(parent, message, onConfirm, () -> MinecraftClient.getInstance().setScreen(parent)));
+    }
+
+    // change colors
+    public static void setPanelColor(int color) {
+        panelColor = color;
+    }
+
+    public static void setBackgroundGradientColors(int start, int end) {
+        startColor = start;
+        endColor = end;
     }
 }
