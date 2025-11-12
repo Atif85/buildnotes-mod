@@ -82,6 +82,11 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return this.visible && super.isMouseOver(mouseX, mouseY);
+    }
+
+    @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
 
