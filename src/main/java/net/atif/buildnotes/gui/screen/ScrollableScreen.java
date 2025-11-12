@@ -50,6 +50,7 @@ public abstract class ScrollableScreen extends BaseScreen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
+        super.render(matrices, mouseX, mouseY, delta);
 
         int top = getTopMargin();
         int bottom = this.height - getBottomMargin();
@@ -80,12 +81,6 @@ public abstract class ScrollableScreen extends BaseScreen {
 
         matrices.pop();
         RenderSystem.disableScissor();
-
-        for (Element child : this.children()) {
-            if (!this.scrollableWidgets.contains(child) && child instanceof Drawable drawable) {
-                drawable.render(matrices, mouseX, mouseY, delta);
-            }
-        }
 
         renderScrollbar(matrices);
     }
