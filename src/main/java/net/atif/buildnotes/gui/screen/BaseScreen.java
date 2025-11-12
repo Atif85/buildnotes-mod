@@ -1,7 +1,9 @@
 package net.atif.buildnotes.gui.screen;
 
 import net.atif.buildnotes.gui.helper.UIHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public abstract class BaseScreen extends Screen {
@@ -17,6 +19,13 @@ public abstract class BaseScreen extends Screen {
     protected void init() {
         super.init();
     }
+
+    @Override
+    public void renderBackground(DrawContext context) {
+        // We only need to draw the gradient, as the world is always rendered behind it.
+        context.fillGradient(0, 0, this.width, this.height, UIHelper.startColor, UIHelper.endColor);
+    }
+
 
     /**
      * Default close behaviour: stop repeat events and return to parent screen.
