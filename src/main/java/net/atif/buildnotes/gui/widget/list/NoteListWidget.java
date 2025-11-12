@@ -52,7 +52,21 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
         public NoteEntry(Note note) {
             this.note = note;
-            this.firstLine = note.getContent().split("\n")[0];
+            String content = note.getContent();
+            // Check if the content is null or just an empty string
+            if (content == null) {
+                this.firstLine = "";
+            } else {
+                // Split the content into lines.
+                String[] lines = content.split("\n");
+                // THE CRUCIAL CHECK: Make sure the resulting array is not empty.
+                if (lines.length > 0) {
+                    this.firstLine = lines[0];
+                } else {
+                    // This handles cases like "" or "\n\n" which result in an empty array.
+                    this.firstLine = "";
+                }
+            }
 
             LocalDateTime dateTime = LocalDateTime.ofInstant(
                     Instant.ofEpochSecond(note.getLastModified()), ZoneId.systemDefault()
