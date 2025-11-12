@@ -86,6 +86,15 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if (!this.visible) {
+            return false; // If the widget is not visible, don't handle the scroll event.
+        }
+        // If it is visible, let the parent class handle the scrolling as usual.
+        return super.mouseScrolled(mouseX, mouseY, amount);
+    }
+
+    @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
 
