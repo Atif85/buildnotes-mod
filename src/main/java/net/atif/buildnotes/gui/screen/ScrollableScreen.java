@@ -49,6 +49,7 @@ public abstract class ScrollableScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
         this.renderBackground(context);
 
         int top = getTopMargin();
@@ -80,12 +81,6 @@ public abstract class ScrollableScreen extends BaseScreen {
 
         context.getMatrices().pop();
         RenderSystem.disableScissor();
-
-        for (Element child : this.children()) {
-            if (!this.scrollableWidgets.contains(child) && child instanceof Drawable drawable) {
-                drawable.render(context, mouseX, mouseY, delta);
-            }
-        }
 
         renderScrollbar(context);
     }
