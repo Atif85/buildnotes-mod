@@ -30,6 +30,9 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         super(client, parent.width, bottom - top, top, itemHeight);
 
         this.parentScreen = parent;
+
+        super.setRenderHeader(false, 0);
+
     }
 
     // --- SHARED VISIBILITY LOGIC ---
@@ -90,6 +93,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
 
+
         // --- START SCISSORING (clip area so content doesn't render above or below list) ---
         double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
 
@@ -122,6 +126,14 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
                 0x00000000, 0x60000000);
 
         RenderSystem.disableBlend();
+    }
+
+    @Override
+    protected void drawMenuListBackground(DrawContext context) {
+    }
+
+    @Override
+    protected void drawHeaderAndFooterSeparators(DrawContext context) {
     }
 
     protected void renderCustomScrollbar(DrawContext context) {
