@@ -21,7 +21,7 @@ public abstract class BaseScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(DrawContext context) {
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         // We only need to draw the gradient, as the world is always rendered behind it.
         context.fillGradient(0, 0, this.width, this.height, UIHelper.startColor, UIHelper.endColor);
     }
