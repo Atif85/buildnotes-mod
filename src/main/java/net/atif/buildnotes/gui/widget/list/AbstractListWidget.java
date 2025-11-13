@@ -123,6 +123,14 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         RenderSystem.disableBlend();
     }
 
+    @Override
+    protected void drawMenuListBackground(DrawContext context) {
+    }
+
+    @Override
+    protected void drawHeaderAndFooterSeparators(DrawContext context) {
+    }
+
     protected void renderCustomScrollbar(DrawContext context) {
         int maxScroll = this.getMaxScroll();
         if (maxScroll <= 0) return; // Don't render if not scrollable
