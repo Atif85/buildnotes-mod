@@ -82,19 +82,10 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
         @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            // Title
-            client.textRenderer.draw(matrices, note.getTitle(), x + 2, y + 2, 0xFFFFFF);
-
-            // Content Preview
-            Text contentPreview = new LiteralText(firstLine).formatted(Formatting.GRAY);
-            String truncated = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
-            client.textRenderer.draw(matrices, new LiteralText(truncated), x + 2, y + 12, 0xCCCCCC);
-
-            // Date/Time with new label
-            client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
-
+            // Prepare Scope indicator to calculate its width
             Text scopeText = null;
-            if (note.getScope() != null) { // Add null check for safety
+            int scopeWidth = 0;
+            if (note.getScope() != null) {
                 switch (note.getScope()) {
                     case GLOBAL -> scopeText = new LiteralText("Global").formatted(Formatting.AQUA);
                     case SERVER -> scopeText = new LiteralText("Server").formatted(Formatting.GREEN);
@@ -103,9 +94,29 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             }
 
             if (scopeText != null) {
-                int scopeWidth = client.textRenderer.getWidth(scopeText);
+                scopeWidth = client.textRenderer.getWidth(scopeText);
+            }
+
+            // Truncate and draw the Title
+            // Calculate available width for the title by subtracting space for the scope indicator and padding
+            int availableTitleWidth = entryWidth - 4; // Base padding
+            if (scopeText != null) {
+                availableTitleWidth -= (scopeWidth + 7); // Account for the scope text and its padding
+            }
+
+            String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
+            client.textRenderer.draw(matrices, truncatedTitle, x + 2, y + 2, 0xFFFFFF);
+
+            if (scopeText != null) {
                 client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF);
             }
+
+            // Truncate and draw the Content Preview
+            Text contentPreview = new LiteralText(firstLine).formatted(Formatting.GRAY);
+            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
+            client.textRenderer.draw(matrices, new LiteralText(truncatedContent), x + 2, y + 12, 0xCCCCCC);
+
+            client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
         }
 
         @Override

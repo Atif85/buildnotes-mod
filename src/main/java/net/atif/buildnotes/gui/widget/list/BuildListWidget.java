@@ -62,19 +62,10 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
         @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            // Line 1: Name
-            client.textRenderer.draw(matrices, build.getName(), x + 2, y + 2, 0xFFFFFF);
-
-            // Line 2: Coords
-            Text coords = new LiteralText("Coords: " + build.getCoordinates()).formatted(Formatting.GRAY);
-            client.textRenderer.draw(matrices, coords, x + 2, y + 12, 0xCCCCCC);
-
-            // Line 3: Date/Time with new label
-            client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
-
-            // --- NEW SCOPE INDICATOR ---
+            // Prepare Scope indicator to calculate its width
             Text scopeText = null;
-            if (build.getScope() != null) { // Add null check for safety
+            int scopeWidth = 0;
+            if (build.getScope() != null) {
                 switch (build.getScope()) {
                     case GLOBAL -> scopeText = new LiteralText("Global").formatted(Formatting.AQUA);
                     case SERVER -> scopeText = new LiteralText("Server").formatted(Formatting.GREEN);
@@ -83,9 +74,33 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
             }
 
             if (scopeText != null) {
-                int scopeWidth = client.textRenderer.getWidth(scopeText);
+                scopeWidth = client.textRenderer.getWidth(scopeText);
+            }
+
+            // Truncate and draw the Build Name
+            // Calculate available width for the name by subtracting space for the scope indicator and padding
+            int availableNameWidth = entryWidth - 4; // Base padding
+            if (scopeText != null) {
+                availableNameWidth -= (scopeWidth + 7); // Account for the scope text and its padding
+            }
+
+            String truncatedName = client.textRenderer.trimToWidth(build.getName(), availableNameWidth);
+            client.textRenderer.draw(matrices, truncatedName, x + 2, y + 2, 0xFFFFFF);
+
+            // Draw the Scope indicator
+            if (scopeText != null) {
                 client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF);
             }
+
+            // Truncate and draw the Coordinates
+            String fullCoordsText = "Coords: " + build.getCoordinates();
+            String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 4);
+            client.textRenderer.draw(matrices, new LiteralText(truncatedCoords).formatted(Formatting.GRAY), x + 2, y + 12, 0xCCCCCC);
+
+            // Truncate and draw the Date/Time
+            String fullDateText = "Last Modified: " + this.formattedDateTime;
+            String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 4);
+            client.textRenderer.draw(matrices, truncatedDate, x + 2, y + 22, 0xCCCCCC);
         }
 
         @Override

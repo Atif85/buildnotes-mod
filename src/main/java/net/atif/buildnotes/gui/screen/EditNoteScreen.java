@@ -8,6 +8,7 @@ import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -24,7 +25,7 @@ public class EditNoteScreen extends BaseScreen {
 
     private MultiLineTextFieldWidget titleField;
     private MultiLineTextFieldWidget contentField;
-    private DarkButtonWidget scopeToggleButton;
+    private MultiLineTextFieldWidget lastFocusedTextField;
 
     public EditNoteScreen(Screen parent, Note note) {
         super(new TranslatableText("gui.buildnotes.edit_note_title"), parent);
@@ -95,7 +96,12 @@ public class EditNoteScreen extends BaseScreen {
         );
         UIHelper.createBottomButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
             if (index == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(0), button -> saveNote()));
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
+                    bottomButtonTexts.get(0), button -> {
+                        saveNote();
+                        open(new ViewNoteScreen(this.parent, this.note));
+                    })
+                );
             } else {
                 this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(1), button -> this.close()));
             }
@@ -139,18 +145,27 @@ public class EditNoteScreen extends BaseScreen {
         DataManager.getInstance().saveNote(this.note);
     }
 
+    private void insertTextAtLastFocus(String text) {
+        if (this.lastFocusedTextField != null) {
+            this.lastFocusedTextField.insertText(text);
+            this.setFocused(this.lastFocusedTextField);
+        } else if (this.contentField != null) { // Fallback to the content field
+            this.contentField.insertText(text);
+            this.setFocused(this.contentField);
+        }
+    }
 
     private void insertCoords() {
         if (this.client.player == null) return;
         String coords = String.format("X: %.0f, Y: %.0f, Z: %.0f", this.client.player.getX(), this.client.player.getY(), this.client.player.getZ());
-        this.contentField.insertText(coords);
+        insertTextAtLastFocus(coords);
     }
 
     private void insertBiome() {
         if (this.client.player == null || this.client.world == null) return;
         BlockPos playerPos = this.client.player.getBlockPos();
         String biomeId = this.client.world.getRegistryManager().get(Registry.BIOME_KEY).getId(this.client.world.getBiome(playerPos).value()).toString();
-        this.contentField.insertText(biomeId);
+        insertTextAtLastFocus(biomeId);
     }
 
     @Override
@@ -183,6 +198,14 @@ public class EditNoteScreen extends BaseScreen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         return this.contentField.mouseScrolled(mouseX, mouseY, amount) || super.mouseScrolled(mouseX, mouseY, amount);
+    }
+
+    @Override
+    public void setFocused(Element focused) {
+        super.setFocused(focused);
+        if (focused instanceof MultiLineTextFieldWidget widget) {
+            this.lastFocusedTextField = widget;
+        }
     }
 
     @Override
