@@ -1,7 +1,7 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.atif.buildnotes.gui.helper.ScissorStack;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -42,31 +42,23 @@ public abstract class ScrollableScreen extends BaseScreen {
     /**
      * Type-safe addSelectableChild helper for scrollable widgets.
      */
-    protected <T extends Element & Selectable> T addScrollableWidget(T widget) {
+    protected <T extends Element & Selectable> void addScrollableWidget(T widget) {
         this.scrollableWidgets.add(widget);
-        return this.addSelectableChild(widget);
+        this.addSelectableChild(widget);
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
-        super.render(matrices, mouseX, mouseY, delta);
-
         int top = getTopMargin();
         int bottom = this.height - getBottomMargin();
         if (bottom <= top) return;
 
-        double scale = this.client.getWindow().getScaleFactor();
-        RenderSystem.enableScissor(
-                (int)(0 * scale),
-                (int)(this.client.getWindow().getFramebufferHeight() - (bottom * scale)),
-                (int)(this.width * scale),
-                (int)((bottom - top) * scale)
-        );
+        ScissorStack.push(0, top, this.width, bottom - top, new MatrixStack());
 
         matrices.push();
         // 1. Move origin to the top of the scrollable area.
-        matrices.translate(0.0, (double)top, 0.0);
+        matrices.translate(0.0, top, 0.0);
         // 2. Move origin up by the scroll amount.
         matrices.translate(0.0, -this.scrollY, 0.0);
 
@@ -80,8 +72,9 @@ public abstract class ScrollableScreen extends BaseScreen {
         }
 
         matrices.pop();
-        RenderSystem.disableScissor();
+        ScissorStack.pop();
 
+        super.render(matrices, mouseX, mouseY, delta);
         renderScrollbar(matrices);
     }
 
