@@ -1,7 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
@@ -66,7 +65,6 @@ public class ViewBuildScreen extends ScrollableScreen {
                 this.textRenderer, contentX, yPos + 5, contentWidth, titlePanelHeight,
                 this.title.getString(), 1, false
         );
-        titleArea.setInternalScissoring(false);
         addScrollableWidget(titleArea);
         yPos += titlePanelHeight + panelSpacing;
 
@@ -80,7 +78,6 @@ public class ViewBuildScreen extends ScrollableScreen {
                 this.textRenderer, coordsTextX, yPos, fieldWidth - 50, smallFieldHeight,
                 build.getCoordinates(), 1, false
         );
-        coordsArea.setInternalScissoring(false);
         addScrollableWidget(coordsArea);
 
         // Dimension Widget (positioned after the label)
@@ -90,7 +87,6 @@ public class ViewBuildScreen extends ScrollableScreen {
                 this.textRenderer, dimensionTextX, yPos, fieldWidth - 65, smallFieldHeight,
                 build.getDimension(), 1, false
         );
-        dimensionArea.setInternalScissoring(false);
         addScrollableWidget(dimensionArea);
         yPos += smallFieldHeight + panelSpacing;
 
@@ -105,7 +101,6 @@ public class ViewBuildScreen extends ScrollableScreen {
                 this.textRenderer, contentX, yPos + labelHeight, contentWidth, descriptionHeight,
                 build.getDescription(), Integer.MAX_VALUE, true
         );
-        descriptionArea.setInternalScissoring(false);
         addScrollableWidget(descriptionArea);
         yPos += descriptionHeight + labelHeight + panelSpacing;
 
@@ -115,7 +110,6 @@ public class ViewBuildScreen extends ScrollableScreen {
                 this.textRenderer, contentX, yPos + labelHeight, contentWidth, creditsHeight,
                 build.getCredits(), Integer.MAX_VALUE, true
         );
-        creditsArea.setInternalScissoring(false);
         addScrollableWidget(creditsArea);
         yPos += creditsHeight + labelHeight + panelSpacing;
 
@@ -126,7 +120,6 @@ public class ViewBuildScreen extends ScrollableScreen {
                     this.textRenderer, contentX, yPos + labelHeight, contentWidth, fieldHeight,
                     field.getContent(), Integer.MAX_VALUE, true
             );
-            fieldArea.setInternalScissoring(false);
             addScrollableWidget(fieldArea);
             yPos += fieldHeight + labelHeight + panelSpacing;
         }
@@ -187,11 +180,11 @@ public class ViewBuildScreen extends ScrollableScreen {
 
             // Backgrounds and Labels only
             UIHelper.drawPanel(matrices, contentX, yPos, fieldWidth, smallFieldHeight);
-            this.textRenderer.draw(matrices, Text.literal("Coords: ").formatted(Formatting.GRAY), contentX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            this.textRenderer.draw(matrices, Text.literal("Coords: ").formatted(Formatting.GRAY), contentX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
 
             int dimensionX = contentX + fieldWidth + panelSpacing;
             UIHelper.drawPanel(matrices, dimensionX, yPos, fieldWidth, smallFieldHeight);
-            this.textRenderer.draw(matrices, Text.literal("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (float)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC);
+            this.textRenderer.draw(matrices, Text.literal("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, yPos + (smallFieldHeight - 8) / 2f + 1, 0xCCCCCC);
             yPos += smallFieldHeight + panelSpacing;
 
             if (!build.getImageFileNames().isEmpty()) {
@@ -309,9 +302,7 @@ public class ViewBuildScreen extends ScrollableScreen {
                         downloadingImages.add(fileName);
                         ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
                             // This is the CALLBACK! It runs when the download is finished (success or fail).
-                            this.client.execute(() -> {
-                                downloadingImages.remove(fileName);
-                            });
+                            this.client.execute(() -> downloadingImages.remove(fileName));
                         });
                     }
                 }
@@ -329,10 +320,6 @@ public class ViewBuildScreen extends ScrollableScreen {
             this.close();
         };
         this.showConfirm(Text.literal("Delete build \"" + build.getName() + "\"?"), onConfirm);
-    }
-
-    private void rebuild() {
-        this.open(new ViewBuildScreen(this.parent, this.build));
     }
 
     @Override
