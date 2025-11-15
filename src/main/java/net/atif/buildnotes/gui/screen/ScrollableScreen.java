@@ -1,12 +1,12 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 import java.util.List;
@@ -42,32 +42,28 @@ public abstract class ScrollableScreen extends BaseScreen {
     /**
      * Type-safe addSelectableChild helper for scrollable widgets.
      */
-    protected <T extends Element & Selectable> T addScrollableWidget(T widget) {
+    protected <T extends Element & Selectable> void addScrollableWidget(T widget) {
         this.scrollableWidgets.add(widget);
-        return this.addSelectableChild(widget);
+        this.addSelectableChild(widget);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-
         int top = getTopMargin();
         int bottom = this.height - getBottomMargin();
         if (bottom <= top) return;
 
-        double scale = this.client.getWindow().getScaleFactor();
-        RenderSystem.enableScissor(
-                (int)(0 * scale),
-                (int)(this.client.getWindow().getFramebufferHeight() - (bottom * scale)),
-                (int)(this.width * scale),
-                (int)((bottom - top) * scale)
-        );
 
-        context.getMatrices().push();
+        context.enableScissor(0, top, this.width, bottom - top);
+
+        MatrixStack matrices = context.getMatrices();
+
+        matrices.push();
         // 1. Move origin to the top of the scrollable area.
-        context.getMatrices().translate(0.0, (double)top, 0.0);
+        matrices.translate(0.0, top, 0.0);
         // 2. Move origin up by the scroll amount.
-        context.getMatrices().translate(0.0, -this.scrollY, 0.0);
+        matrices.translate(0.0, -this.scrollY, 0.0);
 
         int adjustedMouseY = (int)(mouseY - top + this.scrollY);
         this.renderContent(context, mouseX, adjustedMouseY, delta);
@@ -78,8 +74,8 @@ public abstract class ScrollableScreen extends BaseScreen {
             }
         }
 
-        context.getMatrices().pop();
-        RenderSystem.disableScissor();
+        matrices.pop();
+        context.disableScissor();
 
         renderScrollbar(context);
     }

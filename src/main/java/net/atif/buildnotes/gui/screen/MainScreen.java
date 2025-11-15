@@ -52,8 +52,8 @@ public class MainScreen extends BaseScreen {
         // Lists
         int topMargin = 40;
         int bottomMargin = 85;
-        this.noteListWidget = new NoteListWidget(this, this.client, this.width, this.height, topMargin, this.height - bottomMargin, 38);
-        this.buildListWidget = new BuildListWidget(this, this.client, this.width, this.height, topMargin, this.height - bottomMargin, 38);
+        this.noteListWidget = new NoteListWidget(this, this.client, topMargin, this.height - bottomMargin, 38);
+        this.buildListWidget = new BuildListWidget(this, this.client, topMargin, this.height - bottomMargin, 38);
         this.addSelectableChild(noteListWidget);
         this.addSelectableChild(buildListWidget);
 

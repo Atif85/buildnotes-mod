@@ -34,7 +34,7 @@
   "gui.buildnotes.placeholder.note_content": "Enter Text Here",
   "gui.buildnotes.placeholder.build_name": "Build Name",
   "gui.buildnotes.placeholder.coords": "X, Y, Z",
-  "gui.buildnotes.placeholder.dimension": "e.g., minecraft:overworld",
+  "gui.buildnotes.placeholder.dimension": "minecraft:overworld",
   "gui.buildnotes.placeholder.description": "Build Description",
   "gui.buildnotes.placeholder.credits": "Designer Credits",
 
