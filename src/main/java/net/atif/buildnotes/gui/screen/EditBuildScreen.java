@@ -70,7 +70,12 @@ public class EditBuildScreen extends ScrollableScreen {
         );
         UIHelper.createBottomButtonRow(this, buttonsY, bottomTexts, (index, x, width) -> {
             if (index == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(0), button -> saveBuild()));
+                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT,
+                    bottomTexts.get(0), button -> {
+                        saveBuild();
+                        open(new ViewBuildScreen(this.parent, this.build));
+                    })
+                );
             } else {
                 this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> this.close()));
             }
@@ -142,7 +147,6 @@ public class EditBuildScreen extends ScrollableScreen {
                 1, false
         );
 
-        this.nameField.setInternalScissoring(false);
         addScrollableWidget(this.nameField);
         yPos += 25 + panelSpacing;
 
@@ -153,14 +157,12 @@ public class EditBuildScreen extends ScrollableScreen {
                 this.textRenderer, contentX + 50, yPos, fieldWidth - 50, smallFieldHeight, build.getCoordinates(),
                 Text.translatable("gui.buildnotes.placeholder.coords").getString(), 1, false
         );
-        this.coordsField.setInternalScissoring(false);
         addScrollableWidget(this.coordsField);
         int dimensionX = contentX + fieldWidth + panelSpacing;
         this.dimensionField = new MultiLineTextFieldWidget(
                 this.textRenderer, dimensionX + 65, yPos, fieldWidth - 65, smallFieldHeight, build.getDimension(),
                 Text.translatable("gui.buildnotes.placeholder.dimension").getString(), 1, false
         );
-        this.dimensionField.setInternalScissoring(false);
         addScrollableWidget(this.dimensionField);
         yPos += smallFieldHeight + panelSpacing;
 
@@ -176,7 +178,6 @@ public class EditBuildScreen extends ScrollableScreen {
                 this.textRenderer, contentX, yPos, contentWidth, 80, build.getDescription(),
                 Text.translatable("gui.buildnotes.placeholder.description").getString(), Integer.MAX_VALUE, true
         );
-        this.descriptionField.setInternalScissoring(false);
         addScrollableWidget(this.descriptionField);
         yPos += 80 + panelSpacing;
 
@@ -185,7 +186,6 @@ public class EditBuildScreen extends ScrollableScreen {
                 this.textRenderer, contentX, yPos, contentWidth, 40, build.getCredits(),
                 Text.translatable("gui.buildnotes.placeholder.credits").getString(), Integer.MAX_VALUE, true
         );
-        this.designerField.setInternalScissoring(false);
         addScrollableWidget(this.designerField);
         yPos += 40 + panelSpacing;
 
@@ -197,7 +197,6 @@ public class EditBuildScreen extends ScrollableScreen {
             MultiLineTextFieldWidget fieldArea = new MultiLineTextFieldWidget(this.textRenderer, contentX, yPos, fieldWidgetWidth, 40,
                     field.getContent(), "", Integer.MAX_VALUE, true);
 
-            fieldArea.setInternalScissoring(false);
             addScrollableWidget(fieldArea);
 
             this.customFieldWidgets.put(field, fieldArea);
@@ -335,9 +334,7 @@ public class EditBuildScreen extends ScrollableScreen {
                         downloadingImages.add(fileName);
                         ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
                             // This is the CALLBACK! It runs when the download is finished (success or fail).
-                            this.client.execute(() -> {
-                                downloadingImages.remove(fileName);
-                            });
+                            this.client.execute(() -> downloadingImages.remove(fileName));
                         });
                     }
                 }
