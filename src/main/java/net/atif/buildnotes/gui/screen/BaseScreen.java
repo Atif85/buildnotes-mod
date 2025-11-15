@@ -3,7 +3,6 @@ package net.atif.buildnotes.gui.screen;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public abstract class BaseScreen extends Screen {
@@ -35,7 +34,7 @@ public abstract class BaseScreen extends Screen {
     @Override
     public void close() {
         if (this.client != null) {
-            this.client.setScreen(this.parent);
+            open(this.parent);
         } else {
             super.close();
         }
@@ -50,9 +49,7 @@ public abstract class BaseScreen extends Screen {
      * Convenience to open another screen safely.
      */
     protected void open(Screen next) {
-        if (this.client != null) {
-            this.client.setScreen(next);
-        }
+        this.client.setScreen(next);
     }
 
     /**

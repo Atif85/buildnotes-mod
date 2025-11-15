@@ -24,6 +24,7 @@ public class EditNoteScreen extends BaseScreen {
 
     private MultiLineTextFieldWidget titleField;
     private MultiLineTextFieldWidget contentField;
+    private MultiLineTextFieldWidget lastFocusedTextField;
 
     public EditNoteScreen(Screen parent, Note note) {
         super(Text.translatable("gui.buildnotes.edit_note_title"), parent);
@@ -74,17 +75,14 @@ public class EditNoteScreen extends BaseScreen {
 
         UIHelper.createBottomButtonRow(this, topRowY, topButtonTexts, (index, x, width) -> { // Note the new 'width' parameter
             switch (index) {
-                case 0 ->
-                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
-                case 1 ->
-                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
-                case 2 -> {
-                    this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
-                        saveNote();
-                        cycleScope();
-                        this.init(this.client, this.width, this.height);
-                    }));
-                }
+                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
+                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
+                case 2 ->
+                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
+                            saveNote();
+                            cycleScope();
+                            this.init(this.client, this.width, this.height);
+                        }));
             }
         });
 
@@ -96,7 +94,12 @@ public class EditNoteScreen extends BaseScreen {
         );
         UIHelper.createBottomButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
             if (index == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(0), button -> saveNote()));
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
+                    bottomButtonTexts.get(0), button -> {
+                        saveNote();
+                        open(new ViewNoteScreen(this.parent, this.note));
+                    })
+                );
             } else {
                 this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(1), button -> this.close()));
             }
@@ -140,11 +143,20 @@ public class EditNoteScreen extends BaseScreen {
         DataManager.getInstance().saveNote(this.note);
     }
 
+    private void insertTextAtLastFocus(String text) {
+        if (this.lastFocusedTextField != null) {
+            this.lastFocusedTextField.insertText(text);
+            this.setFocused(this.lastFocusedTextField);
+        } else if (this.contentField != null) { // Fallback to the content field
+            this.contentField.insertText(text);
+            this.setFocused(this.contentField);
+        }
+    }
 
     private void insertCoords() {
         if (this.client.player == null) return;
         String coords = String.format("X: %.0f, Y: %.0f, Z: %.0f", this.client.player.getX(), this.client.player.getY(), this.client.player.getZ());
-        this.contentField.insertText(coords);
+        insertTextAtLastFocus(coords);
     }
 
     private void insertBiome() {
@@ -152,7 +164,7 @@ public class EditNoteScreen extends BaseScreen {
         BlockPos playerPos = this.client.player.getBlockPos();
         RegistryEntry<Biome> biomeEntry = this.client.world.getBiome(playerPos);
         String biomeId = biomeEntry.getKey().map(RegistryKey::getValue).map(Identifier::toString).orElse("minecraft:unknown");
-        this.contentField.insertText(biomeId);
+        insertTextAtLastFocus(biomeId);
     }
 
     @Override
