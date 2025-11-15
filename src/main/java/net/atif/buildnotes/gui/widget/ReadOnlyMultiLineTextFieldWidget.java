@@ -9,23 +9,12 @@ public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
 
     public ReadOnlyMultiLineTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, String initialText, int maxLines, boolean scrollingEnabled) {
         super(textRenderer, x, y, width, height, initialText, "", maxLines, scrollingEnabled);
+
+        this.setCaretEnabled(false);
     }
 
     /**
-     * Override the render method to prevent the caret from ever being drawn.
-     * We do this by temporarily setting 'focused' to false before calling the parent's render
-     * method, and then restoring it immediately after.
-     */
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        boolean originalFocus = this.focused;
-        this.focused = false; // Trick the renderer into not drawing the caret
-        super.render(context, mouseX, mouseY, delta);
-        this.focused = originalFocus; // Restore the actual focus state
-    }
-
-    /**
-     * Block all character input.
+     * Block all character input. This is a read-only field.
      */
     @Override
     public boolean charTyped(char chr, int modifiers) {
@@ -33,28 +22,29 @@ public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
     }
 
     /**
-     * Block all key presses except for navigation (for keyboard scrolling) and copying.
+     * Block any programmatic text insertion.
+     */
+    @Override
+    public void insertText(String text) {
+        // Do nothing.
+    }
+
+    /**
+     * Block all key presses that could modify the text.
+     * Allows only navigation (arrows, home, end), copying, and selecting all.
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Allow copying text
-        if (Screen.isCopy(keyCode)) {
-            return super.keyPressed(keyCode, scanCode, modifiers);
+        // These keys modify text, so we block them by "handling" the event (returning true)
+        // but performing no action.
+        if (Screen.isPaste(keyCode) || Screen.isCut(keyCode) ||
+                keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER ||
+                keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE) {
+            return true;
         }
 
-        // Allow navigation keys (arrows, home, end, etc.) so the user can scroll with the keyboard.
-        if (isNavigationKey(keyCode)) {
-            return super.keyPressed(keyCode, scanCode, modifiers);
-        }
-
-        // Block all other keys (text input, backspace, delete, paste, cut, etc.)
-        return false;
-    }
-
-    private boolean isNavigationKey(int keyCode) {
-        return keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN ||
-                keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT ||
-                keyCode == GLFW.GLFW_KEY_HOME || keyCode == GLFW.GLFW_KEY_END ||
-                keyCode == GLFW.GLFW_KEY_PAGE_UP || keyCode == GLFW.GLFW_KEY_PAGE_DOWN;
+        // For all other keys (which include navigation, copy, and select all),
+        // we let the parent widget handle them as usual.
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }
