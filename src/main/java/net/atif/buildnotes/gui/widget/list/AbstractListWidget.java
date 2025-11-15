@@ -30,9 +30,6 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         super(client, parent.width, bottom - top, top, itemHeight);
 
         this.parentScreen = parent;
-
-        super.setRenderHeader(false, 0);
-
     }
 
     // --- SHARED VISIBILITY LOGIC ---
@@ -144,7 +141,12 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         int trackHeight = this.getHeight();
 
         float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getContentsHeightWithPadding());
-        float thumbY = (float)this.getScrollY() / (float)(this.getContentsHeightWithPadding() - trackHeight) * (trackHeight - thumbHeight);
+
+        float maxThumbY = trackHeight - thumbHeight;
+
+        float thumbY = (float)this.getScrollY() / (float)maxScroll * maxThumbY;
+
+        thumbY = Math.min(thumbY, maxThumbY);
 
         int thumbColor = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
 
