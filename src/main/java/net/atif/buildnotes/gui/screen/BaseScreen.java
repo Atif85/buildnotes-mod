@@ -33,7 +33,7 @@ public abstract class BaseScreen extends Screen {
     @Override
     public void close() {
         if (this.client != null) {
-            this.client.setScreen(this.parent);
+            open(this.parent);
         } else {
             super.close();
         }
@@ -48,9 +48,7 @@ public abstract class BaseScreen extends Screen {
      * Convenience to open another screen safely.
      */
     protected void open(Screen next) {
-        if (this.client != null) {
-            this.client.setScreen(next);
-        }
+        this.client.setScreen(next);
     }
 
     /**
