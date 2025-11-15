@@ -7,17 +7,17 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.List;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry> {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public NoteListWidget(MainScreen parent, MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
+    public NoteListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
         super(parent, client, top, bottom, itemHeight);
     }
 
@@ -29,10 +29,6 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
     public Note getSelectedNote() {
         NoteEntry entry = getSelectedOrNull();
         return entry != null ? entry.getNote() : null;
-    }
-
-    public NoteEntry getPublicEntry(int index) {
-        return this.getEntry(index);
     }
 
     @Override
@@ -78,19 +74,10 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
         @Override
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            // Title
-            context.drawText(client.textRenderer, note.getTitle(), x + 2, y + 2, 0xFFFFFF, false);
-
-            // Content Preview
-            Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
-            String truncated = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
-            context.drawText(client.textRenderer, Text.literal(truncated), x + 2, y + 12, 0xCCCCCC, false);
-
-            // Date/Time with new label
-            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC, false);
-
+            // Prepare Scope indicator to calculate its width
             Text scopeText = null;
-            if (note.getScope() != null) { // Add null check for safety
+            int scopeWidth = 0;
+            if (note.getScope() != null) {
                 switch (note.getScope()) {
                     case GLOBAL -> scopeText = Text.literal("Global").formatted(Formatting.AQUA);
                     case SERVER -> scopeText = Text.literal("Server").formatted(Formatting.GREEN);
@@ -99,9 +86,29 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             }
 
             if (scopeText != null) {
-                int scopeWidth = client.textRenderer.getWidth(scopeText);
+                scopeWidth = client.textRenderer.getWidth(scopeText);
+            }
+
+            // Truncate and draw the Title
+            // Calculate available width for the title by subtracting space for the scope indicator and padding
+            int availableTitleWidth = entryWidth - 4; // Base padding
+            if (scopeText != null) {
+                availableTitleWidth -= (scopeWidth + 7); // Account for the scope text and its padding
+            }
+
+            String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
+            context.drawText(client.textRenderer, truncatedTitle, x + 2, y + 2, 0xFFFFFF, false);
+
+            if (scopeText != null) {
                 context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF, false);
             }
+
+            // Truncate and draw the Content Preview
+            Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
+            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
+            context.drawText(client.textRenderer, Text.literal(truncatedContent), x + 2, y + 12, 0xCCCCCC, false);
+
+            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC, false);
         }
 
         @Override
