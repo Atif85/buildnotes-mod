@@ -4,9 +4,12 @@ import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.data.Scope;
+import net.atif.buildnotes.gui.helper.Colors;
+import net.atif.buildnotes.gui.helper.NoteScreenLayouts;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.registry.RegistryKey;
@@ -35,20 +38,17 @@ public class EditNoteScreen extends BaseScreen {
     protected void init() {
         super.init();
 
-        int contentWidth = (int) (this.width * 0.6);
+        int contentWidth = (int) (this.width * NoteScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
-        int topMargin = 20;
-        int titlePanelHeight = 25;
-        int panelSpacing = 5;
-        int bottomMargin = 70;
+        int bottomMargin = NoteScreenLayouts.getBottomMarginDoubleRow();
 
         // --- Title Text Field ---
         this.titleField = new MultiLineTextFieldWidget(
                 this.textRenderer,
                 contentX,
-                topMargin + 5,
+                NoteScreenLayouts.TOP_MARGIN + 5,
                 contentWidth,
-                titlePanelHeight,
+                NoteScreenLayouts.TITLE_PANEL_HEIGHT,
                 note.getTitle(),
                 Text.translatable("gui.buildnotes.placeholder.title").getString(),
                 1, false
@@ -56,7 +56,7 @@ public class EditNoteScreen extends BaseScreen {
         this.addSelectableChild(this.titleField);
 
         // --- Content Text Field ---
-        int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
+        int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
         this.contentField = new MultiLineTextFieldWidget(
                 this.textRenderer, contentX, contentPanelY, contentWidth,
@@ -66,14 +66,14 @@ public class EditNoteScreen extends BaseScreen {
         this.addSelectableChild(this.contentField);
 
         // --- TOP BUTTON ROW (3) ---
-        int topRowY = this.height - (UIHelper.BUTTON_HEIGHT + UIHelper.BOTTOM_PADDING) - UIHelper.BUTTON_HEIGHT - 5;
+        int topRowY = UIHelper.getBottomButtonY(this, 1);
         List<Text> topButtonTexts = List.of(
                 Text.translatable("gui.buildnotes.edit.coords"),
                 Text.translatable("gui.buildnotes.edit.biome"),
                 getScopeButtonText()
         );
 
-        UIHelper.createBottomButtonRow(this, topRowY, topButtonTexts, (index, x, width) -> { // Note the new 'width' parameter
+        UIHelper.createButtonRow(this, topRowY, topButtonTexts, (index, x, width) -> { // Note the new 'width' parameter
             switch (index) {
                 case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
                 case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
@@ -87,12 +87,12 @@ public class EditNoteScreen extends BaseScreen {
         });
 
         // --- BOTTOM BUTTON ROW ---
-        int bottomRowY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
+        int bottomRowY = UIHelper.getBottomButtonY(this, 2);
         List<Text> bottomButtonTexts = List.of(
                 Text.translatable("gui.buildnotes.save_button"),
                 Text.translatable("gui.buildnotes.close_button")
         );
-        UIHelper.createBottomButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
+        UIHelper.createButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
             if (index == 0) {
                 this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
                     bottomButtonTexts.get(0), button -> {
@@ -171,32 +171,70 @@ public class EditNoteScreen extends BaseScreen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
 
-        int contentWidth = (int) (this.width * 0.6);
+        int contentWidth = (int) (this.width * NoteScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
-        int topMargin = 20;
-        int titlePanelHeight = 25;
-        int panelSpacing = 5;
-        int bottomMargin = 70;
+        int bottomMargin = NoteScreenLayouts.getBottomMarginDoubleRow();
 
         // --- Title Panel ---
-        UIHelper.drawPanel(matrices, contentX, topMargin, contentWidth, titlePanelHeight);
+        UIHelper.drawPanel(matrices, contentX, NoteScreenLayouts.TOP_MARGIN, contentWidth, NoteScreenLayouts.TITLE_PANEL_HEIGHT);
         this.titleField.render(matrices, mouseX, mouseY, delta);
 
         // --- Content Panel ---
-        int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
+        int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
         UIHelper.drawPanel(matrices, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
         this.contentField.render(matrices, mouseX, mouseY, delta);
 
         // Draw screen title
-        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, 8, Colors.TEXT_PRIMARY);
         super.render(matrices, mouseX, mouseY, delta);
     }
 
     // We need to override mouseScrolled to pass the event to our custom widget
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        return this.contentField.mouseScrolled(mouseX, mouseY, amount) || super.mouseScrolled(mouseX, mouseY, amount);
+        if (this.contentField.isMouseOver(mouseX, mouseY)) {
+            return this.contentField.mouseScrolled(mouseX, mouseY, amount);
+        }
+        if (this.titleField.isMouseOver(mouseX, mouseY)) {
+            return this.titleField.mouseScrolled(mouseX, mouseY, amount);
+        }
+        return super.mouseScrolled(mouseX, mouseY, amount);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Find which child element was clicked and set it as the "focused" one for this interaction.
+        for (Element element : this.children()) {
+            if (element.mouseClicked(mouseX, mouseY, button)) {
+                this.setFocused(element);
+                if (button == 0) {
+                    this.setDragging(true);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        // If we are in a drag operation, send the event directly to the focused element.
+        if (this.getFocused() != null && this.isDragging() && button == 0) {
+            return this.getFocused().mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        // This is the crucial fix. The mouse release event is sent to the element
+        // that was focused during mouseClicked, not the one currently under the cursor.
+        if (this.getFocused() != null && this.isDragging() && button == 0) {
+            this.setDragging(false);
+            return this.getFocused().mouseReleased(mouseX, mouseY, button);
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override

@@ -2,9 +2,11 @@ package net.atif.buildnotes.gui.screen;
 
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.gui.helper.NoteScreenLayouts;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -25,8 +27,8 @@ public class ViewNoteScreen extends BaseScreen {
     protected void init() {
         super.init();
 
-        int buttonsY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
-        UIHelper.createBottomButtonRow(this, buttonsY, 3, x -> {
+        int buttonsY = UIHelper.getBottomButtonY(this);
+        UIHelper.createButtonRow(this, buttonsY, 3, x -> {
             int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (idx) {
                 case 0 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
@@ -38,27 +40,24 @@ public class ViewNoteScreen extends BaseScreen {
             }
         });
 
-        int contentWidth = (int) (this.width * 0.6);
+        int contentWidth = (int) (this.width * NoteScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
-        int topMargin = 20;
-        int titlePanelHeight = 25;
-        int panelSpacing = 5;
-        int bottomMargin = 45;
+        int bottomMargin = NoteScreenLayouts.getBottomMarginSingleRow();
 
         // --- Title Widget ---
         this.titleArea = new ReadOnlyMultiLineTextFieldWidget(
                 this.textRenderer,
                 contentX,
-                topMargin + 5,
+                NoteScreenLayouts.TOP_MARGIN + 5,
                 contentWidth,
-                titlePanelHeight,
+                NoteScreenLayouts.TITLE_PANEL_HEIGHT,
                 this.note.getTitle(),
                 1,
                 false
         );
         this.addSelectableChild(this.titleArea);
 
-        int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
+        int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
         int contentPanelHeight = contentPanelBottom - contentPanelY;
 
@@ -88,19 +87,16 @@ public class ViewNoteScreen extends BaseScreen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
 
-        int contentWidth = (int) (this.width * 0.6);
+        int contentWidth = (int) (this.width * NoteScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
-        int topMargin = 20;
-        int titlePanelHeight = 25;
-        int panelSpacing = 5;
-        int bottomMargin = 45;
+        int bottomMargin = NoteScreenLayouts.getBottomMarginSingleRow();
 
         // --- Title Panel ---
-        UIHelper.drawPanel(matrices, contentX, topMargin, contentWidth, titlePanelHeight);
+        UIHelper.drawPanel(matrices, contentX, NoteScreenLayouts.TOP_MARGIN, contentWidth, NoteScreenLayouts.TITLE_PANEL_HEIGHT);
         this.titleArea.render(matrices, mouseX, mouseY, delta);
 
         // --- Content Panel ---
-        int contentPanelY = topMargin + titlePanelHeight + panelSpacing;
+        int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
         UIHelper.drawPanel(matrices, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
         this.contentArea.render(matrices, mouseX, mouseY, delta);
@@ -127,5 +123,40 @@ public class ViewNoteScreen extends BaseScreen {
             return this.contentArea.mouseScrolled(mouseX, mouseY, amount);
         }
         return false;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Find which child element was clicked and set it as the "focused" one for this interaction.
+        for (Element element : this.children()) {
+            if (element.mouseClicked(mouseX, mouseY, button)) {
+                this.setFocused(element);
+                if (button == 0) {
+                    this.setDragging(true);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        // If we are in a drag operation, send the event directly to the focused element.
+        if (this.getFocused() != null && this.isDragging() && button == 0) {
+            return this.getFocused().mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        // This is the crucial fix. The mouse release event is sent to the element
+        // that was focused during mouseClicked, not the one currently under the cursor.
+        if (this.getFocused() != null && this.isDragging() && button == 0) {
+            this.setDragging(false);
+            return this.getFocused().mouseReleased(mouseX, mouseY, button);
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 }
