@@ -4,6 +4,7 @@ import net.atif.buildnotes.data.undoredo.TextAction;
 import net.atif.buildnotes.data.undoredo.UndoManager;
 
 import com.google.common.collect.Lists;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.ScissorStack;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -29,7 +30,6 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     public final int y;
     public final int width;
     public final int height;
-    protected double yOffset = 0;
 
     protected final int maxLines;
 
@@ -359,7 +359,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         if (getText().isEmpty() && !this.focused && this.placeholderText != null && !this.placeholderText.isEmpty()) {
             // Draw placeholder text, respecting horizontal scroll
             int drawX = contentX - (int) Math.round(scrollX);
-            textRenderer.draw(matrices, this.placeholderText, drawX, contentY, 0xFF808080); // Gray color
+            textRenderer.draw(matrices, this.placeholderText, drawX, contentY, Colors.TEXT_DISABLED); // Gray color
         }
 
         int firstVisibleLine = (int) (scrollY / textRenderer.fontHeight);
@@ -390,7 +390,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             int lineYPos = contentY + (i * textRenderer.fontHeight) - (int) scrollY;
             if (lineYPos > this.y - textRenderer.fontHeight && lineYPos < this.y + this.height) {
                 int drawX = contentX - (int) Math.round(scrollX);
-                this.textRenderer.draw(matrices, this.lines.get(i), drawX, lineYPos, 0xFFFFFF);
+                this.textRenderer.draw(matrices, this.lines.get(i), drawX, lineYPos, Colors.TEXT_PRIMARY);
             }
         }
 
@@ -412,7 +412,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 int top = caretYPos - paddingTop;
                 int bottom = caretYPos + textRenderer.fontHeight + paddingBottom;
                 // draw 2px wide vertical caret centered at caretPixelX
-                fill(matrices, caretPixelX, top, caretPixelX + 1, bottom, 0xFFFFFFFF);
+                fill(matrices, caretPixelX, top, caretPixelX + 1, bottom, Colors.CARET_PRIMARY);
             }
         }
 
@@ -421,28 +421,28 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         }
 
         // Draw scrollbars
-        if (this.scrollingEnabled && vNeeded) renderVScrollbar(matrices, contentX, contentY, contentHeight);
-        if (this.scrollingEnabled && hNeeded) renderHScrollbar(matrices, contentX, contentY, contentWidth, contentHeight);
+        if (this.scrollingEnabled && vNeeded) renderVScrollbar(matrices, contentHeight);
+        if (this.scrollingEnabled && hNeeded) renderHScrollbar(matrices, contentX, contentWidth);
     }
 
-    protected void renderVScrollbar(MatrixStack matrices, int contentX, int contentY, int contentHeight) {
+    protected void renderVScrollbar(MatrixStack matrices, int contentHeight) {
         int scrollbarX = this.x + this.width - SCROLLBAR_THICKNESS - 2;
         int maxScroll = getMaxScrollV();
         float contentPixelHeight = lines.size() * textRenderer.fontHeight;
         float thumbHeight = Math.max(10, (contentHeight / contentPixelHeight) * contentHeight);
         float thumbY = (float) ((scrollY / (double) Math.max(1, maxScroll)) * (contentHeight - thumbHeight));
-        int thumbColor = isDraggingVScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
+        int thumbColor = isDraggingVScrollbar ? Colors.SCROLLBAR_THUMB_ACTIVE : Colors.SCROLLBAR_THUMB_INACTIVE;
         fill(matrices, scrollbarX, this.y + 5 + (int) thumbY, scrollbarX + SCROLLBAR_THICKNESS, this.y + 5 + (int) (thumbY + thumbHeight), thumbColor);
     }
 
-    protected void renderHScrollbar(MatrixStack matrices, int contentX, int contentY, int contentWidth, int contentHeight) {
+    protected void renderHScrollbar(MatrixStack matrices, int contentX, int contentWidth) {
         int scrollbarY = this.y + this.height - SCROLLBAR_THICKNESS - 2;
         // compute max horizontal content width
         int maxLinePixel = getMaxLinePixelWidth();
         if (maxLinePixel <= 0) return;
-        float thumbWidth = Math.max(10, (contentWidth / (float) maxLinePixel) * contentWidth);
+        float thumbWidth = Math.max(10, (contentWidth / (float) Math.max(1, getMaxLinePixelWidth())) * contentWidth);
         float thumbX = (float) ((scrollX / (double) Math.max(1, getMaxScrollH())) * (contentWidth - thumbWidth));
-        int thumbColor = isDraggingHScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
+        int thumbColor = isDraggingHScrollbar ? Colors.SCROLLBAR_THUMB_ACTIVE : Colors.SCROLLBAR_THUMB_INACTIVE;
         fill(matrices, contentX + (int) thumbX, scrollbarY, contentX + (int) (thumbX + thumbWidth), scrollbarY + SCROLLBAR_THICKNESS, thumbColor);
     }
 
@@ -450,10 +450,15 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
+            boolean vNeeded = this.scrollingEnabled && isScrollbarNeededV();
+            boolean hNeeded = this.scrollingEnabled && isScrollbarNeededH();
+
             // vertical scrollbar click?
-            if (this.scrollingEnabled && isScrollbarNeededV()) {
+            if (vNeeded) {
                 int vXStart = this.x + this.width - SCROLLBAR_THICKNESS - 2;
-                if (mouseX >= vXStart) {
+                // The vertical scrollbar's clickable area stops where the horizontal one begins.
+                int vYEnd = this.y + this.height - (hNeeded ? (SCROLLBAR_THICKNESS + 2) : 0);
+                if (mouseX >= vXStart && mouseY < vYEnd) {
                     this.isDraggingVScrollbar = true;
                     this.vScrollbarDragStartY = mouseY;
                     this.vScrollbarDragStartScrollY = this.scrollY;
@@ -462,14 +467,11 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 }
             }
             // horizontal scrollbar click?
-            if (this.scrollingEnabled && isScrollbarNeededH()) {
-                int padding = 5;
-                int contentX = this.x + padding;
-                int contentY = this.y + padding;
-                int contentWidth = this.width - padding * 2 - (isScrollbarNeededV() ? (SCROLLBAR_THICKNESS + 2) : 0);
-                int scrollbarY = this.y + this.height - SCROLLBAR_THICKNESS - 2;
-                if (mouseY >= scrollbarY) {
-                    // click on horizontal thumb region
+            if (hNeeded) {
+                int hYStart = this.y + this.height - SCROLLBAR_THICKNESS - 2;
+                // The horizontal scrollbar's clickable area stops where the vertical one begins.
+                int hXEnd = this.x + this.width - (vNeeded ? (SCROLLBAR_THICKNESS + 2) : 0);
+                if (mouseY >= hYStart && mouseX < hXEnd) {
                     this.isDraggingHScrollbar = true;
                     this.hScrollbarDragStartX = mouseX;
                     this.hScrollbarDragStartScrollX = this.scrollX;
@@ -588,8 +590,6 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     protected int absoluteIndexFromMouse(double mouseX, double mouseY) {
         int padding = 5;
         int contentX = this.x + padding;
-        int contentY = this.y + padding;
-        int contentWidth = this.width - padding * 2 - (isScrollbarNeededV() ? (SCROLLBAR_THICKNESS + 2) : 0);
         int clickedLine = (int) ((mouseY - (this.y + padding) + scrollY) / textRenderer.fontHeight);
         clickedLine = Math.max(0, Math.min(clickedLine, this.lines.size() - 1));
         int relX = (int) Math.round(mouseX - (contentX) + scrollX);
@@ -719,7 +719,6 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 return true;
             }
             case GLFW.GLFW_KEY_UP -> {
-                int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                 int newLine = Math.max(0, cursorY - 1);
                 int newCol = Math.min(cursorX, lines.get(newLine).length());
                 int newAbs = getAbsoluteIndex(newLine, newCol);
@@ -727,7 +726,6 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 return true;
             }
             case GLFW.GLFW_KEY_DOWN -> {
-                int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                 int newLine = Math.min(lines.size() - 1, cursorY + 1);
                 int newCol = Math.min(cursorX, lines.get(newLine).length());
                 int newAbs = getAbsoluteIndex(newLine, newCol);
@@ -749,13 +747,11 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 return true;
             }
             case GLFW.GLFW_KEY_HOME -> {
-                int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                 int newAbs = getAbsoluteIndex(cursorY, 0);
                 moveCursorToAbsolute(newAbs, shift);
                 return true;
             }
             case GLFW.GLFW_KEY_END -> {
-                int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                 int newAbs = getAbsoluteIndex(cursorY, lines.get(cursorY).length());
                 moveCursorToAbsolute(newAbs, shift);
                 return true;
@@ -777,8 +773,6 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     protected void ensureCursorVisible() {
         int padding = 5;
-        int contentX = this.x + padding;
-        int contentY = this.y + padding;
         int contentWidth = this.width - padding * 2 - (isScrollbarNeededV() ? (SCROLLBAR_THICKNESS + 2) : 0);
         int contentHeight = this.height - padding * 2 - (isScrollbarNeededH() ? (SCROLLBAR_THICKNESS + 2) : 0);
 
@@ -904,10 +898,6 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= this.x && mouseX < this.x + this.width && mouseY >= this.y && mouseY < this.y + this.height;
-    }
-
-    public void setYOffset(double offset) {
-        this.yOffset = offset;
     }
 
     public void _deleteTextInternal(int startAbsolute, int endAbsolute) {
