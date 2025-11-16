@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -25,7 +26,7 @@ public abstract class BaseScreen extends Screen {
     @Override
     public void renderBackground(MatrixStack matrices) {
         // We only need to draw the gradient, as the world is always rendered behind it.
-        this.fillGradient(matrices, 0, 0, this.width, this.height, UIHelper.startColor, UIHelper.endColor);
+        this.fillGradient(matrices, 0, 0, this.width, this.height, Colors.GRADIENT_START, Colors.GRADIENT_END);
     }
 
     /**

@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.widget;
 
+import net.atif.buildnotes.gui.helper.Colors;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -16,20 +17,17 @@ public class DarkButtonWidget extends ButtonWidget {
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         int color;
         if (!this.active) {
-            // disabled less dark
-            color = 0x44000000;
+            color = Colors.BUTTON_DISABLED;
         } else if (this.isHovered()) {
-            // hover darker
-            color = 0xAA000000;
+            color = Colors.BUTTON_HOVER;
         } else {
-            // default dark translucent
-            color = 0x77000000;
+            color = Colors.PANEL_BACKGROUND;
         }
 
         fill(matrices, this.x, this.y, this.x + this.width, this.y + this.height, color);
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        int textColor = this.active ? 0xFFFFFF : 0x888888;
+        int textColor = this.active ? Colors.TEXT_PRIMARY : Colors.TEXT_DISABLED;
         drawCenteredText(matrices, textRenderer, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, textColor);
     }
 }

@@ -2,7 +2,6 @@ package net.atif.buildnotes.gui.widget;
 
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
 public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
