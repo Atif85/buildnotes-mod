@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.minecraft.client.gui.screen.Screen;
@@ -23,14 +24,12 @@ public class ConfirmScreen extends BaseScreen {
     protected void init() {
         super.init();
 
-        int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
-        int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
-        int btnY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
+        int btnY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.OUTER_PADDING;
 
-        UIHelper.createBottomButtonRow(this, btnY, 2, x -> {
+        UIHelper.createButtonRow(this, btnY, 2, x -> {
             boolean isLeft = x == UIHelper.getCenteredButtonStartX(this.width, 2);
             this.addDrawableChild(new DarkButtonWidget(
                     x, btnY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
@@ -51,7 +50,7 @@ public class ConfirmScreen extends BaseScreen {
 
         UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
 
-        this.textRenderer.drawTrimmed(this.message, panelX + 12, panelY + 12, panelW - 24, 0xFFFFFF);
+        this.textRenderer.drawTrimmed(this.message, panelX + 12, panelY + 12, panelW - 24, Colors.TEXT_PRIMARY);
 
         super.render(matrices, mouseX, mouseY, delta);
     }

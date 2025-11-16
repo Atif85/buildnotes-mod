@@ -2,7 +2,6 @@ package net.atif.buildnotes.data;
 
 import net.minecraft.network.PacketByteBuf;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
