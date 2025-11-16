@@ -1,6 +1,7 @@
 package net.atif.buildnotes.gui.widget.list;
 
 import net.atif.buildnotes.data.Build;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.EntryListWidget;
@@ -18,17 +19,13 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public BuildListWidget(MainScreen parent, MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
+    public BuildListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
         super(parent, client, top, bottom, itemHeight);
     }
 
     public void setBuilds(List<Build> builds) {
         this.clearEntries();
         builds.forEach(build -> this.addEntry(new BuildEntry(build)));
-    }
-
-    public BuildEntry getPublicEntry(int index) {
-        return this.getEntry(index);
     }
 
     public Build getSelectedBuild() {
@@ -82,22 +79,22 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
             }
 
             String truncatedName = client.textRenderer.trimToWidth(build.getName(), availableNameWidth);
-            client.textRenderer.draw(matrices, truncatedName, x + 2, y + 2, 0xFFFFFF);
+            client.textRenderer.draw(matrices, truncatedName, x + 2, y + 2, Colors.TEXT_PRIMARY);
 
             // Draw the Scope indicator
             if (scopeText != null) {
-                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF);
+                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, Colors.TEXT_PRIMARY);
             }
 
             // Truncate and draw the Coordinates
             String fullCoordsText = "Coords: " + build.getCoordinates();
             String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 4);
-            client.textRenderer.draw(matrices, Text.literal(truncatedCoords).formatted(Formatting.GRAY), x + 2, y + 12, 0xCCCCCC);
+            client.textRenderer.draw(matrices, Text.literal(truncatedCoords).formatted(Formatting.GRAY), x + 2, y + 12, Colors.TEXT_MUTED);
 
             // Truncate and draw the Date/Time
             String fullDateText = "Last Modified: " + this.formattedDateTime;
             String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 4);
-            client.textRenderer.draw(matrices, truncatedDate, x + 2, y + 22, 0xCCCCCC);
+            client.textRenderer.draw(matrices, truncatedDate, x + 2, y + 22, Colors.TEXT_MUTED);
         }
 
         @Override
