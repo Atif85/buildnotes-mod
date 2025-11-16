@@ -1,7 +1,10 @@
 package net.atif.buildnotes.gui.widget.list;
 
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.gui.helper.Colors;
+import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.screen.MainScreen;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -18,7 +21,7 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public NoteListWidget(MainScreen parent, MinecraftClient client, int width, int height, int top, int bottom, int itemHeight) {
+    public NoteListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
         super(parent, client, top, bottom, itemHeight);
     }
 
@@ -30,10 +33,6 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
     public Note getSelectedNote() {
             NoteEntry entry = getSelectedOrNull();
         return entry != null ? entry.getNote() : null;
-    }
-
-    public NoteEntry getPublicEntry(int index) {
-        return this.getEntry(index);
     }
 
     @Override
@@ -102,18 +101,18 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             }
 
             String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
-            client.textRenderer.draw(matrices, truncatedTitle, x + 2, y + 2, 0xFFFFFF);
+            client.textRenderer.draw(matrices, Text.of(truncatedTitle), x + 2, y + 2, Colors.TEXT_PRIMARY);
 
             if (scopeText != null) {
-                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF);
+                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, Colors.TEXT_PRIMARY);
             }
 
             // Truncate and draw the Content Preview
             Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
             String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
-            client.textRenderer.draw(matrices, Text.literal(truncatedContent), x + 2, y + 12, 0xCCCCCC);
+            client.textRenderer.draw(matrices, Text.literal(truncatedContent), x + 2, y + 12, Colors.TEXT_MUTED);
 
-            client.textRenderer.draw(matrices, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC);
+            client.textRenderer.draw(matrices, Text.of("Last Modified: " + this.formattedDateTime), x + 2, y + 22, Colors.TEXT_MUTED);
         }
 
         @Override
