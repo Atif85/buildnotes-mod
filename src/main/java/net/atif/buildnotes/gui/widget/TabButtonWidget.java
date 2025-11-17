@@ -1,5 +1,7 @@
 package net.atif.buildnotes.gui.widget;
 
+import net.atif.buildnotes.gui.helper.Colors;
+import net.atif.buildnotes.gui.helper.UIHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -19,14 +21,11 @@ public class TabButtonWidget extends ButtonWidget {
         // Determine the background color based on the button's state
         int color;
         if (this.isActive) {
-            // A brighter, less transparent color for the active tab
-            color = 0x77000000;
+            color = Colors.PANEL_BACKGROUND;
         } else if (this.isHovered()) {
-            // A slightly brighter color when hovered
-            color = 0xAA000000;
+            color = Colors.BUTTON_HOVER;
         } else {
-            // Default dark, translucent background
-            color = 0x44000000;
+            color = Colors.TAB_INACTIVE;
         }
 
         // Render the background
@@ -34,8 +33,7 @@ public class TabButtonWidget extends ButtonWidget {
 
         // Render the text
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        int textColor = 0xFFFFFF;
-        context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
+        context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, Colors.TEXT_PRIMARY);
         context.draw();
     }
 
