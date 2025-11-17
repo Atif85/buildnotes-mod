@@ -1,13 +1,13 @@
 package net.atif.buildnotes.gui.widget.list;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.EntryListWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.client.sound.PositionedSoundInstance;
 
@@ -144,7 +144,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         thumbY = Math.min(thumbY, maxThumbY);
 
-        int thumbColor = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
+        int thumbColor = isDraggingScrollbar ? Colors.SCROLLBAR_THUMB_ACTIVE : Colors.SCROLLBAR_THUMB_INACTIVE;
 
         context.fill(scrollbarX, this.top + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.top + (int) (thumbY + thumbHeight), thumbColor);
     }

@@ -1,6 +1,7 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.google.common.collect.Lists;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.ScissorStack;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
@@ -92,7 +93,7 @@ public abstract class ScrollableScreen extends BaseScreen {
             float thumbHeight = Math.max(20, (trackHeight / (float)this.totalContentHeight) * trackHeight);
             float thumbY = (float) ((this.scrollY / maxScroll) * (trackHeight - thumbHeight));
 
-            int color = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
+            int color = isDraggingScrollbar ? Colors.SCROLLBAR_THUMB_ACTIVE : Colors.SCROLLBAR_THUMB_INACTIVE;
             context.fill(scrollbarX, top + (int)thumbY, scrollbarX + SCROLLBAR_WIDTH, top + (int)(thumbY + thumbHeight), color);
         }
     }
@@ -196,7 +197,32 @@ public abstract class ScrollableScreen extends BaseScreen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        isDraggingScrollbar = false;
+        // First, handle the screen's own scrollbar state.
+        if (isDraggingScrollbar) {
+            isDraggingScrollbar = false;
+            return true;
+        }
+
+        if (this.getFocused() != null) {
+            boolean handled;
+            // Adjust coordinates for scrollable widgets before sending the event.
+            if (this.scrollableWidgets.contains(this.getFocused())) {
+                double adjustedMouseY = mouseY - getTopMargin() + this.scrollY;
+                handled = this.getFocused().mouseReleased(mouseX, adjustedMouseY, button);
+            } else {
+                handled = this.getFocused().mouseReleased(mouseX, mouseY, button);
+            }
+
+            // After dispatching, reset the screen's global dragging state.
+            this.setDragging(false);
+
+            // If the focused element handled it, we are done.
+            if (handled) {
+                return true;
+            }
+        }
+
+        // Fallback to default behavior if no specific element was focused.
         return super.mouseReleased(mouseX, mouseY, button);
     }
 

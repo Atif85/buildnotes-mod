@@ -4,6 +4,7 @@ import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.data.TabType;
+import net.atif.buildnotes.gui.helper.MainScreenLayouts;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
@@ -41,36 +42,42 @@ public class MainScreen extends BaseScreen {
     protected void init() {
         super.init();
 
-        // Tabs
-        int tabWidth = 80;
-        int tabHeight = 20;
-        this.notesTab = this.addDrawableChild(new TabButtonWidget((this.width / 2) - tabWidth - 2, 15, tabWidth, tabHeight,
-                Text.translatable("gui.buildnotes.notes_tab"), b -> selectTab(TabType.NOTES)));
-        this.buildsTab = this.addDrawableChild(new TabButtonWidget((this.width / 2) + 2, 15, tabWidth, tabHeight,
-                Text.translatable("gui.buildnotes.builds_tab"), b -> selectTab(TabType.BUILDS)));
+        // --- LAYOUT CALCULATIONS ---
+        int buttonsY = UIHelper.getBottomButtonY(this);
+        int searchBarY = buttonsY - UIHelper.OUTER_PADDING - MainScreenLayouts.SEARCH_BAR_HEIGHT;
+        int bottomMargin = this.height - searchBarY + UIHelper.OUTER_PADDING;
+
+        // Vertically center the tabs in the top margin
+        int tabY = (MainScreenLayouts.TOP_MARGIN - MainScreenLayouts.TAB_HEIGHT) / 2;
+        this.notesTab = this.addDrawableChild(new TabButtonWidget(
+                (this.width / 2) - MainScreenLayouts.TAB_WIDTH - 2, tabY,
+                MainScreenLayouts.TAB_WIDTH, MainScreenLayouts.TAB_HEIGHT,
+                Text.translatable("gui.buildnotes.notes_tab"), b -> selectTab(TabType.NOTES)
+        ));
+        this.buildsTab = this.addDrawableChild(new TabButtonWidget(
+                (this.width / 2) + 2, tabY,
+                MainScreenLayouts.TAB_WIDTH, MainScreenLayouts.TAB_HEIGHT,
+                Text.translatable("gui.buildnotes.builds_tab"), b -> selectTab(TabType.BUILDS)
+        ));
 
         // Lists
-        int topMargin = 40;
-        int bottomMargin = 85;
-        this.noteListWidget = new NoteListWidget(this, this.client, topMargin, this.height - bottomMargin, 38);
-        this.buildListWidget = new BuildListWidget(this, this.client, topMargin, this.height - bottomMargin, 38);
+        this.noteListWidget = new NoteListWidget(this, this.client, MainScreenLayouts.TOP_MARGIN, this.height - bottomMargin, 38);
+        this.buildListWidget = new BuildListWidget(this, this.client, MainScreenLayouts.TOP_MARGIN, this.height - bottomMargin, 38);
         this.addSelectableChild(noteListWidget);
         this.addSelectableChild(buildListWidget);
 
         // Search field
-        int searchFieldWidth = 160;
-        int searchBarHeight = 20;
-        int searchFieldX = (this.width - searchFieldWidth) / 2;
-        int listBottomY = this.height - bottomMargin;
-        int buttonsTopY = this.height - 40;
-        int searchBarY = listBottomY + (buttonsTopY - listBottomY - searchBarHeight) / 2;
-        this.searchField = new MultiLineTextFieldWidget(this.textRenderer, searchFieldX, searchBarY, searchFieldWidth, searchBarHeight, "", "Search...", 1, false);
+        int searchFieldX = (this.width - MainScreenLayouts.SEARCH_FIELD_WIDTH) / 2;
+        this.searchField = new MultiLineTextFieldWidget(
+                this.textRenderer, searchFieldX, searchBarY,
+                MainScreenLayouts.SEARCH_FIELD_WIDTH, MainScreenLayouts.SEARCH_BAR_HEIGHT,
+                "", "Search...", 1, false
+        );
         this.searchField.setChangedListener(this::onSearchTermChanged);
         this.addSelectableChild(searchField);
 
         // Action buttons
-        int buttonsY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
-        UIHelper.createBottomButtonRow(this, buttonsY, 5, x -> {
+        UIHelper.createButtonRow(this, buttonsY, 5, x -> {
             int index = (x - UIHelper.getCenteredButtonStartX(this.width, 5)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (index) {
                 case 0 -> this.addButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
