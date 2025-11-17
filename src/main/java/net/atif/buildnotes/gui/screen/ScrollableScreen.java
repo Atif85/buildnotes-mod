@@ -7,8 +7,8 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import org.joml.Matrix3x2fStack;
 
 import java.util.List;
 
@@ -58,13 +58,13 @@ public abstract class ScrollableScreen extends BaseScreen {
 
         context.enableScissor(0, top, this.width, bottom - top);
 
-        MatrixStack matrices = context.getMatrices();
+        Matrix3x2fStack matrices = context.getMatrices();
 
-        matrices.push();
+        matrices.pushMatrix();
         // 1. Move origin to the top of the scrollable area.
-        matrices.translate(0.0, top, 0.0);
+        matrices.translate(0.0f, (float) top);
         // 2. Move origin up by the scroll amount.
-        matrices.translate(0.0, -this.scrollY, 0.0);
+        matrices.translate(0.0f, (float) -this.scrollY);
 
         int adjustedMouseY = (int)(mouseY - top + this.scrollY);
         this.renderContent(context, mouseX, adjustedMouseY, delta);
@@ -75,7 +75,7 @@ public abstract class ScrollableScreen extends BaseScreen {
             }
         }
 
-        matrices.pop();
+        matrices.popMatrix();
         context.disableScissor();
 
         renderScrollbar(context);

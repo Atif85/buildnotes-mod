@@ -6,9 +6,9 @@ public final class Colors {
     public static int PANEL_BACKGROUND = 0x77000000;
 
     // --- Text ---
-    public static int TEXT_PRIMARY = 0xFFFFFF;
-    public static int TEXT_MUTED = 0xCCCCCC;
-    public static int TEXT_DISABLED = 0x888888;
+    public static int TEXT_PRIMARY = 0xFFFFFFFF;
+    public static int TEXT_MUTED = 0xFFCCCCCC;
+    public static int TEXT_DISABLED = 0xFF888888;
 
     // --- Caret ---
     public static int CARET_PRIMARY = 0xFFFFFFFF;

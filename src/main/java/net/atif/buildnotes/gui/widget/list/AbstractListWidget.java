@@ -1,6 +1,5 @@
 package net.atif.buildnotes.gui.widget.list;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 
@@ -91,22 +90,12 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
 
-
-        // --- START SCISSORING (clip area so content doesn't render above or below list) ---
-        double scale = MinecraftClient.getInstance().getWindow().getScaleFactor();
-
-        // Convert logical screen coordinates to framebuffer coordinates
-        int scissorX = (int) (0 * scale);
-        int scissorY = (int) (this.client.getWindow().getFramebufferHeight() - (this.getBottom() * scale));
-        int scissorWidth = (int) (this.width * scale);
-        int scissorHeight = (int) ((this.getBottom() - this.getY()) * scale);
-
-        RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+        context.enableScissor(this.getX(), this.getY(), this.getRight(), this.getBottom());
 
         super.renderWidget(context, mouseX, mouseY, delta);
         renderCustomScrollbar(context);
 
-        RenderSystem.disableScissor();
+        context.disableScissor();
 
         // Top fade overlay
         int left = this.getX();

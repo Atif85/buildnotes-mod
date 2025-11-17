@@ -1,6 +1,5 @@
 package net.atif.buildnotes.gui.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.data.Build;
@@ -13,9 +12,9 @@ import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.text.Text;
@@ -204,7 +203,7 @@ public class ViewBuildScreen extends ScrollableScreen {
                         int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
                         int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
 
-                        context.drawTexture(RenderLayer::getGuiTextured, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
+                        context.drawTexture(RenderPipelines.GUI_TEXTURED, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                     } else {
                         context.drawCenteredTextWithShadow(textRenderer, Text.literal("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
                     }

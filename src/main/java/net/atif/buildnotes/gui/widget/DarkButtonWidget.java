@@ -30,6 +30,5 @@ public class DarkButtonWidget extends ButtonWidget {
         int textColor = this.active ? Colors.TEXT_PRIMARY : Colors.TEXT_DISABLED;
 
         context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
-        context.draw();
     }
 }
