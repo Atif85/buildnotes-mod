@@ -1,6 +1,8 @@
 package net.atif.buildnotes.gui.widget.list;
 
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.gui.helper.Colors;
+import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -97,18 +99,18 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             }
 
             String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
-            context.drawText(client.textRenderer, truncatedTitle, x + 2, y + 2, 0xFFFFFF, false);
+            context.drawText(client.textRenderer, truncatedTitle, x + 2, y + 2, Colors.TEXT_PRIMARY, false);
 
             if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF, false);
+                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 7, y + 2, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Content Preview
             Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
             String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
-            context.drawText(client.textRenderer, Text.literal(truncatedContent), x + 2, y + 12, 0xCCCCCC, false);
+            context.drawText(client.textRenderer, Text.literal(truncatedContent), x + 2, y + 12, Colors.TEXT_MUTED, false);
 
-            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, 0xCCCCCC, false);
+            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, Colors.TEXT_MUTED, false);
         }
 
         @Override
