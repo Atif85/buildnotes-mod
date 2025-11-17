@@ -8,6 +8,8 @@ import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Scope;
+import net.atif.buildnotes.gui.helper.BuildScreenLayouts;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
@@ -60,30 +62,38 @@ public class EditBuildScreen extends ScrollableScreen {
     }
 
     @Override
+    protected int getTopMargin() { return 20; }
+
+    @Override
+    protected int getBottomMargin() {
+        return (UIHelper.BUTTON_HEIGHT * 2) + (UIHelper.OUTER_PADDING * 2) + UIHelper.BUTTON_ROW_SPACING;
+    }
+
+    @Override
     protected void init() {
         super.init(); // calls initContent()
 
         // --- BOTTOM BUTTON ROW ---
-        int buttonsY = this.height - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
+        int bottomRowY = UIHelper.getBottomButtonY(this, 2);
         List<Text> bottomTexts = List.of(
                 Text.translatable("gui.buildnotes.save_button"),
                 Text.translatable("gui.buildnotes.close_button")
         );
-        UIHelper.createBottomButtonRow(this, buttonsY, bottomTexts, (index, x, width) -> {
+        UIHelper.createButtonRow(this, bottomRowY, bottomTexts, (index, x, width) -> {
             if (index == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT,
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
                     bottomTexts.get(0), button -> {
                         saveBuild();
                         open(new ViewBuildScreen(this.parent, this.build));
                     })
                 );
             } else {
-                this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> this.close()));
+                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> this.close()));
             }
         });
 
         // --- TOP BUTTON ROW ---
-        int topRowY = buttonsY - UIHelper.BUTTON_HEIGHT - 5;
+        int topRowY = UIHelper.getBottomButtonY(this, 1);
         List<Text> topTexts = List.of(
                 Text.translatable("gui.buildnotes.edit.coords"),
                 Text.translatable("gui.buildnotes.edit.dimension"),
@@ -92,7 +102,7 @@ public class EditBuildScreen extends ScrollableScreen {
                 Text.translatable("gui.buildnotes.edit.add_field"),
                 getScopeButtonText()
         );
-        UIHelper.createBottomButtonRow(this, topRowY, topTexts, (index, x, width) -> {
+        UIHelper.createButtonRow(this, topRowY, topTexts, (index, x, width) -> {
             switch (index) {
                 case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(0), b -> insertCoords()));
                 case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(1), b -> insertDimension()));
@@ -113,10 +123,12 @@ public class EditBuildScreen extends ScrollableScreen {
 
         // --- IMAGE GALLERY WIDGETS ---
         if (!build.getImageFileNames().isEmpty()) {
-            int contentWidth = (int) (this.width * 0.6);
+            int panelSpacing = BuildScreenLayouts.PANEL_SPACING;
+
+            int contentWidth = (int) (this.width * BuildScreenLayouts.CONTENT_WIDTH_RATIO);
             int contentX = (this.width - contentWidth) / 2;
-            int galleryHeight = (int) (contentWidth * (9.0 / 16.0));
-            int galleryY = getTopMargin() + 25 + 5 + 20 + 5;
+            int galleryHeight = (int) (contentWidth * (BuildScreenLayouts.GALLERY_ASPECT_RATIO_H / BuildScreenLayouts.GALLERY_ASPECT_RATIO_W));
+            int galleryY = getTopMargin() + BuildScreenLayouts.NAME_FIELD_HEIGHT + panelSpacing + BuildScreenLayouts.SMALL_FIELD_HEIGHT + panelSpacing;
             int navButtonY = galleryY + (galleryHeight - 20) / 2;
 
             prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, Text.translatable("gui.buildnotes.gallery.previous"), b -> switchImage(-1));
@@ -135,77 +147,74 @@ public class EditBuildScreen extends ScrollableScreen {
     @Override
     protected void initContent() {
         this.customFieldWidgets.clear();
-        int contentWidth = (int) (this.width * 0.6);
+        int contentWidth = (int) (this.width * BuildScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
         int yPos = getTopMargin();
-        final int panelSpacing = 5;
-        final int labelHeight = 12;
+        int panelSpacing = BuildScreenLayouts.PANEL_SPACING;
 
         // --- Name Widget ---
         this.nameField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos + 5, contentWidth, 25, build.getName(),
+                this.textRenderer, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT, build.getName(),
                 Text.translatable("gui.buildnotes.placeholder.build_name").getString(),
                 1, false
         );
 
         addScrollableWidget(this.nameField);
-        yPos += 25 + panelSpacing;
+        yPos += BuildScreenLayouts.NAME_FIELD_HEIGHT + panelSpacing;
 
         // --- Coords & Dimension Widgets ---
-        int smallFieldHeight = 20;
         int fieldWidth = (contentWidth - panelSpacing) / 2;
         this.coordsField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX + 50, yPos, fieldWidth - 50, smallFieldHeight, build.getCoordinates(),
+                this.textRenderer, contentX + 50, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getCoordinates(),
                 Text.translatable("gui.buildnotes.placeholder.coords").getString(), 1, false
         );
         addScrollableWidget(this.coordsField);
         int dimensionX = contentX + fieldWidth + panelSpacing;
         this.dimensionField = new MultiLineTextFieldWidget(
-                this.textRenderer, dimensionX + 65, yPos, fieldWidth - 65, smallFieldHeight, build.getDimension(),
+                this.textRenderer, dimensionX + 65, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getDimension(),
                 Text.translatable("gui.buildnotes.placeholder.dimension").getString(), 1, false
         );
         addScrollableWidget(this.dimensionField);
-        yPos += smallFieldHeight + panelSpacing;
+        yPos += BuildScreenLayouts.SMALL_FIELD_HEIGHT + panelSpacing;
 
         // --- Image Gallery Placeholder ---
         if (!build.getImageFileNames().isEmpty()) {
-            int galleryHeight = (int) (contentWidth * (9.0 / 16.0)); // 16:9 aspect ratio
+            int galleryHeight = (int) (contentWidth * (BuildScreenLayouts.GALLERY_ASPECT_RATIO_H / BuildScreenLayouts.GALLERY_ASPECT_RATIO_W));
             yPos += galleryHeight + panelSpacing;
         }
 
         // --- Description, Credits, and Custom Fields ---
-        yPos += labelHeight;
+        yPos += BuildScreenLayouts.LABEL_HEIGHT;
         this.descriptionField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos, contentWidth, 80, build.getDescription(),
+                this.textRenderer, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT, build.getDescription(),
                 Text.translatable("gui.buildnotes.placeholder.description").getString(), Integer.MAX_VALUE, true
         );
         addScrollableWidget(this.descriptionField);
-        yPos += 80 + panelSpacing;
+        yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + panelSpacing;
 
-        yPos += labelHeight;
+        yPos += BuildScreenLayouts.LABEL_HEIGHT;
         this.designerField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos, contentWidth, 40, build.getCredits(),
+                this.textRenderer, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT, build.getCredits(),
                 Text.translatable("gui.buildnotes.placeholder.credits").getString(), Integer.MAX_VALUE, true
         );
         addScrollableWidget(this.designerField);
-        yPos += 40 + panelSpacing;
+        yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + panelSpacing;
 
         for (CustomField field : this.build.getCustomFields()) {
-            yPos += labelHeight;
-            int customRemoveBtnWidth = 20;
-            int fieldWidgetWidth = contentWidth - customRemoveBtnWidth - panelSpacing;
+            yPos += BuildScreenLayouts.LABEL_HEIGHT;
+            int fieldWidgetWidth = contentWidth - BuildScreenLayouts.CUSTOM_FIELD_REMOVE_BTN_WIDTH - panelSpacing;
 
-            MultiLineTextFieldWidget fieldArea = new MultiLineTextFieldWidget(this.textRenderer, contentX, yPos, fieldWidgetWidth, 40,
+            MultiLineTextFieldWidget fieldArea = new MultiLineTextFieldWidget(this.textRenderer, contentX, yPos, fieldWidgetWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT,
                     field.getContent(), "", Integer.MAX_VALUE, true);
 
             addScrollableWidget(fieldArea);
 
             this.customFieldWidgets.put(field, fieldArea);
-            DarkButtonWidget removeButton = new DarkButtonWidget(contentX + fieldWidgetWidth + panelSpacing, yPos, customRemoveBtnWidth, 20,
+            DarkButtonWidget removeButton = new DarkButtonWidget(contentX + fieldWidgetWidth + panelSpacing, yPos, BuildScreenLayouts.CUSTOM_FIELD_REMOVE_BTN_WIDTH, 20,
                     Text.translatable("gui.buildnotes.edit.remove_field"),  button -> removeCustomField(field));
 
             addScrollableWidget(removeButton);
-            yPos += 40 + panelSpacing;
+            yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + panelSpacing;
         }
 
         this.totalContentHeight = yPos;
@@ -213,30 +222,29 @@ public class EditBuildScreen extends ScrollableScreen {
 
     @Override
     protected void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
-        int contentWidth = (int) (this.width * 0.6);
+        int contentWidth = (int) (this.width * BuildScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
         int yPos = getTopMargin();
-        final int panelSpacing = 5;
-        final int labelHeight = 12;
+        int panelSpacing = BuildScreenLayouts.PANEL_SPACING;
 
-        UIHelper.drawPanel(context, contentX, yPos, contentWidth, 25);
+        UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT);
+        yPos += BuildScreenLayouts.NAME_FIELD_HEIGHT + panelSpacing;
 
-        yPos += 25 + panelSpacing;
-        int smallFieldHeight = 20;
+
         int fieldWidth = (contentWidth - panelSpacing) / 2;
-        UIHelper.drawPanel(context, contentX, yPos, fieldWidth, smallFieldHeight);
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.coords").formatted(Formatting.GRAY), contentX + 4, (int)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC, false);
+        UIHelper.drawPanel(context, contentX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.coords").formatted(Formatting.GRAY), contentX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
         int dimensionX = contentX + fieldWidth + panelSpacing;
-        UIHelper.drawPanel(context, dimensionX, yPos, fieldWidth, smallFieldHeight);
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.dimension").formatted(Formatting.GRAY), dimensionX + 4, (int)(yPos + (smallFieldHeight - 8) / 2f + 1), 0xCCCCCC, false);
-        yPos += smallFieldHeight + panelSpacing;
+        UIHelper.drawPanel(context, dimensionX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.dimension").formatted(Formatting.GRAY), dimensionX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
+        yPos += BuildScreenLayouts.SMALL_FIELD_HEIGHT + panelSpacing;
 
         if (!build.getImageFileNames().isEmpty()) {
-            int galleryBoxHeight = (int) (contentWidth * (9.0 / 16.0));
-            context.fill(contentX, yPos, contentX + contentWidth, yPos + galleryBoxHeight, 0x77000000);
+            int galleryBoxHeight = (int) (contentWidth * (BuildScreenLayouts.GALLERY_ASPECT_RATIO_H / BuildScreenLayouts.GALLERY_ASPECT_RATIO_W));
+            UIHelper.drawPanel(context, contentX, yPos, contentWidth, galleryBoxHeight);
             String currentImageName = build.getImageFileNames().get(currentImageIndex);
             if (downloadingImages.contains(currentImageName)) {
-                context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.loading").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.loading").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
             } else {
                 ImageData data = getImageDataForCurrentImage();
                 if (data != null && data.textureId != null) {
@@ -258,30 +266,30 @@ public class EditBuildScreen extends ScrollableScreen {
                     context.drawTexture(RenderLayer::getGuiTextured, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                     RenderSystem.disableBlend();
                 } else {
-                    context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, 0xFFFFFF);
+                    context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
                 }
             }
             String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
             int counterWidth = textRenderer.getWidth(counter);
-            context.drawText(this.textRenderer, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, 0xFFFFFF, true);
+            context.drawText(this.textRenderer, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, Colors.TEXT_PRIMARY, true);
             yPos += galleryBoxHeight + panelSpacing;
         }
 
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.description").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
-        yPos += labelHeight;
-        UIHelper.drawPanel(context, contentX, yPos, contentWidth, 80);
-        yPos += 80 + panelSpacing;
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.credits").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
-        yPos += labelHeight;
-        UIHelper.drawPanel(context, contentX, yPos, contentWidth, 40);
-        yPos += 40 + panelSpacing;
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.description").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+        yPos += BuildScreenLayouts.LABEL_HEIGHT;
+        UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT);
+        yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + panelSpacing;
+        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.credits").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+        yPos += BuildScreenLayouts.LABEL_HEIGHT;
+        UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT);
+        yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + panelSpacing;
         for (CustomField field : this.build.getCustomFields()) {
-            context.drawText(this.textRenderer, Text.translatable(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, 0xFFFFFF, false);
-            yPos += labelHeight;
-            UIHelper.drawPanel(context, contentX, yPos, contentWidth, 40);
-            yPos += 40 + panelSpacing;
+            context.drawText(this.textRenderer, Text.translatable(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+            yPos += BuildScreenLayouts.LABEL_HEIGHT;
+            UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT);
+            yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + panelSpacing;
         }
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, Colors.TEXT_PRIMARY);
     }
 
     // --- Image Management Logic ---
@@ -368,12 +376,6 @@ public class EditBuildScreen extends ScrollableScreen {
         saveBuild();
         this.open(new EditBuildScreen(this.parent, this.build));
     }
-
-    @Override
-    protected int getTopMargin() { return 20; }
-
-    @Override
-    protected int getBottomMargin() { return 70; }
 
     private void saveBuild() {
         build.setName(nameField.getText());
@@ -541,7 +543,7 @@ public class EditBuildScreen extends ScrollableScreen {
             int panelY = (this.height - panelH) / 2;
             UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
 
-            context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, panelY + 8, 0xFFFFFF);
+            context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
 
             this.titleField.render(context, mouseX, mouseY, delta);
 

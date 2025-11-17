@@ -1,6 +1,6 @@
 package net.atif.buildnotes.gui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -17,20 +17,18 @@ public class DarkButtonWidget extends ButtonWidget {
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         int color;
         if (!this.active) {
-            // disabled less dark
-            color = 0x44000000;
+            color = Colors.BUTTON_DISABLED;
         } else if (this.isHovered()) {
-            // hover darker
-            color = 0xAA000000;
+            color = Colors.BUTTON_HOVER;
         } else {
-            // default dark translucent
-            color = 0x77000000;
+            color = Colors.PANEL_BACKGROUND;
         }
 
         context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, color);
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        int textColor = this.active ? 0xFFFFFF : 0x888888;
+        int textColor = this.active ? Colors.TEXT_PRIMARY : Colors.TEXT_DISABLED;
+
         context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
         context.draw();
     }
