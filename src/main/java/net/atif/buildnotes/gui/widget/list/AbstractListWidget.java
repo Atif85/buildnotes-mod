@@ -1,6 +1,7 @@
 package net.atif.buildnotes.gui.widget.list;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 
 import net.minecraft.client.MinecraftClient;
@@ -142,7 +143,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         thumbY = Math.min(thumbY, maxThumbY);
 
-        int thumbColor = isDraggingScrollbar ? 0xFFFFFFFF : 0x88FFFFFF;
+        int thumbColor = isDraggingScrollbar ? Colors.SCROLLBAR_THUMB_ACTIVE : Colors.SCROLLBAR_THUMB_INACTIVE;
 
         context.fill(scrollbarX, this.getY() + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.getY() + (int) (thumbY + thumbHeight), thumbColor);
     }
