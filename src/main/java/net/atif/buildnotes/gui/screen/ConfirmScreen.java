@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.minecraft.client.gui.DrawContext;
@@ -26,9 +27,9 @@ public class ConfirmScreen extends BaseScreen {
         int panelH = 100;
         int panelY = (this.height - panelH) / 2;
 
-        int btnY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.BOTTOM_PADDING;
+        int btnY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.OUTER_PADDING;
 
-        UIHelper.createBottomButtonRow(this, btnY, 2, x -> {
+        UIHelper.createButtonRow(this, btnY, 2, x -> {
             boolean isLeft = x == UIHelper.getCenteredButtonStartX(this.width, 2);
             this.addDrawableChild(new DarkButtonWidget(
                     x, btnY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
@@ -48,7 +49,7 @@ public class ConfirmScreen extends BaseScreen {
 
         UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
 
-        context.drawTextWithShadow(this.textRenderer, this.message, panelX + 12, panelY + 12, 0xFFFFFF);
+        context.drawTextWithShadow(this.textRenderer, this.message, panelX + 12, panelY + 12, Colors.TEXT_PRIMARY);
 
         super.render(context, mouseX, mouseY, delta);
     }
