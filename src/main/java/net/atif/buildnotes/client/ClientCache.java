@@ -56,17 +56,6 @@ public class ClientCache {
         serverBuilds.add(build);
     }
 
-    /**
-     * Deletes an entry by its ID.
-     */
-    public static void removeNote(Note note) {
-        serverNotes.removeIf(n -> n.getId().equals(note.getId()));
-    }
-
-    public static void removeBuild(Build build) {
-        serverBuilds.removeIf(b -> b.getId().equals(build.getId()));
-    }
-
     // More specific removal methods
     public static void removeNoteById(UUID id) {
         serverNotes.removeIf(n -> n.getId().equals(id));
