@@ -1,10 +1,10 @@
 package net.atif.buildnotes.gui.widget.list;
 
 import net.atif.buildnotes.data.Build;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -78,22 +78,22 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
             }
 
             String truncatedName = client.textRenderer.trimToWidth(build.getName(), availableNameWidth);
-            context.drawText(client.textRenderer, truncatedName, x + 2, y + 2, 0xFFFFFF, false);
+            context.drawText(client.textRenderer, truncatedName, x + 2, y + 2, Colors.TEXT_PRIMARY, false);
 
             // Draw the Scope indicator
             if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 7, y + 2, 0xFFFFFF, false);
+                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 7, y + 2, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Coordinates
             String fullCoordsText = "Coords: " + build.getCoordinates();
             String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 4);
-            context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), x + 2, y + 12, 0xCCCCCC, false);
+            context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), x + 2, y + 12, Colors.TEXT_MUTED, false);
 
             // Truncate and draw the Date/Time
             String fullDateText = "Last Modified: " + this.formattedDateTime;
             String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 4);
-            context.drawText(client.textRenderer, truncatedDate, x + 2, y + 22, 0xCCCCCC, false);
+            context.drawText(client.textRenderer, truncatedDate, x + 2, y + 22, Colors.TEXT_MUTED, false);
         }
 
         @Override
