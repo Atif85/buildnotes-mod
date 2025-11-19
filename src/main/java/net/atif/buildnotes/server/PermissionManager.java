@@ -21,12 +21,14 @@ public class PermissionManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String PERMISSIONS_FILE = "buildnotes_permissions.json";
     private final Path configPath;
+    private final MinecraftServer server;
 
     private boolean allowAll = false;
     // The data structure now stores a PermissionEntry object, not just a UUID.
     private final Set<PermissionEntry> allowedPlayers = new HashSet<>();
 
     public PermissionManager(MinecraftServer server) {
+        this.server = server;
         this.configPath = server.getSavePath(WorldSavePath.ROOT).resolve("buildnotes").resolve(PERMISSIONS_FILE);
         load();
     }
@@ -76,7 +78,7 @@ public class PermissionManager {
         if (this.allowAll) {
             return true;
         }
-        if (player.getServer().getPlayerManager().isOperator(player.getGameProfile())) {
+        if (server.getPlayerManager().isOperator(player.getPlayerConfigEntry())) {
             return true;
         }
         // Check if any entry in the set matches the player's UUID
@@ -85,7 +87,7 @@ public class PermissionManager {
 
     // Now accepts a GameProfile to get both UUID and name
     public boolean addPlayer(GameProfile profile) {
-        PermissionEntry newEntry = new PermissionEntry(profile.getId(), profile.getName());
+        PermissionEntry newEntry = new PermissionEntry(profile.id(), profile.name());
         if (allowedPlayers.add(newEntry)) {
             save();
             return true;
@@ -96,7 +98,7 @@ public class PermissionManager {
     // Now accepts a GameProfile to find the player to remove
     public boolean removePlayer(GameProfile profile) {
         // We can remove based on a dummy entry, since equals() only checks the UUID
-        if (allowedPlayers.remove(new PermissionEntry(profile.getId(), ""))) {
+        if (allowedPlayers.remove(new PermissionEntry(profile.id(), ""))) {
             save();
             return true;
         }

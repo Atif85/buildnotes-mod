@@ -9,6 +9,7 @@ import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 
 public class ViewNoteScreen extends BaseScreen {
@@ -103,11 +104,10 @@ public class ViewNoteScreen extends BaseScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Pass key events to both widgets for copying/navigation
-        if (this.titleArea.keyPressed(keyCode, scanCode, modifiers)) return true;
-        if (this.contentArea.keyPressed(keyCode, scanCode, modifiers)) return true;
-        return super.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(KeyInput input) {
+        if (this.titleArea.keyPressed(input)) return true;
+        if (this.contentArea.keyPressed(input)) return true;
+        return super.keyPressed(input);
     }
 
     // --- Delegate scrolling to the widget ---
@@ -123,38 +123,4 @@ public class ViewNoteScreen extends BaseScreen {
         return false;
     }
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Find which child element was clicked and set it as the "focused" one for this interaction.
-        for (Element element : this.children()) {
-            if (element.mouseClicked(mouseX, mouseY, button)) {
-                this.setFocused(element);
-                if (button == 0) {
-                    this.setDragging(true);
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        // If we are in a drag operation, send the event directly to the focused element.
-        if (this.getFocused() != null && this.isDragging() && button == 0) {
-            return this.getFocused().mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        // This is the crucial fix. The mouse release event is sent to the element
-        // that was focused during mouseClicked, not the one currently under the cursor.
-        if (this.getFocused() != null && this.isDragging() && button == 0) {
-            this.setDragging(false);
-            return this.getFocused().mouseReleased(mouseX, mouseY, button);
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
 }

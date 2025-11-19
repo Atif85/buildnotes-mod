@@ -2,11 +2,9 @@ package net.atif.buildnotes.gui.screen;
 
 import com.google.common.collect.Lists;
 import net.atif.buildnotes.gui.helper.Colors;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.joml.Matrix3x2fStack;
 
@@ -56,7 +54,7 @@ public abstract class ScrollableScreen extends BaseScreen {
         if (bottom <= top) return;
 
 
-        context.enableScissor( 0, top, this.width, bottom - top);
+        context.enableScissor( 0, top, this.width, bottom);
 
         Matrix3x2fStack matrices = context.getMatrices();
 
@@ -129,10 +127,14 @@ public abstract class ScrollableScreen extends BaseScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+
         for (Element child : children()) {
             if (!scrollableWidgets.contains(child)) {
-                if (child.mouseClicked(mouseX, mouseY, button)) {
+                if (child.mouseClicked(click, doubled)) {
                     this.setFocused(child);
                     if (button == 0) {
                         this.setDragging(true);
@@ -153,8 +155,10 @@ public abstract class ScrollableScreen extends BaseScreen {
 
         if (mouseY >= top && mouseY < bottom) {
             double adjustedMouseY = mouseY - top + scrollY;
+            Click adjustedClick = new Click(mouseX, adjustedMouseY, click.buttonInfo());
+
             for (Element widget : this.scrollableWidgets) {
-                if (widget.mouseClicked(mouseX, adjustedMouseY, button)) {
+                if (widget.mouseClicked(adjustedClick, doubled)) {
                     this.setFocused(widget);
                     if (button == 0) this.setDragging(true);
                     return true;
@@ -165,17 +169,20 @@ public abstract class ScrollableScreen extends BaseScreen {
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        // Ensure consistent coordinate space for the dragged element
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
+
         if (this.getFocused() != null && this.isDragging() && button == 0) {
-            // If the dragged element is scrollable, pass it the adjusted coordinates
+            // Create a new Click object with adjusted coordinates for scrollable widgets
             if (this.scrollableWidgets.contains(this.getFocused())) {
                 double adjustedMouseY = mouseY - getTopMargin() + this.scrollY;
-                return this.getFocused().mouseDragged(mouseX, adjustedMouseY, button, deltaX, deltaY);
-            }
-            // Otherwise, pass normal coordinates (for fixed buttons, etc.)
-            else {
-                return this.getFocused().mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+                Click adjustedClick = new Click(mouseX, adjustedMouseY, click.buttonInfo());
+                return this.getFocused().mouseDragged(adjustedClick, offsetX, offsetY);
+            } else {
+                // Pass original click to fixed widgets
+                return this.getFocused().mouseDragged(click, offsetX, offsetY);
             }
         }
 
@@ -187,7 +194,7 @@ public abstract class ScrollableScreen extends BaseScreen {
             if (trackHeight - thumbHeight <= 0) return true;
 
             double scrollRatio = (double)getMaxScroll() / (trackHeight - thumbHeight);
-            this.scrollY += deltaY * scrollRatio;
+            this.scrollY += offsetY * scrollRatio;
             clampScroll();
             return true;
         }
@@ -195,47 +202,47 @@ public abstract class ScrollableScreen extends BaseScreen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         // First, handle the screen's own scrollbar state.
         if (isDraggingScrollbar) {
             isDraggingScrollbar = false;
             return true;
         }
 
+
         if (this.getFocused() != null) {
             boolean handled;
-            // Adjust coordinates for scrollable widgets before sending the event.
+            // Adjust coordinates for scrollable widgets
             if (this.scrollableWidgets.contains(this.getFocused())) {
-                double adjustedMouseY = mouseY - getTopMargin() + this.scrollY;
-                handled = this.getFocused().mouseReleased(mouseX, adjustedMouseY, button);
+                double adjustedMouseY = click.y() - getTopMargin() + this.scrollY;
+                Click adjustedClick = new Click(click.x(), adjustedMouseY, click.buttonInfo());
+                handled = this.getFocused().mouseReleased(adjustedClick);
             } else {
-                handled = this.getFocused().mouseReleased(mouseX, mouseY, button);
+                handled = this.getFocused().mouseReleased(click);
             }
 
-            // After dispatching, reset the screen's global dragging state.
             this.setDragging(false);
-
-            // If the focused element handled it, we are done.
             if (handled) {
                 return true;
             }
         }
 
-        // Fallback to default behavior if no specific element was focused.
-        return super.mouseReleased(mouseX, mouseY, button);
+        // Use the new method on the superclass
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.getFocused() != null && this.getFocused().keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyInput input) {
+        if (this.getFocused() != null && this.getFocused().keyPressed(input)) {
             return true;
         }
-        if (keyCode == 265) { // Up Arrow
+        // Use GLFW constants for key codes
+        if (input.isUp()) {
             this.scrollY -= 10; clampScroll(); return true;
-        } else if (keyCode == 264) { // Down Arrow
+        } else if (input.isDown()) {
             this.scrollY += 10; clampScroll(); return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     private void clampScroll() {

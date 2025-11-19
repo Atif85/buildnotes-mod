@@ -4,6 +4,7 @@ import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -54,7 +55,11 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            int entryX = getX();
+            int entryY = getY();
+            int entryWidth = BuildListWidget.this.getRowWidth();
+            
             // Prepare Scope indicator to calculate its width
             Text scopeText = null;
             int scopeWidth = 0;
@@ -78,27 +83,27 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
             }
 
             String truncatedName = client.textRenderer.trimToWidth(build.getName(), availableNameWidth);
-            context.drawText(client.textRenderer, truncatedName, x + 2, y + 2, Colors.TEXT_PRIMARY, false);
+            context.drawText(client.textRenderer, truncatedName, entryX + 2, entryY + 2, Colors.TEXT_PRIMARY, false);
 
             // Draw the Scope indicator
             if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 7, y + 2, Colors.TEXT_PRIMARY, false);
+                context.drawText(client.textRenderer, scopeText, entryX + entryWidth - scopeWidth - 7, entryY + 2, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Coordinates
             String fullCoordsText = "Coords: " + build.getCoordinates();
             String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 4);
-            context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), x + 2, y + 12, Colors.TEXT_MUTED, false);
+            context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), entryX + 2, entryY + 12, Colors.TEXT_MUTED, false);
 
             // Truncate and draw the Date/Time
             String fullDateText = "Last Modified: " + this.formattedDateTime;
             String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 4);
-            context.drawText(client.textRenderer, truncatedDate, x + 2, y + 22, Colors.TEXT_MUTED, false);
+            context.drawText(client.textRenderer, truncatedDate, entryX + 2, entryY + 22, Colors.TEXT_MUTED, false);
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0) {
+        public boolean mouseClicked(Click click, boolean doubled) {
+            if (click.button() == 0) { // Check for left-click
                 BuildListWidget.this.setSelected(this);
 
                 BuildListWidget.this.handleEntryClick(this);

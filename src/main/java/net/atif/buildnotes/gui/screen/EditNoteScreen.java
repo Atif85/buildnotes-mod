@@ -108,6 +108,17 @@ public class EditNoteScreen extends BaseScreen {
         this.setInitialFocus(this.titleField);
     }
 
+    @Override
+    public void tick() {
+        super.tick();
+        // Keep track of the last text field that had focus
+        if (this.titleField.isFocused()) {
+            this.lastFocusedTextField = this.titleField;
+        } else if (this.contentField.isFocused()) {
+            this.lastFocusedTextField = this.contentField;
+        }
+    }
+
     private void cycleScope() {
         Scope currentScope = note.getScope();
         if (ClientSession.isOnServer() && ClientSession.hasEditPermission()) {
@@ -199,41 +210,6 @@ public class EditNoteScreen extends BaseScreen {
             return this.titleField.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Find which child element was clicked and set it as the "focused" one for this interaction.
-        for (Element element : this.children()) {
-            if (element.mouseClicked(mouseX, mouseY, button)) {
-                this.setFocused(element);
-                if (button == 0) {
-                    this.setDragging(true);
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        // If we are in a drag operation, send the event directly to the focused element.
-        if (this.getFocused() != null && this.isDragging() && button == 0) {
-            return this.getFocused().mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        // This is the crucial fix. The mouse release event is sent to the element
-        // that was focused during mouseClicked, not the one currently under the cursor.
-        if (this.getFocused() != null && this.isDragging() && button == 0) {
-            this.setDragging(false);
-            return this.getFocused().mouseReleased(mouseX, mouseY, button);
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override

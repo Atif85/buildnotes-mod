@@ -407,7 +407,7 @@ public class EditBuildScreen extends ScrollableScreen {
 
     private void insertDimension() {
         if (this.client == null || this.client.player == null) return;
-        String dim = this.client.player.getWorld().getRegistryKey().getValue().toString();
+        String dim = this.client.player.getEntityWorld().getRegistryKey().getValue().toString();
         insertTextAtLastFocus(dim);
     }
 

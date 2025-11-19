@@ -33,9 +33,11 @@ public class ServerDataManager {
     private static final String BUILDS_FILE_NAME = "builds.json";
     private static final String MOD_DATA_SUBFOLDER = "buildnotes";
 
+    private final MinecraftServer server;
     private final Path storagePath;
 
     public ServerDataManager(MinecraftServer server) {
+        this.server = server;
         this.storagePath = server.getSavePath(WorldSavePath.ROOT).resolve(MOD_DATA_SUBFOLDER);
     }
 
@@ -110,8 +112,6 @@ public class ServerDataManager {
             Path imagePath = getImageStoragePath(buildId).resolve(filename);
             if (Files.notExists(imagePath)) {
                 Buildnotes.LOGGER.warn("Player {} requested non-existent image '{}' for build {}", player.getName().getString(), filename, buildId);
-
-                MinecraftServer server = player.getServer();
                 server.execute(() -> {
                     ServerPlayNetworking.send(player, new ImageNotFoundS2CPacket(buildId, filename));
                 });
@@ -128,8 +128,6 @@ public class ServerDataManager {
                     int length = Math.min(NetworkConstants.CHUNK_SIZE, fullData.length - offset);
                     byte[] chunkData = new byte[length];
                     System.arraycopy(fullData, offset, chunkData, 0, length);
-
-                    MinecraftServer server = player.getServer();
                     int finalI = i;
                     server.execute(() -> ServerPlayNetworking.send(player, new ImageChunkS2CPacket(buildId, filename, totalChunks, finalI, chunkData)));
                 }

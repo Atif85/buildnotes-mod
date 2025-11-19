@@ -7,12 +7,11 @@ import com.google.common.collect.Lists;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
@@ -58,6 +57,9 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     protected int lastClickIndex = -1;
     protected int clickCount = 0;
     private static final long DOUBLE_CLICK_INTERVAL_MS = 300;
+
+    private boolean shiftDown = false;
+    private boolean ctrlDown = false;
 
     // dragging selection by mouse
     protected boolean isDraggingText = false;
@@ -445,7 +447,10 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     // ---------- Mouse handling ----------
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+
         if (isMouseOver(mouseX, mouseY)) {
             boolean vNeeded = this.scrollingEnabled && isScrollbarNeededV();
             boolean hNeeded = this.scrollingEnabled && isScrollbarNeededH();
@@ -480,40 +485,29 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             // normal text area click
             this.focused = true;
             int clickedAbs = absoluteIndexFromMouse(mouseX, mouseY);
-            long now = System.currentTimeMillis();
 
-            // --- Double/Triple click detection logic ---
-            if (now - lastClickTime < DOUBLE_CLICK_INTERVAL_MS && clickedAbs == lastClickIndex) {
-                clickCount++;
-            } else {
+            // --- Double/Triple click detection ---
+            if (doubled) { // This boolean is true on the second click of a double click
+                if (clickCount == 1) { // It was a single click, now it's a double
+                    clickCount = 2;
+                    selectWordAt(clickedAbs);
+                } else { // It was already a double, now it's a triple
+                    clickCount = 0; // Reset
+                    selectLineAt(clickedAbs);
+                }
+                this.isDraggingText = false;
+            } else { // This is a single click
                 clickCount = 1;
-            }
-
-            // Update state for the next click
-            this.lastClickTime = now;
-            this.lastClickIndex = clickedAbs;
-
-            // Handle actions based on click count
-            if (clickCount == 1) { // SINGLE CLICK
-                boolean shift = Screen.hasShiftDown();
-                if (shift) {
+                if (click.hasShift()) {
                     setSelectionAbsolute(selectionAnchor, clickedAbs);
                     setCursorFromAbsolute(clickedAbs);
                 } else {
                     selectionAnchor = clickedAbs;
                     setSelectionAbsolute(clickedAbs, clickedAbs);
                     setCursorFromAbsolute(clickedAbs);
-                    this.isDraggingText = true; // Only start dragging on single click
+                    this.isDraggingText = true;
                 }
-            } else if (clickCount == 2) { // DOUBLE CLICK
-                selectWordAt(clickedAbs);
-                this.isDraggingText = false;
-            } else if (clickCount == 3) { // TRIPLE CLICK
-                selectLineAt(clickedAbs);
-                this.isDraggingText = false;
-                clickCount = 0; // Reset after triple-click to restart the cycle
             }
-
             return true;
         }
         this.focused = false;
@@ -521,22 +515,27 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         isDraggingVScrollbar = false;
         isDraggingHScrollbar = false;
         isDraggingText = false;
-        return Element.super.mouseReleased(mouseX, mouseY, button);
+        return Element.super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+
         if (this.scrollingEnabled && isDraggingVScrollbar) {
             double dragDelta = mouseY - this.vScrollbarDragStartY;
             int trackHeight = this.height - 10 - (isScrollbarNeededH() ? (SCROLLBAR_THICKNESS + 2) : 0);
+
             double maxScroll = Math.max(1, getMaxScrollV());
             double contentPixelHeight = lines.size() * textRenderer.fontHeight;
             double thumbHeight = Math.max(10, (trackHeight / contentPixelHeight) * trackHeight);
             double toTrack = (trackHeight - thumbHeight);
+
             if (toTrack <= 0) return true;
             this.scrollY = this.vScrollbarDragStartScrollY + (dragDelta * (maxScroll / toTrack));
             clampScroll();
@@ -547,8 +546,10 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
             int padding = 5;
             int contentWidth = this.width - padding * 2 - (isScrollbarNeededV() ? (SCROLLBAR_THICKNESS + 2) : 0);
             int maxH = getMaxScrollH();
+
             double thumbWidth = Math.max(10, (contentWidth / (float) Math.max(1, getMaxLinePixelWidth())) * contentWidth);
             double toTrack = (contentWidth - thumbWidth);
+
             if (toTrack <= 0) return true;
             this.scrollX = this.hScrollbarDragStartScrollX + (dragDelta * (maxH / toTrack));
             clampScroll();
@@ -569,10 +570,9 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         if (!isMouseOver(mouseX, mouseY)) { return false; }
 
         final double scrollMultiplier = 10.0;
-        boolean shift = Screen.hasShiftDown();
         boolean handled = false;
 
-        if (shift && this.allowHorizontalScroll && verticalAmount != 0) {
+        if (this.shiftDown && this.allowHorizontalScroll && verticalAmount != 0) {
             this.scrollX -= verticalAmount * scrollMultiplier;
             clampScroll();
             handled = true;
@@ -606,52 +606,57 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
 
     // ---------- Keyboard ----------
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
+        int keyCode = input.getKeycode();
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) {
+            this.shiftDown = true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
+            this.ctrlDown = true;
+        }
+
         if (!this.focused) return false;
 
-        boolean shift = Screen.hasShiftDown();
-        boolean ctrl = Screen.hasControlDown();
-
-        if (ctrl && keyCode == GLFW.GLFW_KEY_Z) {
+        if (input.hasCtrl() && keyCode == GLFW.GLFW_KEY_Z) {
             undoManager.undo();
             onChanged();
             return true;
         }
-        if (ctrl && keyCode == GLFW.GLFW_KEY_Y) {
+        if (input.hasCtrl() && keyCode == GLFW.GLFW_KEY_Y) {
             undoManager.redo();
             onChanged();
             return true;
         }
 
         // ctrl+word moves (absolute space)
-        if (ctrl && keyCode == GLFW.GLFW_KEY_LEFT) {
+        if (input.hasCtrl() && input.isLeft()) {
             int oldAbs = getAbsoluteIndex(cursorY, cursorX);
             int newAbs = moveWordBackAbsolute(oldAbs);
-            moveCursorToAbsolute(newAbs, shift);
+            moveCursorToAbsolute(newAbs, input.hasShift());
             return true;
         }
-        if (ctrl && keyCode == GLFW.GLFW_KEY_RIGHT) {
+        if (input.hasCtrl() && input.isRight()) {
             int oldAbs = getAbsoluteIndex(cursorY, cursorX);
             int newAbs = moveWordForwardAbsolute(oldAbs);
-            moveCursorToAbsolute(newAbs, shift);
+            moveCursorToAbsolute(newAbs, input.hasShift());
             return true;
         }
 
-        if (Screen.isSelectAll(keyCode)) {
+        if (input.isSelectAll()) {
             setSelectionAbsolute(0, getTotalLength());
             setCursorFromAbsolute(getTotalLength());
             return true;
         }
-        if (Screen.isCopy(keyCode)) {
+        if (input.isCopy()) {
             if (hasSelection()) MinecraftClient.getInstance().keyboard.setClipboard(getSelectedText());
             return true;
         }
-        if (Screen.isPaste(keyCode)) {
+        if (input.isPaste()) {
             String clip = MinecraftClient.getInstance().keyboard.getClipboard();
             if (clip != null && !clip.isEmpty()) insertText(clip);
             return true;
         }
-        if (Screen.isCut(keyCode)) {
+        if (input.isCut()) {
             if (hasSelection()) {
                 MinecraftClient.getInstance().keyboard.setClipboard(getSelectedText());
                 deleteSelection();
@@ -671,7 +676,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                     deleteSelection();
                     return true;
                 }
-                if (ctrl) {
+                if (input.hasCtrl()) {
                     int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                     if (oldAbs > 0) {
                         int newAbs = moveWordBackAbsolute(oldAbs);
@@ -702,7 +707,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                     deleteSelection();
                     return true;
                 }
-                if (ctrl) {
+                if (input.hasCtrl()) {
                     int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                     if (oldAbs < getTotalLength()) {
                         int newAbs = moveWordForwardAbsolute(oldAbs);
@@ -727,38 +732,38 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                 int newLine = Math.max(0, cursorY - 1);
                 int newCol = Math.min(cursorX, lines.get(newLine).length());
                 int newAbs = getAbsoluteIndex(newLine, newCol);
-                moveCursorToAbsolute(newAbs, shift);
+                moveCursorToAbsolute(newAbs, input.hasShift());
                 return true;
             }
             case GLFW.GLFW_KEY_DOWN -> {
                 int newLine = Math.min(lines.size() - 1, cursorY + 1);
                 int newCol = Math.min(cursorX, lines.get(newLine).length());
                 int newAbs = getAbsoluteIndex(newLine, newCol);
-                moveCursorToAbsolute(newAbs, shift);
+                moveCursorToAbsolute(newAbs, input.hasShift());
                 return true;
             }
             case GLFW.GLFW_KEY_LEFT -> {
                 int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                 if (oldAbs == 0) return true;
                 int newAbs = oldAbs - 1;
-                moveCursorToAbsolute(newAbs, shift);
+                moveCursorToAbsolute(newAbs, input.hasShift());
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
                 int oldAbs = getAbsoluteIndex(cursorY, cursorX);
                 if (oldAbs >= getTotalLength()) return true;
                 int newAbs = oldAbs + 1;
-                moveCursorToAbsolute(newAbs, shift);
+                moveCursorToAbsolute(newAbs, input.hasShift());
                 return true;
             }
             case GLFW.GLFW_KEY_HOME -> {
                 int newAbs = getAbsoluteIndex(cursorY, 0);
-                moveCursorToAbsolute(newAbs, shift);
+                moveCursorToAbsolute(newAbs, input.hasShift());
                 return true;
             }
             case GLFW.GLFW_KEY_END -> {
                 int newAbs = getAbsoluteIndex(cursorY, lines.get(cursorY).length());
-                moveCursorToAbsolute(newAbs, shift);
+                moveCursorToAbsolute(newAbs, input.hasShift());
                 return true;
             }
         }
@@ -767,11 +772,24 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
+    public boolean keyReleased(KeyInput input) {
+        int keyCode = input.getKeycode(); // Use the getter for clarity
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) {
+            this.shiftDown = false;
+        }
+        if (keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) {
+            this.ctrlDown = false;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(CharInput input) {
         if (this.focused) {
-            if (chr == 0 || Character.isISOControl(chr)) return false;
-            insertText(Character.toString(chr));
-            return true;
+            if (input.isValidChar()) {
+                insertText(input.asString());
+                return true;
+            }
         }
         return false;
     }

@@ -9,6 +9,7 @@ import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.server.PermissionEntry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.GameProfileArgumentType;
+import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -47,17 +48,18 @@ public class BuildNotesCommands {
     }
 
     private static int allowPlayer(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        Collection<GameProfile> profiles = GameProfileArgumentType.getProfileArgument(context, "players");
+        Collection<PlayerConfigEntry> entries = GameProfileArgumentType.getProfileArgument(context, "players");
         ServerCommandSource source = context.getSource();
 
         List<String> addedPlayers = new ArrayList<>();
         List<String> alreadyAllowedPlayers = new ArrayList<>();
 
-        for (GameProfile profile : profiles) {
+        for (PlayerConfigEntry entry : entries) {
+            GameProfile profile = new GameProfile(entry.id(), entry.name());
             if (Buildnotes.PERMISSION_MANAGER.addPlayer(profile)) {
-                addedPlayers.add(profile.getName());
+                addedPlayers.add(profile.name());
             } else {
-                alreadyAllowedPlayers.add(profile.getName());
+                alreadyAllowedPlayers.add(profile.name());
             }
         }
 
@@ -75,17 +77,18 @@ public class BuildNotesCommands {
     }
 
     private static int disallowPlayer(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        Collection<GameProfile> profiles = GameProfileArgumentType.getProfileArgument(context, "players");
+        Collection<PlayerConfigEntry> entries = GameProfileArgumentType.getProfileArgument(context, "players");
         ServerCommandSource source = context.getSource();
 
         List<String> removedPlayers = new ArrayList<>();
         List<String> notOnListPlayers = new ArrayList<>();
 
-        for (GameProfile profile : profiles) {
+        for (PlayerConfigEntry entry : entries) {
+            GameProfile profile = new GameProfile(entry.id(), entry.name());
             if (Buildnotes.PERMISSION_MANAGER.removePlayer(profile)) {
-                removedPlayers.add(profile.getName());
+                removedPlayers.add(profile.name());
             } else {
-                notOnListPlayers.add(profile.getName());
+                notOnListPlayers.add(profile.name());
             }
         }
 

@@ -4,6 +4,7 @@ import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.EntryListWidget;
@@ -38,47 +39,47 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         if (!this.visible) return false;
+
+
+        double mouseX = click.x();
+        double mouseY = click.y();
 
         if (this.isMouseOver(mouseX, mouseY) && mouseX >= this.getScrollbarX() && mouseX < this.getScrollbarX() + SCROLLBAR_WIDTH) {
             this.isDraggingScrollbar = true;
-            this.scrollbarDragStartMouseY = mouseY;
             return true;
         }
+
         this.isDraggingScrollbar = false;
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         isDraggingScrollbar = false;
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
         if (this.isDraggingScrollbar) {
             int trackHeight = this.getHeight();
             float maxScroll = this.getMaxScrollY();
+            if (maxScroll <= 0) return true;
+
             float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getContentsHeightWithPadding());
             float draggableHeight = trackHeight - thumbHeight;
-
             if (draggableHeight <= 0) return true; // Cannot drag if thumb fills the track
 
             // Calculate the ratio of scrollable content to draggable area
             float ratio = maxScroll / draggableHeight;
 
-            // Update scroll amount based on mouse movement since the drag started
-            double relativeMouseY = mouseY - this.scrollbarDragStartMouseY;
-            this.setScrollY(this.getScrollY() + (relativeMouseY * ratio));
-
-            // Update the start position for the next frame's calculation
-            this.scrollbarDragStartMouseY = mouseY;
+            this.setScrollY(this.getScrollY() + (offsetY * ratio));
 
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(click, offsetX, offsetY);
     }
 
     @Override

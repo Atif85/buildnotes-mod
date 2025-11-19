@@ -3,6 +3,8 @@ package net.atif.buildnotes.gui.widget;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import org.lwjgl.glfw.GLFW;
 
 public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
@@ -17,7 +19,7 @@ public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
      * Block all character input. This is a read-only field.
      */
     @Override
-    public boolean charTyped(char chr, int modifiers) {
+    public boolean charTyped(CharInput input) {
         return false;
     }
 
@@ -34,17 +36,17 @@ public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
      * Allows only navigation (arrows, home, end), copying, and selecting all.
      */
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         // These keys modify text, so we block them by "handling" the event (returning true)
         // but performing no action.
-        if (Screen.isPaste(keyCode) || Screen.isCut(keyCode) ||
-                keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER ||
+        int keyCode = input.getKeycode();
+        if (input.isPaste() || input.isCut() || input.isEnter() ||
                 keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE) {
             return true;
         }
 
         // For all other keys (which include navigation, copy, and select all),
         // we let the parent widget handle them as usual.
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 }
