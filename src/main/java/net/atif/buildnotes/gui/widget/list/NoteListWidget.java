@@ -104,18 +104,18 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             }
 
             String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
-            context.drawText(client.textRenderer, truncatedTitle, entryX + 2, entryY +  2, Colors.TEXT_PRIMARY, false);
+            context.drawText(client.textRenderer, truncatedTitle, entryX + 4, entryY +  4, Colors.TEXT_PRIMARY, false);
 
             if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, entryX + entryWidth - scopeWidth - 7, entryY +  2, Colors.TEXT_PRIMARY, false);
+                context.drawText(client.textRenderer, scopeText, entryX + entryWidth - scopeWidth - 4, entryY +  4, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Content Preview
             Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
-            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
-            context.drawText(client.textRenderer, Text.literal(truncatedContent), entryX + 2, entryY +  12, Colors.TEXT_MUTED, false);
+            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 8);
+            context.drawText(client.textRenderer, Text.literal(truncatedContent), entryX + 4, entryY +  14, Colors.TEXT_MUTED, false);
 
-            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, entryX + 2, entryY +  22, Colors.TEXT_MUTED, false);
+            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, entryX + 4, entryY +  24, Colors.TEXT_MUTED, false);
         }
 
         @Override

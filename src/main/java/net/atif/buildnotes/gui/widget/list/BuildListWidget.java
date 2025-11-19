@@ -83,22 +83,22 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
             }
 
             String truncatedName = client.textRenderer.trimToWidth(build.getName(), availableNameWidth);
-            context.drawText(client.textRenderer, truncatedName, entryX + 2, entryY + 2, Colors.TEXT_PRIMARY, false);
+            context.drawText(client.textRenderer, truncatedName, entryX + 4, entryY + 4, Colors.TEXT_PRIMARY, false);
 
             // Draw the Scope indicator
             if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, entryX + entryWidth - scopeWidth - 7, entryY + 2, Colors.TEXT_PRIMARY, false);
+                context.drawText(client.textRenderer, scopeText, entryX + entryWidth - scopeWidth - 4, entryY + 4, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Coordinates
             String fullCoordsText = "Coords: " + build.getCoordinates();
             String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 4);
-            context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), entryX + 2, entryY + 12, Colors.TEXT_MUTED, false);
+            context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), entryX + 4, entryY + 14, Colors.TEXT_MUTED, false);
 
             // Truncate and draw the Date/Time
             String fullDateText = "Last Modified: " + this.formattedDateTime;
-            String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 4);
-            context.drawText(client.textRenderer, truncatedDate, entryX + 2, entryY + 22, Colors.TEXT_MUTED, false);
+            String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 8);
+            context.drawText(client.textRenderer, truncatedDate, entryX + 4, entryY + 24, Colors.TEXT_MUTED, false);
         }
 
         @Override
