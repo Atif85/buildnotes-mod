@@ -85,17 +85,17 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
             // Draw the Scope indicator
             if (scopeText != null) {
-                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, Colors.TEXT_PRIMARY);
+                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 4, y + 2, Colors.TEXT_PRIMARY);
             }
 
             // Truncate and draw the Coordinates
             String fullCoordsText = "Coords: " + build.getCoordinates();
-            String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 4);
+            String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 6);
             client.textRenderer.draw(matrices, new LiteralText(truncatedCoords).formatted(Formatting.GRAY), x + 2, y + 12, Colors.TEXT_MUTED);
 
             // Truncate and draw the Date/Time
             String fullDateText = "Last Modified: " + this.formattedDateTime;
-            String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 4);
+            String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 6);
             client.textRenderer.draw(matrices, truncatedDate, x + 2, y + 22, Colors.TEXT_MUTED);
         }
 

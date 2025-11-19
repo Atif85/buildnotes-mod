@@ -105,12 +105,12 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             client.textRenderer.draw(matrices, Text.of(truncatedTitle), x + 2, y + 2, Colors.TEXT_PRIMARY);
 
             if (scopeText != null) {
-                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 7, y + 2, Colors.TEXT_PRIMARY);
+                client.textRenderer.draw(matrices, scopeText, x + entryWidth - scopeWidth - 4, y + 2, Colors.TEXT_PRIMARY);
             }
 
             // Truncate and draw the Content Preview
             Text contentPreview = new LiteralText(firstLine).formatted(Formatting.GRAY);
-            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 4);
+            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 6);
             client.textRenderer.draw(matrices, new LiteralText(truncatedContent), x + 2, y + 12, Colors.TEXT_MUTED);
 
             client.textRenderer.draw(matrices, Text.of("Last Modified: " + this.formattedDateTime), x + 2, y + 22, Colors.TEXT_MUTED);
