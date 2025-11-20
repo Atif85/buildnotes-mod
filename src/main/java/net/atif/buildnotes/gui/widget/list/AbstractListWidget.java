@@ -105,11 +105,11 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         int topY = this.getY();
 
         context.fillGradient(left, topY, right, topY + FADE_HEIGHT,
-                0x60000000, 0x00000000);
+                Colors.FADE_GRADIENT_TOP, Colors.FADE_GRADIENT_BOTTOM);
 
         int bottomY = this.getBottom() - FADE_HEIGHT;
         context.fillGradient(left, bottomY, right, this.getBottom(),
-                0x00000000, 0x60000000);
+                Colors.FADE_GRADIENT_BOTTOM, Colors.FADE_GRADIENT_TOP);
 
     }
 
