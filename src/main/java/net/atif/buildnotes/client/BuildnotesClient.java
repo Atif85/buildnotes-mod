@@ -1,9 +1,11 @@
 package net.atif.buildnotes.client;
 
 import io.netty.buffer.Unpooled;
+import net.atif.buildnotes.data.ColorConfig;
 import net.atif.buildnotes.data.PermissionLevel;
-import net.atif.buildnotes.data.TabType;
+import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
+import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.network.ClientPacketHandler;
 import net.atif.buildnotes.network.PacketIdentifiers;
 
@@ -22,11 +24,13 @@ import net.minecraft.network.PacketByteBuf;
 public class BuildnotesClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ColorConfig.loadColors();
         KeyBinds.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (KeyBinds.openGuiKey.wasPressed()) {
                 if (client.currentScreen == null) {
+                    Colors.reload();
                     client.setScreen(new MainScreen(TabType.NOTES));
                 }
             }
