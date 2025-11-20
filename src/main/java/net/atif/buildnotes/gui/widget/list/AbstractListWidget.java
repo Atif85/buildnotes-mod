@@ -120,11 +120,11 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         int right = this.getRight();
         int topY = this.getY();
         drawVerticalGradient(context, left, topY, right, topY + FADE_HEIGHT,
-                0x60000000, 0x00000000);
+                Colors.FADE_GRADIENT_TOP, Colors.FADE_GRADIENT_BOTTOM);
 
         int bottomY = this.getBottom() - FADE_HEIGHT;
         drawVerticalGradient(context, left, bottomY, right, this.getBottom(),
-                0x00000000, 0x60000000);
+                Colors.FADE_GRADIENT_BOTTOM, Colors.FADE_GRADIENT_TOP);
 
         RenderSystem.disableBlend();
     }
