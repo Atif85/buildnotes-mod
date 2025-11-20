@@ -119,12 +119,12 @@ public abstract class AbstractListWidget<E extends EntryListWidget.Entry<E>> ext
         int right = this.right;
         int topY = this.top;
         drawVerticalGradient(matrices, left, topY, right, topY + FADE_HEIGHT,
-                0x60000000, 0x00000000);  // semi-transparent black to transparent
+                Colors.FADE_GRADIENT_TOP, Colors.FADE_GRADIENT_BOTTOM);  // semi-transparent black to transparent
 
         // Bottom fade overlay
         int bottomY = this.bottom - FADE_HEIGHT;
         drawVerticalGradient(matrices, left, bottomY, right, this.bottom,
-                0x00000000, 0x60000000); // transparent to semi-transparent black
+                Colors.FADE_GRADIENT_BOTTOM, Colors.FADE_GRADIENT_TOP); // transparent to semi-transparent black
 
         RenderSystem.disableBlend();
     }
