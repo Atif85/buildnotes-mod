@@ -380,7 +380,7 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
                     int sx = contentX + (int) Math.round(textRenderer.getWidth(lines.get(i).substring(0, startCol)) - scrollX);
                     int ex = contentX + (int) Math.round(textRenderer.getWidth(lines.get(i).substring(0, endCol)) - scrollX);
                     int lineYPos = contentY + (i * textRenderer.fontHeight) - (int) scrollY;
-                    fill(matrices, sx, lineYPos, ex, lineYPos + textRenderer.fontHeight, 0x8855AADD);
+                    fill(matrices, sx, lineYPos, ex, lineYPos + textRenderer.fontHeight, Colors.SELECTION_BACKGROUND);
                 }
             }
         }
