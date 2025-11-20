@@ -33,7 +33,6 @@ public class TabButtonWidget extends ButtonWidget {
 
         // Render the text
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        int textColor = 0xFFFFFF;
         drawCenteredText(matrices, textRenderer, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, Colors.TEXT_PRIMARY);
     }
 
