@@ -55,8 +55,7 @@ public abstract class ScrollableScreen extends BaseScreen {
         int bottom = this.height - getBottomMargin();
         if (bottom <= top) return;
 
-
-        context.enableScissor(0, top, this.width, bottom - top);
+        context.enableScissor( 0, top, this.width, bottom);
 
         Matrix3x2fStack matrices = context.getMatrices();
 
