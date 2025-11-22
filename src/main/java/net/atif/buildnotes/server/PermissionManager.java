@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import net.atif.buildnotes.Buildnotes;
+import net.atif.buildnotes.network.ServerPacketHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.WorldSavePath;
@@ -15,11 +16,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 // NOTE: This class is SERVER-ONLY
 public class PermissionManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String PERMISSIONS_FILE = "buildnotes_permissions.json";
+    private final MinecraftServer server;
     private final Path configPath;
 
     private boolean allowAll = false;
@@ -27,6 +30,7 @@ public class PermissionManager {
     private final Set<PermissionEntry> allowedPlayers = new HashSet<>();
 
     public PermissionManager(MinecraftServer server) {
+        this.server = server;
         this.configPath = server.getSavePath(WorldSavePath.ROOT).resolve("buildnotes").resolve(PERMISSIONS_FILE);
         load();
     }
@@ -88,6 +92,8 @@ public class PermissionManager {
         PermissionEntry newEntry = new PermissionEntry(profile.getId(), profile.getName());
         if (allowedPlayers.add(newEntry)) {
             save();
+
+            refreshIfOnline(profile.getId());
             return true;
         }
         return false;
@@ -98,6 +104,8 @@ public class PermissionManager {
         // We can remove based on a dummy entry, since equals() only checks the UUID
         if (allowedPlayers.remove(new PermissionEntry(profile.getId(), ""))) {
             save();
+
+            refreshIfOnline(profile.getId());
             return true;
         }
         return false;
@@ -106,6 +114,17 @@ public class PermissionManager {
     public void setAllowAll(boolean allow) {
         this.allowAll = allow;
         save();
+
+        for (ServerPlayerEntity player : this.server.getPlayerManager().getPlayerList()) {
+            ServerPacketHandler.refreshPlayerPermissions(player);
+        }
+    }
+
+    private void refreshIfOnline(UUID uuid) {
+        ServerPlayerEntity player = this.server.getPlayerManager().getPlayer(uuid);
+        if (player != null) {
+            ServerPacketHandler.refreshPlayerPermissions(player);
+        }
     }
 
     public boolean getAllowAll() {
