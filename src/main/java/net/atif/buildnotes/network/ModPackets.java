@@ -27,6 +27,8 @@ public class ModPackets {
     public static void registerS2CPackets() {
         PayloadTypeRegistry.playS2C().register(HandshakeS2CPacket.ID, HandshakeS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(InitialSyncS2CPacket.ID, InitialSyncS2CPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(UpdatePermissionS2CPacket.ID, UpdatePermissionS2CPacket.CODEC);
+
         PayloadTypeRegistry.playS2C().register(UpdateNoteS2CPacket.ID, UpdateNoteS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateBuildS2CPacket.ID, UpdateBuildS2CPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(DeleteNoteS2CPacket.ID, DeleteNoteS2CPacket.CODEC);
