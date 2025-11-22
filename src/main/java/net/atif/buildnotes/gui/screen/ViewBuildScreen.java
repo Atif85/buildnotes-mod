@@ -2,6 +2,7 @@ package net.atif.buildnotes.gui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.atif.buildnotes.client.ClientImageTransferManager;
+import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
@@ -124,15 +125,25 @@ public class ViewBuildScreen extends ScrollableScreen {
     protected void init() {
         super.init();
 
+        boolean canEdit = !(this.build.getScope() == Scope.SERVER && !ClientSession.hasEditPermission());
+
         // Use UIHelper to create the bottom 3 action buttons
         int buttonsY = UIHelper.getBottomButtonY(this);
         UIHelper.createButtonRow(this, buttonsY, 3, x -> {
             int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (idx) {
-                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete()));
-                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.edit_button"), button -> open(new EditBuildScreen(this.parent, this.build))));
+                case 0 -> {
+                    DarkButtonWidget deleteButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                            Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete());
+                    deleteButton.active = canEdit;
+                    this.addDrawableChild(deleteButton);
+                }
+                case 1 -> {
+                    DarkButtonWidget editButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                            Text.translatable("gui.buildnotes.edit_button"), button -> open(new EditBuildScreen(this.parent, this.build)));
+                    editButton.active = canEdit;
+                    this.addDrawableChild(editButton);
+                }
                 case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
                         Text.translatable("gui.buildnotes.close_button"), button -> this.open(this.parent)));
             }
