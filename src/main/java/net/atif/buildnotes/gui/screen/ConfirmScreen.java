@@ -42,15 +42,18 @@ public class ConfirmScreen extends BaseScreen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context);
+        super.render(context, mouseX, mouseY, delta);
+
         int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
+        panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
         UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
 
-        context.drawTextWithShadow(this.textRenderer, this.message, panelX + 12, panelY + 12, Colors.TEXT_PRIMARY);
-
-        super.render(context, mouseX, mouseY, delta);
+        int textMaxWidth = panelW - 24; // 12px padding on each side
+        String trimmedMessage = this.textRenderer.trimToWidth(this.message.getString(), textMaxWidth);
+        context.drawTextWithShadow(this.textRenderer, Text.literal(trimmedMessage), panelX + 12, panelY + 12, Colors.TEXT_PRIMARY);
     }
 }
