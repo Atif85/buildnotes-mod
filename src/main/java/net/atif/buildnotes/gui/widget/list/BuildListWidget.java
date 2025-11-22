@@ -72,7 +72,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
             // Truncate and draw the Build Name
             // Calculate available width for the name by subtracting space for the scope indicator and padding
-            int availableNameWidth = entryWidth - 4; // Base padding
+            int availableNameWidth = entryWidth - 6; // Base padding
             if (scopeText != null) {
                 availableNameWidth -= (scopeWidth + 7); // Account for the scope text and its padding
             }
@@ -82,7 +82,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
             // Draw the Scope indicator
             if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 4, y + 2, Colors.TEXT_PRIMARY, false);
+                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 6, y + 2, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Coordinates
