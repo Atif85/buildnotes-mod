@@ -515,32 +515,46 @@ public class EditBuildScreen extends ScrollableScreen {
         @Override
         protected void init() {
             super.init();
+            int panelH = 100;
             int panelW = 200;
             int panelX = (this.width - panelW) / 2;
-            int panelY = (this.height - 100) / 2;
+            int panelY = (this.height - panelH) / 2;
 
             this.titleField = new TextFieldWidget(this.textRenderer, panelX + 10, panelY + 20, panelW - 20, 20, Text.of(""));
             this.addSelectableChild(this.titleField);
 
-            int buttonsY = panelY + 60;
-            int btnStartX = (this.width - ((85 * 2) + UIHelper.BUTTON_SPACING)) / 2;
-            this.addDrawableChild(new DarkButtonWidget(btnStartX, buttonsY, 85, 20, Text.translatable("gui.buildnotes.confirm_button"), button -> {
-                this.onConfirm.accept(this.titleField.getText());
-                this.open(this.parent);
-            }));
-            this.addDrawableChild(new DarkButtonWidget(btnStartX + 95, buttonsY, 85, 20, Text.translatable("gui.buildnotes.cancel_button"), button -> this.open(parent)));
+            List<Text> buttonTexts = List.of(
+                    Text.translatable("gui.buildnotes.confirm_button"),
+                    Text.translatable("gui.buildnotes.cancel_button")
+            );
+
+            int buttonsY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.OUTER_PADDING;
+            UIHelper.createButtonRow(this, buttonsY, buttonTexts, (index, x, width) -> {
+                if (index == 0) {
+                    this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.get(0), button -> {
+                        this.onConfirm.accept(this.titleField.getText());
+                        this.open(this.parent);
+                    }));
+                } else {
+                    this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.get(1), button -> this.open(parent)));
+                }
+            });
+
+
+
             this.setInitialFocus(this.titleField);
         }
 
         @Override
         public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-            parent.render(context, -1, -1, delta);
-            super.render(context, mouseX, mouseY, delta);
             int panelW = 200;
             int panelH = 100;
             int panelX = (this.width - panelW) / 2;
             int panelY = (this.height - panelH) / 2;
+
+            panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
             UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
+            super.render(context, mouseX, mouseY, delta);
 
             context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
 
