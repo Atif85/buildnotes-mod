@@ -49,6 +49,13 @@ public class BuildnotesClient implements ClientModInitializer {
                 }
         );
 
+        ClientPlayNetworking.registerGlobalReceiver(UpdatePermissionS2CPacket.ID,
+                (payload, context) -> {
+                    MinecraftClient client = MinecraftClient.getInstance();
+                    client.execute(() -> ClientPacketHandler.handleUpdatePermission(context.client(), payload));
+                }
+        );
+
         ClientPlayNetworking.registerGlobalReceiver(UpdateNoteS2CPacket.ID,
                 (packet, context) -> {
                     MinecraftClient client = MinecraftClient.getInstance();
