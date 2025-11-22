@@ -12,6 +12,11 @@ public class ClientSession {
         System.out.println("BuildNotes: Joined a compatible server with permission level: " + perms.toString());
     }
 
+    public static void updatePermissionLevel(PermissionLevel newPerms) {
+        permissionLevel = newPerms;
+        System.out.println("BuildNotes: Permissions updated to: " + newPerms.toString());
+    }
+
     public static void leaveServer() {
         onServer = false;
         permissionLevel = PermissionLevel.VIEW_ONLY;
