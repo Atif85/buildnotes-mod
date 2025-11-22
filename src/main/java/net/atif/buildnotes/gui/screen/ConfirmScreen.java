@@ -47,8 +47,11 @@ public class ConfirmScreen extends BaseScreen {
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
+        panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
         UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
 
-        context.drawTextWithShadow(this.textRenderer, this.message, panelX + 12, panelY + 12, Colors.TEXT_PRIMARY);
+        int textMaxWidth = panelW - 24; // 12px padding on each side
+        String trimmedMessage = this.textRenderer.trimToWidth(this.message.getString(), textMaxWidth);
+        context.drawTextWithShadow(this.textRenderer, Text.literal(trimmedMessage), panelX + 12, panelY + 12, Colors.TEXT_PRIMARY);
     }
 }
