@@ -5,6 +5,7 @@ import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.data.PermissionLevel;
 import net.atif.buildnotes.gui.screen.MainScreen; // ADDED
 import net.atif.buildnotes.network.packet.c2s.RequestDataC2SPacket;
 import net.atif.buildnotes.network.packet.s2c.*;
@@ -27,6 +28,16 @@ public class ClientPacketHandler {
         ClientSession.joinServer(permission);
         // After joining, immediately request data from the server
         ClientPlayNetworking.send(new RequestDataC2SPacket());
+    }
+
+    public static void handleUpdatePermission(MinecraftClient client, UpdatePermissionS2CPacket packet) {
+        PermissionLevel newLevel = packet.permission();
+
+        // Update the static session data
+        ClientSession.updatePermissionLevel(newLevel);
+
+        // Refresh the screen (e.g., to show/hide the "Add Note" button immediately)
+        refreshMainScreen(client);
     }
 
     // --- Typed packet handlers ---
