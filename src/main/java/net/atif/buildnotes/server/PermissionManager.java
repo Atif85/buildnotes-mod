@@ -22,6 +22,7 @@ import java.util.UUID;
 public class PermissionManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String PERMISSIONS_FILE = "buildnotes_permissions.json";
+    private final MinecraftServer server;
     private final Path configPath;
 
     private boolean allowAll = false;
@@ -29,6 +30,7 @@ public class PermissionManager {
     private final Set<PermissionEntry> allowedPlayers = new HashSet<>();
 
     public PermissionManager(MinecraftServer server) {
+        this.server = server;
         this.configPath = server.getSavePath(WorldSavePath.ROOT).resolve("buildnotes").resolve(PERMISSIONS_FILE);
         load();
     }
@@ -91,7 +93,7 @@ public class PermissionManager {
         if (allowedPlayers.add(newEntry)) {
             save();
 
-            refreshIfOnline(profile.id());
+            refreshIfOnline(profile.getId());
             return true;
         }
         return false;
@@ -103,7 +105,7 @@ public class PermissionManager {
         if (allowedPlayers.remove(new PermissionEntry(profile.getId(), ""))) {
             save();
 
-            refreshIfOnline(profile.id());
+            refreshIfOnline(profile.getId());
             return true;
         }
         return false;
@@ -113,13 +115,13 @@ public class PermissionManager {
         this.allowAll = allow;
         save();
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayerEntity player : this.server.getPlayerManager().getPlayerList()) {
             ServerPacketHandler.refreshPlayerPermissions(player);
         }
     }
 
     private void refreshIfOnline(UUID uuid) {
-        ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+        ServerPlayerEntity player = this.server.getPlayerManager().getPlayer(uuid);
         if (player != null) {
             ServerPacketHandler.refreshPlayerPermissions(player);
         }

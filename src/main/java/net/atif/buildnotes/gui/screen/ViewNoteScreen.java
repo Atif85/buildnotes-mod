@@ -9,6 +9,7 @@ import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Scope;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
