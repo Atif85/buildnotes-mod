@@ -535,6 +535,7 @@ public class EditBuildScreen extends ScrollableScreen {
         @Override
         public void render(DrawContext context, int mouseX, int mouseY, float delta) {
             parent.render(context, -1, -1, delta);
+            super.render(context, mouseX, mouseY, delta);
             int panelW = 200;
             int panelH = 100;
             int panelX = (this.width - panelW) / 2;
@@ -544,8 +545,6 @@ public class EditBuildScreen extends ScrollableScreen {
             context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
 
             this.titleField.render(context, mouseX, mouseY, delta);
-
-            super.render(context, mouseX, mouseY, delta);
         }
     }
 }
