@@ -10,9 +10,9 @@ public final class BuildScreenLayouts {
     // --- Field Heights ---
     public static final int NAME_FIELD_HEIGHT = 25;
     public static final int SMALL_FIELD_HEIGHT = 20; // For Coords & Dimension
-    public static final int DESCRIPTION_FIELD_HEIGHT = 100;
-    public static final int CREDITS_FIELD_HEIGHT = 50;
-    public static final int CUSTOM_FIELD_HEIGHT = 50;
+    public static final int DESCRIPTION_FIELD_HEIGHT = 120;
+    public static final int CREDITS_FIELD_HEIGHT = 60;
+    public static final int CUSTOM_FIELD_HEIGHT = 60;
 
     // --- Gallery ---
     public static final double GALLERY_ASPECT_RATIO_W = 16.0;
