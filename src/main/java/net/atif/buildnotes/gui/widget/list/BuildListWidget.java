@@ -77,7 +77,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
             // Truncate and draw the Build Name
             // Calculate available width for the name by subtracting space for the scope indicator and padding
-            int availableNameWidth = entryWidth - 4; // Base padding
+            int availableNameWidth = entryWidth - 8; // Base padding
             if (scopeText != null) {
                 availableNameWidth -= (scopeWidth + 7); // Account for the scope text and its padding
             }
@@ -92,7 +92,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
             // Truncate and draw the Coordinates
             String fullCoordsText = "Coords: " + build.getCoordinates();
-            String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 4);
+            String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 8);
             context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), entryX + 4, entryY + 14, Colors.TEXT_MUTED, false);
 
             // Truncate and draw the Date/Time
