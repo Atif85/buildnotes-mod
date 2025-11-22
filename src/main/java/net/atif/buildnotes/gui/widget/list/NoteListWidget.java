@@ -96,7 +96,7 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
             // Truncate and draw the Title
             // Calculate available width for the title by subtracting space for the scope indicator and padding
-            int availableTitleWidth = entryWidth - 4; // Base padding
+            int availableTitleWidth = entryWidth - 6; // Base padding
             if (scopeText != null) {
                 availableTitleWidth -= (scopeWidth + 7); // Account for the scope text and its padding
             }
