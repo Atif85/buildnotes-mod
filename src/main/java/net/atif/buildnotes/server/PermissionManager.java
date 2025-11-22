@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import net.atif.buildnotes.Buildnotes;
+import net.atif.buildnotes.network.ServerPacketHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.WorldSavePath;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 // NOTE: This class is SERVER-ONLY
 public class PermissionManager {
@@ -88,6 +90,8 @@ public class PermissionManager {
         PermissionEntry newEntry = new PermissionEntry(profile.getId(), profile.getName());
         if (allowedPlayers.add(newEntry)) {
             save();
+
+            refreshIfOnline(profile.id());
             return true;
         }
         return false;
@@ -98,6 +102,8 @@ public class PermissionManager {
         // We can remove based on a dummy entry, since equals() only checks the UUID
         if (allowedPlayers.remove(new PermissionEntry(profile.getId(), ""))) {
             save();
+
+            refreshIfOnline(profile.id());
             return true;
         }
         return false;
@@ -106,6 +112,17 @@ public class PermissionManager {
     public void setAllowAll(boolean allow) {
         this.allowAll = allow;
         save();
+
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            ServerPacketHandler.refreshPlayerPermissions(player);
+        }
+    }
+
+    private void refreshIfOnline(UUID uuid) {
+        ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+        if (player != null) {
+            ServerPacketHandler.refreshPlayerPermissions(player);
+        }
     }
 
     public boolean getAllowAll() {
