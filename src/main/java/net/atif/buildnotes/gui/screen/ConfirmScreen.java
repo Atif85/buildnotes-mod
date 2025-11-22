@@ -42,16 +42,17 @@ public class ConfirmScreen extends BaseScreen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
+        super.render(matrices, mouseX, mouseY, delta);
 
         int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
         int panelX = (this.width - panelW) / 2;
         int panelY = (this.height - panelH) / 2;
 
+        panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
         UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
 
-        this.textRenderer.drawTrimmed(this.message, panelX + 12, panelY + 12, panelW - 24, Colors.TEXT_PRIMARY);
-
-        super.render(matrices, mouseX, mouseY, delta);
+        int textMaxWidth = panelW - 24; // 12px padding on each side
+        this.textRenderer.drawTrimmed(this.message, panelX + 12, panelY + 12, textMaxWidth, Colors.TEXT_PRIMARY);
     }
 }
