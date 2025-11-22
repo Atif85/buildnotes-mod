@@ -3,6 +3,7 @@ package net.atif.buildnotes.network;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.data.PermissionLevel;
 import net.atif.buildnotes.network.packet.c2s.*;
 import net.atif.buildnotes.network.packet.s2c.*;
 import net.atif.buildnotes.server.ServerDataManager;
@@ -27,6 +28,17 @@ public class ServerPacketHandler {
 
         // Send typed S2C packet
         ServerPlayNetworking.send(player, new InitialSyncS2CPacket(notes, builds));
+    }
+
+
+    // Re-evaluates a specific player's permissions and sends them the update packet.
+    public static void refreshPlayerPermissions(ServerPlayerEntity player) {
+        if (player == null) return;
+
+        boolean canEdit = Buildnotes.PERMISSION_MANAGER.isAllowedToEdit(player);
+        PermissionLevel level = canEdit ? PermissionLevel.CAN_EDIT : PermissionLevel.VIEW_ONLY;
+
+        ServerPlayNetworking.send(player, new UpdatePermissionS2CPacket(level));
     }
 
     public static void handleSaveNote(MinecraftServer server, ServerPlayerEntity player, SaveNoteC2SPacket packet) {
