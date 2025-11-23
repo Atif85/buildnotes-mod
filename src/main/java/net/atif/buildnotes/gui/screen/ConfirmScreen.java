@@ -4,6 +4,7 @@ import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
@@ -41,6 +42,7 @@ public class ConfirmScreen extends BaseScreen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
         int panelW = Math.min(this.width - 80, 360);
         int panelH = 100;
         int panelX = (this.width - panelW) / 2;
@@ -48,7 +50,6 @@ public class ConfirmScreen extends BaseScreen {
 
         panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
         UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
-        super.render(context, mouseX, mouseY, delta);
 
         int textMaxWidth = panelW - 24; // 12px padding on each side
         String trimmedMessage = this.textRenderer.trimToWidth(this.message.getString(), textMaxWidth);
