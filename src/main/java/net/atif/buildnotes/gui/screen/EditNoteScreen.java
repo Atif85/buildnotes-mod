@@ -108,17 +108,6 @@ public class EditNoteScreen extends BaseScreen {
         this.setInitialFocus(this.titleField);
     }
 
-    @Override
-    public void tick() {
-        super.tick();
-        // Keep track of the last text field that had focus
-        if (this.titleField.isFocused()) {
-            this.lastFocusedTextField = this.titleField;
-        } else if (this.contentField.isFocused()) {
-            this.lastFocusedTextField = this.contentField;
-        }
-    }
-
     private void cycleScope() {
         Scope currentScope = note.getScope();
         if (ClientSession.isOnServer() && ClientSession.hasEditPermission()) {
@@ -210,6 +199,14 @@ public class EditNoteScreen extends BaseScreen {
             return this.titleField.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+
+    @Override
+    public void setFocused(Element focused) {
+        super.setFocused(focused);
+        if (focused instanceof MultiLineTextFieldWidget widget) {
+            this.lastFocusedTextField = widget;
+        }
     }
 
     @Override
