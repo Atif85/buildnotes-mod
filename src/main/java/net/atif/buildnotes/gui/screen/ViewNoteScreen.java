@@ -6,6 +6,8 @@ import net.atif.buildnotes.gui.helper.NoteScreenLayouts;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
+import net.atif.buildnotes.client.ClientSession;
+import net.atif.buildnotes.data.Scope;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -27,14 +29,22 @@ public class ViewNoteScreen extends BaseScreen {
     protected void init() {
         super.init();
 
+        boolean canEdit = !(this.note.getScope() == Scope.SERVER && !ClientSession.hasEditPermission());
+
         int buttonsY = UIHelper.getBottomButtonY(this);
         UIHelper.createButtonRow(this, buttonsY, 3, x -> {
             int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (idx) {
-                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete()));
-                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditNoteScreen(this.parent, this.note))));
+                case 0 -> {
+                    DarkButtonWidget deleteButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete());
+                    deleteButton.active = canEdit;
+                    this.addDrawableChild(deleteButton);
+                }
+                case 1 -> {
+                    DarkButtonWidget editButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Text.translatable("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditNoteScreen(this.parent, this.note)));
+                    editButton.active = canEdit;
+                    this.addDrawableChild(editButton);
+                }
                 case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
                         Text.translatable("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
             }
