@@ -5,6 +5,7 @@ import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
 public class ConfirmScreen extends BaseScreen {
@@ -53,6 +54,7 @@ public class ConfirmScreen extends BaseScreen {
         UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
 
         int textMaxWidth = panelW - 24; // 12px padding on each side
-        this.textRenderer.drawTrimmed(this.message, panelX + 12, panelY + 12, textMaxWidth, Colors.TEXT_PRIMARY);
+        String trimmedMessage = this.textRenderer.trimToWidth(this.message.getString(), textMaxWidth);
+        this.textRenderer.draw(matrices, new LiteralText(trimmedMessage), panelX + 12, panelY + 12, Colors.TEXT_PRIMARY);
     }
 }
