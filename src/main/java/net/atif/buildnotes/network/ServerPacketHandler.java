@@ -4,6 +4,7 @@ import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.data.PermissionLevel;
 import net.atif.buildnotes.server.ServerDataManager;
 import net.atif.buildnotes.server.ServerImageTransferManager;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
@@ -34,6 +35,18 @@ public class ServerPacketHandler {
 
             ServerPlayNetworking.send(player, PacketIdentifiers.INITIAL_SYNC_S2C, responseBuf);
         });
+    }
+
+    public static void refreshPlayerPermissions(ServerPlayerEntity player) {
+        if (player == null) return;
+
+        boolean canEdit = Buildnotes.PERMISSION_MANAGER.isAllowedToEdit(player);
+        PermissionLevel level = canEdit ? PermissionLevel.CAN_EDIT : PermissionLevel.VIEW_ONLY;
+
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+        buf.writeEnumConstant(level); // Write the Enum
+
+        ServerPlayNetworking.send(player, PacketIdentifiers.UPDATE_PERMISSION_S2C, buf);
     }
 
     public static void handleSaveNote(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
