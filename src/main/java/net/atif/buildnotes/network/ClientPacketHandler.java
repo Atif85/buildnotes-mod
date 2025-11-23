@@ -2,8 +2,10 @@ package net.atif.buildnotes.network;
 
 import net.atif.buildnotes.client.ClientCache;
 import net.atif.buildnotes.client.ClientImageTransferManager;
+import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.data.PermissionLevel;
 import net.atif.buildnotes.gui.screen.MainScreen; // ADDED
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
@@ -28,6 +30,17 @@ public class ClientPacketHandler {
             ClientCache.setNotes(notes);
             ClientCache.setBuilds(builds);
             // After the very first sync, refresh the screen if it's open
+            refreshMainScreen(client);
+        });
+    }
+
+    public static void handleUpdatePermission(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+        // Read the enum from the buffer
+        PermissionLevel newLevel = buf.readEnumConstant(PermissionLevel.class);
+
+        client.execute(() -> {
+            // Update session
+            ClientSession.updatePermissionLevel(newLevel);
             refreshMainScreen(client);
         });
     }
