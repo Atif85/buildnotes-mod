@@ -38,6 +38,7 @@ public class BuildnotesClient implements ClientModInitializer {
 
         // Register all your S2C packet handlers here
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.HANDSHAKE_S2C, this::handleHandshake);
+        ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.UPDATE_PERMISSION_S2C, ClientPacketHandler::handleUpdatePermission);
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.INITIAL_SYNC_S2C, ClientPacketHandler::handleInitialSync);
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.UPDATE_NOTE_S2C, ClientPacketHandler::handleUpdateNote);
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.UPDATE_BUILD_S2C, ClientPacketHandler::handleUpdateBuild);
