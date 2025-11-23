@@ -53,6 +53,7 @@ public class ConfirmScreen extends BaseScreen {
         UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
 
         int textMaxWidth = panelW - 24; // 12px padding on each side
-        this.textRenderer.drawTrimmed(matrices, this.message, panelX + 12, panelY + 12, textMaxWidth, Colors.TEXT_PRIMARY);
+        String trimmedMessage = this.textRenderer.trimToWidth(this.message.getString(), textMaxWidth);
+        this.textRenderer.draw(matrices, Text.literal(trimmedMessage), panelX + 12, panelY + 12, Colors.TEXT_PRIMARY);
     }
 }
