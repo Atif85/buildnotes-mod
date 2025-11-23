@@ -1,15 +1,18 @@
 package net.atif.buildnotes.gui.screen;
 
-import net.atif.buildnotes.data.*;
+import net.atif.buildnotes.client.ClientSession;
+import net.atif.buildnotes.data.Build;
+import net.atif.buildnotes.data.DataManager;
+import net.atif.buildnotes.data.Note;
+import net.atif.buildnotes.data.Scope;
 import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.gui.helper.MainScreenLayouts;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
+import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.atif.buildnotes.gui.widget.TabButtonWidget;
 import net.atif.buildnotes.gui.widget.list.BuildListWidget;
 import net.atif.buildnotes.gui.widget.list.NoteListWidget;
-import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
-
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -155,13 +158,30 @@ public class MainScreen extends BaseScreen {
     public void onBuildSelected() { updateActionButtons(); }
 
     private void updateActionButtons() {
-        boolean isNotesActive = this.notesTab.isActive();
-        boolean hasSelection = isNotesActive
-                ? this.noteListWidget.getSelectedOrNull() != null
-                : this.buildListWidget.getSelectedOrNull() != null;
+        boolean hasSelection;
+        boolean canEdit = true; // Default to true for local notes/builds
 
-        this.editButton.active = hasSelection;
-        this.deleteButton.active = hasSelection;
+        if (currentTab == TabType.NOTES) {
+            NoteListWidget.NoteEntry selectedEntry = this.noteListWidget.getSelectedOrNull();
+            hasSelection = selectedEntry != null;
+            if (hasSelection && selectedEntry.getNote().getScope() == Scope.SERVER) {
+                // For server-scoped notes, check edit permission
+                canEdit = ClientSession.hasEditPermission();
+            }
+        } else { // BUILDS tab
+            BuildListWidget.BuildEntry selectedEntry = this.buildListWidget.getSelectedOrNull();
+            hasSelection = selectedEntry != null;
+            if (hasSelection && selectedEntry.getBuild().getScope() == Scope.SERVER) {
+                // For server-scoped builds, check edit permission
+                canEdit = ClientSession.hasEditPermission();
+            }
+        }
+
+        // The open button is active as long as there is a selection.
+        this.openButton.active = hasSelection;
+        // Edit and delete buttons require a selection AND edit permissions for server-scoped items.
+        this.editButton.active = hasSelection && canEdit;
+        this.deleteButton.active = hasSelection && canEdit;
     }
 
     public void openSelected() {
