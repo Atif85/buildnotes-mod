@@ -11,6 +11,7 @@ public class PacketIdentifiers {
     public static final Identifier UPDATE_BUILD_S2C = new Identifier(Buildnotes.MOD_ID, "update_build_s2c");
     public static final Identifier DELETE_NOTE_S2C = new Identifier(Buildnotes.MOD_ID, "delete_note_s2c");
     public static final Identifier DELETE_BUILD_S2C = new Identifier(Buildnotes.MOD_ID, "delete_build_s2c");
+    public static final Identifier UPDATE_PERMISSION_S2C = new Identifier(Buildnotes.MOD_ID, "update_permission_s2c");
 
 
     // --- Client to Server (C2S) ---
