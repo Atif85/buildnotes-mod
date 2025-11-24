@@ -131,4 +131,15 @@ public class ViewNoteScreen extends BaseScreen {
         }
         return false;
     }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        // This is the crucial fix. The mouse release event is sent to the element
+        // that was focused during mouseClicked, not the one currently under the cursor.
+        if (this.getFocused() != null && this.isDragging() && button == 0) {
+            this.setDragging(false);
+            return this.getFocused().mouseReleased(mouseX, mouseY, button);
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
 }
