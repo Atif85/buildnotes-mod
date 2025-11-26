@@ -99,11 +99,10 @@ public class BuildnotesClient implements ClientModInitializer {
         );
 
         // Register disconnect event to clear server-side cache
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
-            ClientSession.leaveServer();
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ClientCache.clear();
-
             ClientImageTransferManager.clearFailedDownloads();
-        }));
+            ClientSession.leaveServer();
+        });
     }
 }
