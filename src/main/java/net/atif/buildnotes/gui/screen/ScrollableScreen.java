@@ -77,7 +77,7 @@ public abstract class ScrollableScreen extends BaseScreen {
 
         matrices.pop();
         ScissorStack.pop(context);
-
+    
         renderScrollbar(context);
     }
 
