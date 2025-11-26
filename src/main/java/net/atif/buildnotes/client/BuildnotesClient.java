@@ -48,12 +48,11 @@ public class BuildnotesClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(PacketIdentifiers.IMAGE_NOT_FOUND_S2C, ClientPacketHandler::handleImageNotFound);
 
         // Register disconnect event to clear server-side cache
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
-            ClientSession.leaveServer();
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ClientCache.clear();
-
             ClientImageTransferManager.clearFailedDownloads();
-        }));
+            ClientSession.leaveServer();
+        });
     }
 
     private void handleHandshake(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
