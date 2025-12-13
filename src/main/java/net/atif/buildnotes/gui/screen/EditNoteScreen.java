@@ -81,7 +81,7 @@ public class EditNoteScreen extends BaseScreen {
                         this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
                             saveNote();
                             cycleScope();
-                            this.init(this.client, this.width, this.height);
+                            this.init(this.width, this.height);
                         }));
             }
         });

@@ -1,23 +1,22 @@
 package net.atif.buildnotes.gui.widget;
 
 import net.atif.buildnotes.gui.helper.Colors;
-import net.atif.buildnotes.gui.helper.UIHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.text.MutableText;
 
 public class TabButtonWidget extends ButtonWidget {
 
     private boolean isActive = false;
 
-    public TabButtonWidget(int x, int y, int width, int height, Text message, PressAction onPress) {
+    public TabButtonWidget(int x, int y, int width, int height, MutableText message, PressAction onPress) {
         super(x, y, width, height, message, onPress, ButtonWidget.DEFAULT_NARRATION_SUPPLIER);
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
         // Determine the background color based on the button's state
         int color;
         if (this.isActive) {

@@ -116,7 +116,7 @@ public class EditBuildScreen extends ScrollableScreen {
                         this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(5), button -> {
                             saveBuild();
                             cycleScope();
-                            this.init(this.client, this.width, this.height);
+                            this.init(this.width, this.height);
                         }));
             }
         });

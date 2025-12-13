@@ -9,6 +9,8 @@ import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.server.PermissionEntry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.GameProfileArgumentType;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -32,7 +34,8 @@ public class BuildNotesCommands {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("buildnotes")
                 // Only server operators (or permission level 2+) can use these commands
-                .requires(source -> source.hasPermissionLevel(2))
+                // NEW
+                .requires(source -> source.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
                 .then(CommandManager.literal("allow")
                         .then(CommandManager.argument("players", GameProfileArgumentType.gameProfile())
                                 .executes(BuildNotesCommands::allowPlayer)))
