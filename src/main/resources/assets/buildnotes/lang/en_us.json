@@ -1,6 +1,6 @@
 {
   "key.buildnotes.opengui": "Open BuildNotes",
-  "category.buildnotes.main": "BuildNotes",
+  "key.category.buildnotes.main": "BuildNotes",
 
   "gui.buildnotes.main_title": "BuildNotes",
   "gui.buildnotes.notes_tab": "Notes",
