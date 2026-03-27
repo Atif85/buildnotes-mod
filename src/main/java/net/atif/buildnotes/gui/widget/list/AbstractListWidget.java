@@ -133,6 +133,11 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         graphics.fill(scrollbarX, this.getY() + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.getY() + (int) (thumbY + thumbHeight), thumbColor);
     }
 
+    @Override
+    protected void extractListBackground(GuiGraphicsExtractor graphics) {
+
+    }
+
     // --- SHARED LAYOUT METHODS ---
     @Override
     public int getRowWidth() {

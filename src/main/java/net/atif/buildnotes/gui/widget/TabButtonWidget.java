@@ -9,7 +9,7 @@ import net.minecraft.network.chat.MutableComponent;
 
 public class TabButtonWidget extends Button {
 
-    private boolean isActive = false;
+    private boolean selected = false;
 
     public TabButtonWidget(int x, int y, int width, int height, MutableComponent message, OnPress onPress) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
@@ -19,7 +19,7 @@ public class TabButtonWidget extends Button {
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         // Determine the background color based on the button's state
         int color;
-        if (this.isActive) {
+        if (this.selected) {
             color = Colors.PANEL_BACKGROUND;
         } else if (this.isHovered()) {
             color = Colors.BUTTON_HOVER;
@@ -35,11 +35,11 @@ public class TabButtonWidget extends Button {
         graphics.centeredText(font, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, Colors.TEXT_PRIMARY);
     }
 
-    public boolean isActive() {
-        return this.isActive;
+    public boolean isSelected() {
+        return this.selected;
     }
 
-    public void setActive(boolean active) {
-        this.isActive = active;
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 }

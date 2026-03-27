@@ -139,8 +139,8 @@ public class MainScreen extends BaseScreen {
         this.currentTab = tab;
         boolean isNotes = tab == TabType.NOTES;
 
-        notesTab.setActive(isNotes);
-        buildsTab.setActive(!isNotes);
+        notesTab.setSelected(isNotes);
+        buildsTab.setSelected(!isNotes);
 
         noteListWidget.setVisible(isNotes);
         buildListWidget.setVisible(!isNotes);

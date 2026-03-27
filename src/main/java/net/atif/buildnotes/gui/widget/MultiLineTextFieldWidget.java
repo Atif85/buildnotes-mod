@@ -798,7 +798,7 @@ public class MultiLineTextFieldWidget implements Renderable, GuiEventListener, N
     public boolean charTyped(CharacterEvent event) {
         if (this.focused) {
             if (event.isAllowedChatCharacter()) {
-                insertText(event.toString());
+                insertText(event.codepointAsString());
                 return true;
             }
         }
