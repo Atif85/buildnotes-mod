@@ -1,13 +1,10 @@
 package net.atif.buildnotes.client;
 
-import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.data.ColorConfig;
-import net.atif.buildnotes.data.PermissionLevel;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.network.ClientPacketHandler;
-import net.atif.buildnotes.network.ModPackets;
 import net.atif.buildnotes.network.packet.s2c.*;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -16,7 +13,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 @Environment(EnvType.CLIENT)
 public class BuildnotesClient implements ClientModInitializer {
@@ -26,8 +23,8 @@ public class BuildnotesClient implements ClientModInitializer {
         KeyBinds.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (KeyBinds.openGuiKey.wasPressed()) {
-                if (client.currentScreen == null) {
+            while (KeyBinds.openGuiKey.consumeClick()) {
+                if (client.screen == null) {
                     Colors.reload();
                     client.setScreen(new MainScreen(TabType.NOTES));
                 }
@@ -35,65 +32,65 @@ public class BuildnotesClient implements ClientModInitializer {
         });
 
         // Register all S2C packet
-        ClientPlayNetworking.registerGlobalReceiver(HandshakeS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(HandshakeS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleHandshake(client, packet));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(InitialSyncS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(InitialSyncS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleInitialSync(client, packet));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(UpdatePermissionS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(UpdatePermissionS2CPacket.TYPE,
                 (payload, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleUpdatePermission(context.client(), payload));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(UpdateNoteS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(UpdateNoteS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleUpdateNote(client, packet));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(UpdateBuildS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(UpdateBuildS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleUpdateBuild(client, packet));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(DeleteNoteS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(DeleteNoteS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleDeleteNote(client, packet));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(DeleteBuildS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(DeleteBuildS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleDeleteBuild(client, packet));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(ImageChunkS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(ImageChunkS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleImageChunk(client, packet));
                 }
         );
 
-        ClientPlayNetworking.registerGlobalReceiver(ImageNotFoundS2CPacket.ID,
+        ClientPlayNetworking.registerGlobalReceiver(ImageNotFoundS2CPacket.TYPE,
                 (packet, context) -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
+                    Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleImageNotFound(client, packet));
                 }
         );

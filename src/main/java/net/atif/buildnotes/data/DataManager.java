@@ -12,8 +12,8 @@ import net.atif.buildnotes.network.packet.c2s.SaveBuildC2SPacket;
 import net.atif.buildnotes.network.packet.c2s.SaveNoteC2SPacket;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.WorldSavePath;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.File;
 import java.io.FileReader;
@@ -51,16 +51,16 @@ public class DataManager {
     // --- Path Helper Methods ---
     private Path getGlobalPath() { return CONFIG_DIR.resolve(MOD_DATA_SUBFOLDER); }
     private Path getSinglePlayerWorldPath() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.isIntegratedServerRunning() && client.getServer() != null) {
-            return client.getServer().getSavePath(WorldSavePath.ROOT).resolve(MOD_DATA_SUBFOLDER);
+        Minecraft client = Minecraft.getInstance();
+        if (client.isSingleplayer() && client.getSingleplayerServer() != null) {
+            return client.getSingleplayerServer().getWorldPath(LevelResource.ROOT).resolve(MOD_DATA_SUBFOLDER);
         }
         return null;
     }
     private Path getPerServerPath() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.getCurrentServerEntry() != null) {
-            String serverAddress = client.getCurrentServerEntry().address;
+        Minecraft client = Minecraft.getInstance();
+        if (client.getCurrentServer() != null) {
+            String serverAddress = client.getCurrentServer().ip;
             String sanitizedAddress = serverAddress.replace(":", "_").replaceAll("[^a-zA-Z0-9_.-]", "_");
             return getGlobalPath().resolve(PER_SERVER_SUBFOLDER).resolve(sanitizedAddress);
         }

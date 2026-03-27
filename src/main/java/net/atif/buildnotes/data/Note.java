@@ -1,7 +1,6 @@
 package net.atif.buildnotes.data;
 
-import net.minecraft.network.PacketByteBuf;
-
+import net.minecraft.network.FriendlyByteBuf;
 import java.util.UUID;
 
 public class Note extends BaseEntry {
@@ -24,25 +23,25 @@ public class Note extends BaseEntry {
     // Getters
     public String getTitle() { return title; }
     public String getContent() { return content; }
-
+    
     // Setters
     public void setTitle(String title) { this.title = title; }
     public void setContent(String content) { this.content = content; }
 
-    public void writeToBuf(PacketByteBuf buf) {
-        buf.writeUuid(this.getId());
+    public void writeToBuf(FriendlyByteBuf buf) {
+        buf.writeUUID(this.getId());
         buf.writeLong(this.getLastModified());
-        buf.writeEnumConstant(this.getScope());
-        buf.writeString(this.title);
-        buf.writeString(this.content);
+        buf.writeEnum(this.getScope());
+        buf.writeUtf(this.title);
+        buf.writeUtf(this.content);
     }
 
-    public static Note fromBuf(PacketByteBuf buf) {
-        UUID id = buf.readUuid();
+    public static Note fromBuf(FriendlyByteBuf buf) {
+        UUID id = buf.readUUID();
         long lastModified = buf.readLong();
-        Scope scope = buf.readEnumConstant(Scope.class);
-        String title = buf.readString();
-        String content = buf.readString();
+        Scope scope = buf.readEnum(Scope.class);
+        String title = buf.readUtf();
+        String content = buf.readUtf();
 
         return new Note(id, lastModified, scope, title, content);
     }

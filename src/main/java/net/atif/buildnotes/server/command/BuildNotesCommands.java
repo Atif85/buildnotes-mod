@@ -8,14 +8,14 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.server.PermissionEntry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.command.argument.GameProfileArgumentType;
-import net.minecraft.command.permission.Permission;
-import net.minecraft.command.permission.PermissionLevel;
-import net.minecraft.server.PlayerConfigEntry;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.commands.Commands; 
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.GameProfileArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.server.players.NameAndId;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,33 +31,33 @@ public class BuildNotesCommands {
         );
     }
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("buildnotes")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("buildnotes")
                 // Only server operators (or permission level 2+) can use these commands
                 // NEW
-                .requires(source -> source.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
-                .then(CommandManager.literal("allow")
-                        .then(CommandManager.argument("players", GameProfileArgumentType.gameProfile())
+                .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.GAMEMASTERS)))
+                .then(Commands.literal("allow")
+                        .then(Commands.argument("players", GameProfileArgument.gameProfile())
                                 .executes(BuildNotesCommands::allowPlayer)))
-                .then(CommandManager.literal("disallow")
-                        .then(CommandManager.argument("players", GameProfileArgumentType.gameProfile())
+                .then(Commands.literal("disallow")
+                        .then(Commands.argument("players", GameProfileArgument.gameProfile())
                                 .executes(BuildNotesCommands::disallowPlayer)))
-                .then(CommandManager.literal("list")
+                .then(Commands.literal("list")
                         .executes(BuildNotesCommands::listPlayers))
-                .then(CommandManager.literal("allow_all")
-                        .then(CommandManager.argument("enabled", BoolArgumentType.bool())
+                .then(Commands.literal("allow_all")
+                        .then(Commands.argument("enabled", BoolArgumentType.bool())
                                 .executes(BuildNotesCommands::allowAll)))
         );
     }
 
-    private static int allowPlayer(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        Collection<PlayerConfigEntry> entries = GameProfileArgumentType.getProfileArgument(context, "players");
-        ServerCommandSource source = context.getSource();
+    private static int allowPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Collection<NameAndId> entries = GameProfileArgument.getGameProfiles(context, "players");
+        CommandSourceStack source = context.getSource();
 
         List<String> addedPlayers = new ArrayList<>();
         List<String> alreadyAllowedPlayers = new ArrayList<>();
 
-        for (PlayerConfigEntry entry : entries) {
+        for (NameAndId entry : entries) {
             GameProfile profile = new GameProfile(entry.id(), entry.name());
             if (Buildnotes.PERMISSION_MANAGER.addPlayer(profile)) {
                 addedPlayers.add(profile.name());
@@ -68,25 +68,27 @@ public class BuildNotesCommands {
 
         // Report successfully added players
         if (!addedPlayers.isEmpty()) {
-            source.sendFeedback(() -> Text.literal("Added ").append(Text.literal(String.join(", ", addedPlayers)).formatted(Formatting.GREEN)).append(" to the BuildNotes editor list."), true);
+            source.sendSuccess(() -> Component.literal("Added ")
+                    .append(Component.literal(String.join(", ", addedPlayers)).withStyle(ChatFormatting.GREEN))
+                    .append(" to the BuildNotes editor list."), true);
         }
 
         // Report players who were already on the list
         if (!alreadyAllowedPlayers.isEmpty()) {
-            source.sendError(Text.literal(String.join(", ", alreadyAllowedPlayers) + " were already on the list."));
+            source.sendFailure(Component.literal(String.join(", ", alreadyAllowedPlayers) + " were already on the list."));
         }
 
         return addedPlayers.size();
     }
 
-    private static int disallowPlayer(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        Collection<PlayerConfigEntry> entries = GameProfileArgumentType.getProfileArgument(context, "players");
-        ServerCommandSource source = context.getSource();
+    private static int disallowPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Collection<NameAndId> entries = GameProfileArgument.getGameProfiles(context, "players");
+        CommandSourceStack source = context.getSource();
 
         List<String> removedPlayers = new ArrayList<>();
         List<String> notOnListPlayers = new ArrayList<>();
 
-        for (PlayerConfigEntry entry : entries) {
+        for (NameAndId entry : entries) {
             GameProfile profile = new GameProfile(entry.id(), entry.name());
             if (Buildnotes.PERMISSION_MANAGER.removePlayer(profile)) {
                 removedPlayers.add(profile.name());
@@ -97,29 +99,31 @@ public class BuildNotesCommands {
 
         // Report successfully removed players
         if (!removedPlayers.isEmpty()) {
-            source.sendFeedback(() -> Text.literal("Removed ").append(Text.literal(String.join(", ", removedPlayers)).formatted(Formatting.RED)).append(" from the BuildNotes editor list."), true);
+            source.sendSuccess(() -> Component.literal("Removed ")
+                    .append(Component.literal(String.join(", ", removedPlayers)).withStyle(ChatFormatting.RED))
+                    .append(" from the BuildNotes editor list."), true);
         }
 
         // Report players who were not on the list to begin with
         if (!notOnListPlayers.isEmpty()) {
-            source.sendError(Text.literal(String.join(", ", notOnListPlayers) + " were not on the list."));
+            source.sendFailure(Component.literal(String.join(", ", notOnListPlayers) + " were not on the list."));
         }
 
         return removedPlayers.size();
     }
 
-    private static int listPlayers(CommandContext<ServerCommandSource> context) {
-        ServerCommandSource source = context.getSource();
+    private static int listPlayers(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
 
         boolean allowAll = Buildnotes.PERMISSION_MANAGER.getAllowAll();
         if (allowAll) {
-            source.sendFeedback(() -> Text.literal("Note: 'allow_all' is currently TRUE. All players can edit.").formatted(Formatting.GOLD), false);
+            source.sendSuccess(() -> Component.literal("Note: 'allow_all' is currently TRUE. All players can edit.").withStyle(ChatFormatting.GOLD), false);
         }
 
         Set<PermissionEntry> allowedPlayers = Buildnotes.PERMISSION_MANAGER.getAllowedPlayers();
 
         if (allowedPlayers.isEmpty()) {
-            source.sendFeedback(() -> Text.literal("There are no players on the BuildNotes editor list."), false);
+            source.sendSuccess(() -> Component.literal("There are no players on the BuildNotes editor list."), false);
             return 1;
         }
 
@@ -127,20 +131,20 @@ public class BuildNotesCommands {
                 .map(PermissionEntry::getName)
                 .collect(Collectors.joining(", "));
 
-        source.sendFeedback(() -> Text.literal("BuildNotes Editors: ").formatted(Formatting.YELLOW).append(Text.literal(playerNames)), false);
+        source.sendSuccess(() -> Component.literal("BuildNotes Editors: ").withStyle(ChatFormatting.YELLOW).append(Component.literal(playerNames)), false);
         return allowedPlayers.size();
     }
 
-    private static int allowAll(CommandContext<ServerCommandSource> context) {
+    private static int allowAll(CommandContext<CommandSourceStack> context) {
         boolean enabled = BoolArgumentType.getBool(context, "enabled");
-        ServerCommandSource source = context.getSource();
+        CommandSourceStack source = context.getSource();
 
         Buildnotes.PERMISSION_MANAGER.setAllowAll(enabled);
 
         if (enabled) {
-            source.sendFeedback(() -> Text.literal("All players can now edit BuildNotes.").formatted(Formatting.GREEN), true);
+            source.sendSuccess(() -> Component.literal("All players can now edit BuildNotes.").withStyle(ChatFormatting.GREEN), true);
         } else {
-            source.sendFeedback(() -> Text.literal("Only players on the list (and OPs) can edit BuildNotes.").formatted(Formatting.RED), true);
+            source.sendSuccess(() -> Component.literal("Only players on the list (and OPs) can edit BuildNotes.").withStyle(ChatFormatting.RED), true);
         }
         return 1;
     }

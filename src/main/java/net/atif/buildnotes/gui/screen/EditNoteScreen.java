@@ -9,15 +9,14 @@ import net.atif.buildnotes.gui.helper.NoteScreenLayouts;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 
 import java.util.List;
 
@@ -30,7 +29,7 @@ public class EditNoteScreen extends BaseScreen {
     private MultiLineTextFieldWidget lastFocusedTextField;
 
     public EditNoteScreen(Screen parent, Note note) {
-        super(Text.translatable("gui.buildnotes.edit_note_title"), parent);
+        super(Component.translatable("gui.buildnotes.edit_note_title"), parent);
         this.note = note;
     }
 
@@ -42,43 +41,43 @@ public class EditNoteScreen extends BaseScreen {
         int contentX = (this.width - contentWidth) / 2;
         int bottomMargin = NoteScreenLayouts.getBottomMarginDoubleRow();
 
-        // --- Title Text Field ---
+        // --- Title Component Field ---
         this.titleField = new MultiLineTextFieldWidget(
-                this.textRenderer,
+                this.font,
                 contentX,
                 NoteScreenLayouts.TOP_MARGIN + 5,
                 contentWidth,
                 NoteScreenLayouts.TITLE_PANEL_HEIGHT,
                 note.getTitle(),
-                Text.translatable("gui.buildnotes.placeholder.title").getString(),
+                Component.translatable("gui.buildnotes.placeholder.title").getString(),
                 1, false
         );
-        this.addSelectableChild(this.titleField);
+        this.addWidget(this.titleField);
 
-        // --- Content Text Field ---
+        // --- Content Component Field ---
         int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
         this.contentField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, contentPanelY, contentWidth,
+                this.font, contentX, contentPanelY, contentWidth,
                 contentPanelBottom - contentPanelY, note.getContent(),
-                Text.translatable("gui.buildnotes.placeholder.note_content").getString(), Integer.MAX_VALUE, true
+                Component.translatable("gui.buildnotes.placeholder.note_content").getString(), Integer.MAX_VALUE, true
         );
-        this.addSelectableChild(this.contentField);
+        this.addWidget(this.contentField);
 
         // --- TOP BUTTON ROW (3) ---
         int topRowY = UIHelper.getBottomButtonY(this, 1);
-        List<Text> topButtonTexts = List.of(
-                Text.translatable("gui.buildnotes.edit.coords"),
-                Text.translatable("gui.buildnotes.edit.biome"),
+        List<Component> topButtonTexts = List.of(
+                Component.translatable("gui.buildnotes.edit.coords"),
+                Component.translatable("gui.buildnotes.edit.biome"),
                 getScopeButtonText()
         );
 
         UIHelper.createButtonRow(this, topRowY, topButtonTexts, (index, x, width) -> { // Note the new 'width' parameter
             switch (index) {
-                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
-                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
+                case 0 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(0), b -> insertCoords()));
+                case 1 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(1), b -> insertBiome()));
                 case 2 ->
-                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
+                        this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topButtonTexts.get(2), b -> {
                             saveNote();
                             cycleScope();
                             this.init(this.width, this.height);
@@ -88,20 +87,20 @@ public class EditNoteScreen extends BaseScreen {
 
         // --- BOTTOM BUTTON ROW ---
         int bottomRowY = UIHelper.getBottomButtonY(this, 2);
-        List<Text> bottomButtonTexts = List.of(
-                Text.translatable("gui.buildnotes.save_button"),
-                Text.translatable("gui.buildnotes.close_button")
+        List<Component> bottomButtonTexts = List.of(
+                Component.translatable("gui.buildnotes.save_button"),
+                Component.translatable("gui.buildnotes.close_button")
         );
         UIHelper.createButtonRow(this, bottomRowY, bottomButtonTexts, (index, x, width) -> {
             if (index == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
+                this.addRenderableWidget(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
                     bottomButtonTexts.get(0), button -> {
                         saveNote();
                         open(new ViewNoteScreen(this.parent, this.note));
                     })
                 );
             } else {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(1), button -> this.close()));
+                this.addRenderableWidget(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomButtonTexts.get(1), button -> this.onClose()));
             }
         });
 
@@ -121,19 +120,19 @@ public class EditNoteScreen extends BaseScreen {
         }
     }
 
-    private Text getScopeButtonText() {
-        Text scopeName;
+    private Component getScopeButtonText() {
+        Component scopeName;
         Scope currentScope = note.getScope();
         if (currentScope == Scope.GLOBAL) {
-            scopeName = Text.translatable("gui.buildnotes.edit.scope.global");
+            scopeName = Component.translatable("gui.buildnotes.edit.scope.global");
         } else if (currentScope == Scope.SERVER) {
-            scopeName = Text.translatable("gui.buildnotes.edit.scope.server");
+            scopeName = Component.translatable("gui.buildnotes.edit.scope.server");
         } else {
-            scopeName = this.client != null && this.client.isIntegratedServerRunning()
-                    ? Text.translatable("gui.buildnotes.edit.scope.world")
-                    : Text.translatable("gui.buildnotes.edit.scope.per_server");
+            scopeName = this.minecraft.isSingleplayer()
+                    ? Component.translatable("gui.buildnotes.edit.scope.world")
+                    : Component.translatable("gui.buildnotes.edit.scope.per_server");
         }
-        return Text.translatable("gui.buildnotes.edit.scope_button", scopeName);
+        return Component.translatable("gui.buildnotes.edit.scope_button", scopeName);
     }
 
     private void saveNote() {
@@ -154,22 +153,27 @@ public class EditNoteScreen extends BaseScreen {
     }
 
     private void insertCoords() {
-        if (this.client.player == null) return;
-        String coords = String.format("X: %.0f, Y: %.0f, Z: %.0f", this.client.player.getX(), this.client.player.getY(), this.client.player.getZ());
+        if (this.minecraft.player == null) return;
+        String coords = String.format("X: %.0f, Y: %.0f, Z: %.0f", this.minecraft.player.getX(), this.minecraft.player.getY(), this.minecraft.player.getZ());
         insertTextAtLastFocus(coords);
     }
 
     private void insertBiome() {
-        if (this.client.player == null || this.client.world == null) return;
-        BlockPos playerPos = this.client.player.getBlockPos();
-        RegistryEntry<Biome> biomeEntry = this.client.world.getBiome(playerPos);
-        String biomeId = biomeEntry.getKey().map(RegistryKey::getValue).map(Identifier::toString).orElse("minecraft:unknown");
+        if (this.minecraft.player == null || this.minecraft.level == null) return;
+
+        BlockPos playerPos = this.minecraft.player.blockPosition();
+        Holder<net.minecraft.world.level.biome.Biome> biomeEntry = this.minecraft.level.getBiome(playerPos);
+
+        String biomeId = biomeEntry.unwrapKey()
+                .map(ResourceKey::identifier)
+                .map(Identifier::toString)
+                .orElse("minecraft:unknown");
         insertTextAtLastFocus(biomeId);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         int contentWidth = (int) (this.width * NoteScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
@@ -177,16 +181,16 @@ public class EditNoteScreen extends BaseScreen {
 
         // --- Title Panel ---
         UIHelper.drawPanel(context, contentX, NoteScreenLayouts.TOP_MARGIN, contentWidth, NoteScreenLayouts.TITLE_PANEL_HEIGHT);
-        this.titleField.render(context, mouseX, mouseY, delta);
+        this.titleField.extractRenderState(context, mouseX, mouseY, delta);
 
         // --- Content Panel ---
         int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
         UIHelper.drawPanel(context, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
-        this.contentField.render(context, mouseX, mouseY, delta);
+        this.contentField.extractRenderState(context, mouseX, mouseY, delta);
 
         // Draw screen title
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, Colors.TEXT_PRIMARY);
+        context.centeredText(this.font, this.title, this.width / 2, 8, Colors.TEXT_PRIMARY);
     }
 
     // We need to override mouseScrolled to pass the event to our custom widget
@@ -202,7 +206,7 @@ public class EditNoteScreen extends BaseScreen {
     }
 
     @Override
-    public void setFocused(Element focused) {
+    public void setFocused(GuiEventListener focused) {
         super.setFocused(focused);
         if (focused instanceof MultiLineTextFieldWidget widget) {
             this.lastFocusedTextField = widget;
@@ -210,8 +214,8 @@ public class EditNoteScreen extends BaseScreen {
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         saveNote();
-        super.close();
+        super.onClose();
     }
 }

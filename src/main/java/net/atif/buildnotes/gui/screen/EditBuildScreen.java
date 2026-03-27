@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.client.ClientSession;
@@ -13,21 +14,20 @@ import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.biome.Biome;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
@@ -57,7 +57,7 @@ public class EditBuildScreen extends ScrollableScreen {
     private MultiLineTextFieldWidget lastFocusedTextField;
 
     public EditBuildScreen(Screen parent, Build build) {
-        super(Text.translatable("gui.buildnotes.edit_build_title"), parent);
+        super(Component.translatable("gui.buildnotes.edit_build_title"), parent);
         this.build = build;
     }
 
@@ -75,45 +75,45 @@ public class EditBuildScreen extends ScrollableScreen {
 
         // --- BOTTOM BUTTON ROW ---
         int bottomRowY = UIHelper.getBottomButtonY(this, 2);
-        List<Text> bottomTexts = List.of(
-                Text.translatable("gui.buildnotes.save_button"),
-                Text.translatable("gui.buildnotes.close_button")
+        List<Component> bottomTexts = List.of(
+                Component.translatable("gui.buildnotes.save_button"),
+                Component.translatable("gui.buildnotes.close_button")
         );
         UIHelper.createButtonRow(this, bottomRowY, bottomTexts, (index, x, width) -> {
             if (index == 0) {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
+                this.addRenderableWidget(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
                     bottomTexts.get(0), button -> {
                         saveBuild();
                         open(new ViewBuildScreen(this.parent, this.build));
                     })
                 );
             } else {
-                this.addDrawableChild(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> this.close()));
+                this.addRenderableWidget(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT, bottomTexts.get(1), button -> this.onClose()));
             }
         });
 
         // --- TOP BUTTON ROW ---
         int topRowY = UIHelper.getBottomButtonY(this, 1);
-        List<Text> topTexts = List.of(
-                Text.translatable("gui.buildnotes.edit.coords"),
-                Text.translatable("gui.buildnotes.edit.dimension"),
-                Text.translatable("gui.buildnotes.edit.biome"),
-                Text.translatable("gui.buildnotes.edit.add_images"),
-                Text.translatable("gui.buildnotes.edit.add_field"),
+        List<Component> topTexts = List.of(
+                Component.translatable("gui.buildnotes.edit.coords"),
+                Component.translatable("gui.buildnotes.edit.dimension"),
+                Component.translatable("gui.buildnotes.edit.biome"),
+                Component.translatable("gui.buildnotes.edit.add_images"),
+                Component.translatable("gui.buildnotes.edit.add_field"),
                 getScopeButtonText()
         );
         UIHelper.createButtonRow(this, topRowY, topTexts, (index, x, width) -> {
             switch (index) {
-                case 0 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(0), b -> insertCoords()));
-                case 1 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(1), b -> insertDimension()));
-                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(2), b -> insertBiome()));
-                case 3 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(3), b -> openImageSelectionDialog()));
-                case 4 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(4), b -> {
+                case 0 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(0), b -> insertCoords()));
+                case 1 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(1), b -> insertDimension()));
+                case 2 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(2), b -> insertBiome()));
+                case 3 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(3), b -> openImageSelectionDialog()));
+                case 4 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(4), b -> {
                     saveBuild();
                     this.open(new RequestFieldTitleScreen(this, this::addCustomField));
                 }));
                 case 5 ->
-                        this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(5), button -> {
+                        this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(5), button -> {
                             saveBuild();
                             cycleScope();
                             this.init(this.width, this.height);
@@ -131,9 +131,9 @@ public class EditBuildScreen extends ScrollableScreen {
             int galleryY = getTopMargin() + BuildScreenLayouts.NAME_FIELD_HEIGHT + panelSpacing + BuildScreenLayouts.SMALL_FIELD_HEIGHT + panelSpacing;
             int navButtonY = galleryY + (galleryHeight - 20) / 2;
 
-            prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, Text.translatable("gui.buildnotes.gallery.previous"), b -> switchImage(-1));
-            nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, Text.translatable("gui.buildnotes.gallery.next"), b -> switchImage(1));
-            DarkButtonWidget deleteImageButton = new DarkButtonWidget(contentX + contentWidth - 22, galleryY + 2, 20, 20, Text.translatable("gui.buildnotes.gallery.delete"), b -> removeCurrentImage());
+            prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, Component.translatable("gui.buildnotes.gallery.previous"), b -> switchImage(-1));
+            nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, Component.translatable("gui.buildnotes.gallery.next"), b -> switchImage(1));
+            DarkButtonWidget deleteImageButton = new DarkButtonWidget(contentX + contentWidth - 22, galleryY + 2, 20, 20, Component.translatable("gui.buildnotes.gallery.delete"), b -> removeCurrentImage());
 
             addScrollableWidget(prevImageButton);
             addScrollableWidget(nextImageButton);
@@ -154,8 +154,8 @@ public class EditBuildScreen extends ScrollableScreen {
 
         // --- Name Widget ---
         this.nameField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT, build.getName(),
-                Text.translatable("gui.buildnotes.placeholder.build_name").getString(),
+                this.font, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT, build.getName(),
+                Component.translatable("gui.buildnotes.placeholder.build_name").getString(),
                 1, false
         );
 
@@ -165,14 +165,14 @@ public class EditBuildScreen extends ScrollableScreen {
         // --- Coords & Dimension Widgets ---
         int fieldWidth = (contentWidth - panelSpacing) / 2;
         this.coordsField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX + 50, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getCoordinates(),
-                Text.translatable("gui.buildnotes.placeholder.coords").getString(), 1, false
+                this.font, contentX + 50, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getCoordinates(),
+                Component.translatable("gui.buildnotes.placeholder.coords").getString(), 1, false
         );
         addScrollableWidget(this.coordsField);
         int dimensionX = contentX + fieldWidth + panelSpacing;
         this.dimensionField = new MultiLineTextFieldWidget(
-                this.textRenderer, dimensionX + 65, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getDimension(),
-                Text.translatable("gui.buildnotes.placeholder.dimension").getString(), 1, false
+                this.font, dimensionX + 65, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getDimension(),
+                Component.translatable("gui.buildnotes.placeholder.dimension").getString(), 1, false
         );
         addScrollableWidget(this.dimensionField);
         yPos += BuildScreenLayouts.SMALL_FIELD_HEIGHT + panelSpacing;
@@ -186,16 +186,16 @@ public class EditBuildScreen extends ScrollableScreen {
         // --- Description, Credits, and Custom Fields ---
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         this.descriptionField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT, build.getDescription(),
-                Text.translatable("gui.buildnotes.placeholder.description").getString(), Integer.MAX_VALUE, true
+                this.font, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT, build.getDescription(),
+                Component.translatable("gui.buildnotes.placeholder.description").getString(), Integer.MAX_VALUE, true
         );
         addScrollableWidget(this.descriptionField);
         yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + panelSpacing;
 
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         this.designerField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT, build.getCredits(),
-                Text.translatable("gui.buildnotes.placeholder.credits").getString(), Integer.MAX_VALUE, true
+                this.font, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT, build.getCredits(),
+                Component.translatable("gui.buildnotes.placeholder.credits").getString(), Integer.MAX_VALUE, true
         );
         addScrollableWidget(this.designerField);
         yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + panelSpacing;
@@ -204,14 +204,14 @@ public class EditBuildScreen extends ScrollableScreen {
             yPos += BuildScreenLayouts.LABEL_HEIGHT;
             int fieldWidgetWidth = contentWidth - BuildScreenLayouts.CUSTOM_FIELD_REMOVE_BTN_WIDTH - panelSpacing;
 
-            MultiLineTextFieldWidget fieldArea = new MultiLineTextFieldWidget(this.textRenderer, contentX, yPos, fieldWidgetWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT,
+            MultiLineTextFieldWidget fieldArea = new MultiLineTextFieldWidget(this.font, contentX, yPos, fieldWidgetWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT,
                     field.getContent(), "", Integer.MAX_VALUE, true);
 
             addScrollableWidget(fieldArea);
 
             this.customFieldWidgets.put(field, fieldArea);
             DarkButtonWidget removeButton = new DarkButtonWidget(contentX + fieldWidgetWidth + panelSpacing, yPos, BuildScreenLayouts.CUSTOM_FIELD_REMOVE_BTN_WIDTH, 20,
-                    Text.translatable("gui.buildnotes.edit.remove_field"),  button -> removeCustomField(field));
+                    Component.translatable("gui.buildnotes.edit.remove_field"),  button -> removeCustomField(field));
 
             addScrollableWidget(removeButton);
             yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + panelSpacing;
@@ -221,7 +221,7 @@ public class EditBuildScreen extends ScrollableScreen {
     }
 
     @Override
-    protected void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void renderContent(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         int contentWidth = (int) (this.width * BuildScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
         int yPos = getTopMargin();
@@ -233,10 +233,10 @@ public class EditBuildScreen extends ScrollableScreen {
 
         int fieldWidth = (contentWidth - panelSpacing) / 2;
         UIHelper.drawPanel(context, contentX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.coords").formatted(Formatting.GRAY), contentX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
+        context.text(this.font, Component.translatable("gui.buildnotes.label.coords").withStyle(ChatFormatting.GRAY), contentX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
         int dimensionX = contentX + fieldWidth + panelSpacing;
         UIHelper.drawPanel(context, dimensionX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.dimension").formatted(Formatting.GRAY), dimensionX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
+        context.text(this.font, Component.translatable("gui.buildnotes.label.dimension").withStyle(ChatFormatting.GRAY), dimensionX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
         yPos += BuildScreenLayouts.SMALL_FIELD_HEIGHT + panelSpacing;
 
         if (!build.getImageFileNames().isEmpty()) {
@@ -244,7 +244,7 @@ public class EditBuildScreen extends ScrollableScreen {
             UIHelper.drawPanel(context, contentX, yPos, contentWidth, galleryBoxHeight);
             String currentImageName = build.getImageFileNames().get(currentImageIndex);
             if (downloadingImages.contains(currentImageName)) {
-                context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.loading").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
+                context.centeredText(font, Component.translatable("gui.buildnotes.gallery.loading").withStyle(ChatFormatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
             } else {
                 ImageData data = getImageDataForCurrentImage();
                 if (data != null && data.textureId != null) {
@@ -261,32 +261,32 @@ public class EditBuildScreen extends ScrollableScreen {
                     }
                     int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
                     int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
+                    context.blit(RenderPipelines.GUI_TEXTURED, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                 } else {
-                    context.drawCenteredTextWithShadow(textRenderer, Text.translatable("gui.buildnotes.gallery.error").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
+                    context.centeredText(font, Component.translatable("gui.buildnotes.gallery.error").withStyle(ChatFormatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
                 }
             }
             String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
-            int counterWidth = textRenderer.getWidth(counter);
-            context.drawText(this.textRenderer, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, Colors.TEXT_PRIMARY, true);
+            int counterWidth = font.width(counter);
+            context.text(this.font, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, Colors.TEXT_PRIMARY, true);
             yPos += galleryBoxHeight + panelSpacing;
         }
 
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.description").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+        context.text(this.font, Component.translatable("gui.buildnotes.label.description").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT);
         yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + panelSpacing;
-        context.drawText(this.textRenderer, Text.translatable("gui.buildnotes.label.credits").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+        context.text(this.font, Component.translatable("gui.buildnotes.label.credits").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT);
         yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + panelSpacing;
         for (CustomField field : this.build.getCustomFields()) {
-            context.drawText(this.textRenderer, Text.translatable(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+            context.text(this.font, Component.translatable(field.getTitle() + ":").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
             yPos += BuildScreenLayouts.LABEL_HEIGHT;
             UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT);
             yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + panelSpacing;
         }
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, Colors.TEXT_PRIMARY);
+        context.centeredText(this.font, this.title, this.width / 2, 8, Colors.TEXT_PRIMARY);
     }
 
     // --- Image Management Logic ---
@@ -320,15 +320,19 @@ public class EditBuildScreen extends ScrollableScreen {
             return textureCache.get(fileName);
         }
         try {
-            Path imagePath = FabricLoader.getInstance().getConfigDir().resolve("buildnotes").resolve("images").resolve(build.getId().toString()).resolve(fileName);
+            Path imagePath = FabricLoader.getInstance().getConfigDir()
+                    .resolve("buildnotes").resolve("images")
+                    .resolve(build.getId().toString()).resolve(fileName);
+
             if (Files.exists(imagePath)) {
                 try (InputStream stream = Files.newInputStream(imagePath)) {
                     NativeImage image = NativeImage.read(stream);
 
-                    Identifier textureId = Identifier.of(Buildnotes.MOD_ID, "buildnotes_image_" + build.getId() + "_" + fileName.hashCode());
-                    NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> textureId.toString(), image);
+                    Identifier textureId = Identifier.fromNamespaceAndPath(
+                            Buildnotes.MOD_ID, "buildnotes_image_" + build.getId() + "_" + fileName.hashCode());
+                    DynamicTexture texture = new DynamicTexture (textureId::toString, image);
 
-                    this.client.getTextureManager().registerTexture(textureId, texture);
+                    this.minecraft.getTextureManager().register(textureId, texture);
 
                     ImageData data = new ImageData(textureId, image.getWidth(), image.getHeight());
                     textureCache.put(fileName, data);
@@ -337,14 +341,14 @@ public class EditBuildScreen extends ScrollableScreen {
             }
             else {
                 // --- Only request images for SERVER-scoped builds when on a dedicated server ---
-                boolean isDedicatedServer = this.client != null && !this.client.isIntegratedServerRunning();
+                boolean isDedicatedServer = !this.minecraft.isSingleplayer();
                 if (build.getScope() == Scope.SERVER && isDedicatedServer) {
                     // Image does NOT exist, request it from the server
                     if (!downloadingImages.contains(fileName)) {
                         downloadingImages.add(fileName);
                         ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
                             // This is the CALLBACK! It runs when the download is finished (success or fail).
-                            this.client.execute(() -> downloadingImages.remove(fileName));
+                            this.minecraft.execute(() -> downloadingImages.remove(fileName));
                         });
                     }
                 }
@@ -359,15 +363,15 @@ public class EditBuildScreen extends ScrollableScreen {
 
     // --- Overridden & Helper Methods ---
     @Override
-    public void close() {
+    public void onClose() {
         // Clean up textures to prevent memory leaks
         textureCache.values().forEach(data -> {
             if (data != null && data.textureId != null) {
-                client.getTextureManager().destroyTexture(data.textureId);
+                minecraft.getTextureManager().release(data.textureId);
             }
         });
         saveBuild();
-        super.close();
+        super.onClose();
     }
 
     private void rebuild() {
@@ -389,48 +393,51 @@ public class EditBuildScreen extends ScrollableScreen {
     }
 
 
-    private void insertTextAtLastFocus(String text) {
+    private void insertTextAtLastFocus(String Component) {
         if (this.lastFocusedTextField != null) {
-            this.lastFocusedTextField.insertText(text);
+            this.lastFocusedTextField.insertText(Component);
             this.setFocused(this.lastFocusedTextField);
         } else if (this.descriptionField != null) { // Fallback to a default field
-            this.descriptionField.insertText(text);
+            this.descriptionField.insertText(Component);
             this.setFocused(this.descriptionField);
         }
     }
 
     private void insertCoords() {
-        if (this.client == null || this.client.player == null) return;
-        String coords = String.format("%.0f, %.0f, %.0f", this.client.player.getX(), this.client.player.getY(), this.client.player.getZ());
+        if (this.minecraft.player == null) return;
+        String coords = String.format("%.0f, %.0f, %.0f", this.minecraft.player.getX(), this.minecraft.player.getY(), this.minecraft.player.getZ());
         insertTextAtLastFocus(coords);
     }
 
     private void insertDimension() {
-        if (this.client == null || this.client.player == null) return;
-        String dim = this.client.player.getEntityWorld().getRegistryKey().getValue().toString();
+        if (this.minecraft.player == null) return;
+        String dim = this.minecraft.player.level().dimension().identifier().toString();
         insertTextAtLastFocus(dim);
     }
 
     private void insertBiome() {
-        if (this.client == null || this.client.player == null || this.client.world == null) return;
-        BlockPos playerPos = this.client.player.getBlockPos();
-        RegistryEntry<Biome> biomeEntry = this.client.world.getBiome(playerPos);
-        String biomeId = biomeEntry.getKey().map(RegistryKey::getValue).map(Identifier::toString).orElse("minecraft:unknown");
+        if (this.minecraft.player == null || this.minecraft.level == null) return;
+
+        BlockPos playerPos = this.minecraft.player.blockPosition();
+        Holder<Biome> biomeEntry = this.minecraft.level.getBiome(playerPos);
+
+        String biomeId = biomeEntry.unwrapKey()
+                .map(ResourceKey::identifier)
+                .map(Identifier::toString)
+                .orElse("minecraft:unknown");
         insertTextAtLastFocus(biomeId);
     }
 
     private void openImageSelectionDialog() {
         new Thread(() -> {
             String selectedFiles = TinyFileDialogs.tinyfd_openFileDialog("Select Image(s)", null, null, "Image Files (*.png, *.jpg, *.jpeg)", true);
-            client.execute(() -> {
+            minecraft.execute(() -> {
                 if (selectedFiles != null) {
                     processSelectedFiles(selectedFiles.split("\\|"));
                 }
-                if (client != null) {
-                    long handle = client.getWindow().getHandle();
-                    GLFW.glfwRestoreWindow(handle);
-                    GLFW.glfwFocusWindow(handle);
-                }
+                long handle = minecraft.getWindow().handle();
+                GLFW.glfwRestoreWindow(handle);
+                GLFW.glfwFocusWindow(handle);
             });
         }).start();
     }
@@ -453,7 +460,7 @@ public class EditBuildScreen extends ScrollableScreen {
                     // Log error
                 }
             }
-            client.execute(this::rebuild);
+            minecraft.execute(this::rebuild);
         }).start();
     }
 
@@ -479,23 +486,23 @@ public class EditBuildScreen extends ScrollableScreen {
         }
     }
 
-    private Text getScopeButtonText() {
-        Text scopeName;
+    private Component getScopeButtonText() {
+        Component scopeName;
         Scope currentScope = build.getScope();
         if (currentScope == Scope.GLOBAL) {
-            scopeName = Text.translatable("gui.buildnotes.edit.scope.global");
+            scopeName = Component.translatable("gui.buildnotes.edit.scope.global");
         } else if (currentScope == Scope.SERVER) {
-            scopeName = Text.translatable("gui.buildnotes.edit.scope.server");
+            scopeName = Component.translatable("gui.buildnotes.edit.scope.server");
         } else {
-            scopeName = this.client != null && this.client.isIntegratedServerRunning()
-                    ? Text.translatable("gui.buildnotes.edit.scope.world")
-                    : Text.translatable("gui.buildnotes.edit.scope.per_server");
+            scopeName = this.minecraft.isSingleplayer()
+                    ? Component.translatable("gui.buildnotes.edit.scope.world")
+                    : Component.translatable("gui.buildnotes.edit.scope.per_server");
         }
-        return Text.translatable("gui.buildnotes.edit.scope_button", scopeName);
+        return Component.translatable("gui.buildnotes.edit.scope_button", scopeName);
     }
 
     @Override
-    public void setFocused(Element focused) {
+    public void setFocused(GuiEventListener focused) {
         super.setFocused(focused);
         if (focused instanceof MultiLineTextFieldWidget widget) {
             this.lastFocusedTextField = widget;
@@ -505,10 +512,10 @@ public class EditBuildScreen extends ScrollableScreen {
     // --- Inner Class for RequestFieldTitleScreen (Unchanged) ---
     private static class RequestFieldTitleScreen extends BaseScreen {
         private final Consumer<String> onConfirm;
-        private TextFieldWidget titleField;
+        private EditBox titleField;
 
         protected RequestFieldTitleScreen(Screen parent, Consumer<String> onConfirm) {
-            super(Text.translatable("gui.buildnotes.prompt.field_title"), parent);
+            super(Component.translatable("gui.buildnotes.prompt.field_title"), parent);
             this.onConfirm = onConfirm;
         }
 
@@ -520,23 +527,23 @@ public class EditBuildScreen extends ScrollableScreen {
             int panelX = (this.width - panelW) / 2;
             int panelY = (this.height - panelH) / 2;
 
-            this.titleField = new TextFieldWidget(this.textRenderer, panelX + 10, panelY + 20, panelW - 20, 20, Text.of(""));
-            this.addSelectableChild(this.titleField);
+            this.titleField = new EditBox(this.font, panelX + 10, panelY + 20, panelW - 20, 20, Component.literal(""));
+            this.addWidget(this.titleField);
 
-            List<Text> buttonTexts = List.of(
-                    Text.translatable("gui.buildnotes.confirm_button"),
-                    Text.translatable("gui.buildnotes.cancel_button")
+            List<Component> buttonTexts = List.of(
+                    Component.translatable("gui.buildnotes.confirm_button"),
+                    Component.translatable("gui.buildnotes.cancel_button")
             );
 
             int buttonsY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.OUTER_PADDING;
             UIHelper.createButtonRow(this, buttonsY, buttonTexts, (index, x, width) -> {
                 if (index == 0) {
-                    this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.get(0), button -> {
-                        this.onConfirm.accept(this.titleField.getText());
+                    this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.get(0), button -> {
+                        this.onConfirm.accept(this.titleField.getValue());
                         this.open(this.parent);
                     }));
                 } else {
-                    this.addDrawableChild(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.get(1), button -> this.open(parent)));
+                    this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.get(1), button -> this.open(parent)));
                 }
             });
 
@@ -546,7 +553,7 @@ public class EditBuildScreen extends ScrollableScreen {
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
             //parent.render(context, -1, -1, delta);
             int panelW = 200;
             int panelH = 100;
@@ -555,11 +562,11 @@ public class EditBuildScreen extends ScrollableScreen {
 
             panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
             UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
-            super.render(context, mouseX, mouseY, delta);
+            super.extractRenderState(context, mouseX, mouseY, delta);
 
-            context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
+            context.centeredText(this.font, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
 
-            this.titleField.render(context, mouseX, mouseY, delta);
+            this.titleField.extractRenderState(context, mouseX, mouseY, delta);
         }
     }
 }

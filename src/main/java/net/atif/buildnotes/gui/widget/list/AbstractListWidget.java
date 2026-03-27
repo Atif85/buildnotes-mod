@@ -3,15 +3,15 @@ package net.atif.buildnotes.gui.widget.list;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.EntryListWidget;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
-public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> extends EntryListWidget<E> {
+public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> extends ObjectSelectionList<E> {
 
     protected final MainScreen parentScreen;
     private boolean visible = false;
@@ -26,7 +26,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     private static final int SCROLLBAR_WIDTH = 6;
     private double scrollbarDragStartMouseY;
 
-    public AbstractListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
+    public AbstractListWidget(MainScreen parent, Minecraft client, int top, int bottom, int itemHeight) {
         // We pass the parent's width and height to the super constructor.
         super(client, parent.width, bottom - top, top, itemHeight);
 
@@ -39,47 +39,47 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
         if (!this.visible) return false;
 
 
-        double mouseX = click.x();
-        double mouseY = click.y();
+        double mouseX = event.x();
+        double mouseY = event.y();
 
-        if (this.isMouseOver(mouseX, mouseY) && mouseX >= this.getScrollbarX() && mouseX < this.getScrollbarX() + SCROLLBAR_WIDTH) {
+        if (this.isMouseOver(mouseX, mouseY) && mouseX >= this.scrollBarX() && mouseX < this.scrollBarX() + SCROLLBAR_WIDTH) {
             this.isDraggingScrollbar = true;
             return true;
         }
 
         this.isDraggingScrollbar = false;
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(event, doubled);
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
-        isDraggingScrollbar = false;
-        return super.mouseReleased(click);
+    public void onRelease(MouseButtonEvent event) {
+        this.isDraggingScrollbar = false;
+        super.onRelease(event);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+    public boolean mouseDragged(MouseButtonEvent event, double offsetX, double offsetY) {
         if (this.isDraggingScrollbar) {
             int trackHeight = this.getHeight();
-            float maxScroll = this.getMaxScrollY();
+            float maxScroll = this.maxScrollAmount();
             if (maxScroll <= 0) return true;
 
-            float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getContentsHeightWithPadding());
-            float draggableHeight = trackHeight - thumbHeight;
+            int thumbHeight = this.scrollerHeight();
+            float draggableHeight = (float)trackHeight - thumbHeight;
             if (draggableHeight <= 0) return true; // Cannot drag if thumb fills the track
 
             // Calculate the ratio of scrollable content to draggable area
             float ratio = maxScroll / draggableHeight;
 
-            this.setScrollY(this.getScrollY() + (offsetY * ratio));
+            this.setScrollAmount(this.scrollAmount() + (offsetY * ratio));
 
             return true;
         }
-        return super.mouseDragged(click, offsetX, offsetY);
+        return super.mouseDragged(event, offsetX, offsetY);
     }
 
     @Override
@@ -88,15 +88,15 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         if (!this.visible) return;
 
-        context.enableScissor(this.getX(), this.getY(), this.getRight(), this.getBottom());
+        graphics.enableScissor(this.getX(), this.getY(), this.getRight(), this.getBottom());
 
-        super.renderWidget(context, mouseX, mouseY, delta);
-        renderCustomScrollbar(context);
+        super.extractWidgetRenderState(graphics, mouseX, mouseY, delta);
+        renderCustomScrollbar(graphics);
 
-        context.disableScissor();
+        graphics.disableScissor();
 
         // Top fade overlay
         int left = this.getX();
@@ -104,41 +104,33 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
         int topY = this.getY();
 
-        context.fillGradient(left, topY, right, topY + FADE_HEIGHT,
+        graphics.fillGradient(left, topY, right, topY + FADE_HEIGHT,
                 Colors.FADE_GRADIENT_TOP, Colors.FADE_GRADIENT_BOTTOM);
 
         int bottomY = this.getBottom() - FADE_HEIGHT;
-        context.fillGradient(left, bottomY, right, this.getBottom(),
+        graphics.fillGradient(left, bottomY, right, this.getBottom(),
                 Colors.FADE_GRADIENT_BOTTOM, Colors.FADE_GRADIENT_TOP);
 
     }
 
-    @Override
-    protected void drawMenuListBackground(DrawContext context) {
-    }
-
-    @Override
-    protected void drawHeaderAndFooterSeparators(DrawContext context) {
-    }
-
-    protected void renderCustomScrollbar(DrawContext context) {
-        int maxScroll = this.getMaxScrollY();
+    protected void renderCustomScrollbar(GuiGraphicsExtractor graphics) {
+        int maxScroll = this.maxScrollAmount();
         if (maxScroll <= 0) return; // Don't render if not scrollable
 
-        int scrollbarX = this.getScrollbarX();
+        int scrollbarX = this.scrollBarX();
         int trackHeight = this.getHeight();
 
-        float thumbHeight = Math.max(10, (float)(trackHeight * trackHeight) / (float)this.getContentsHeightWithPadding());
+        int thumbHeight = this.scrollerHeight();
 
         float maxThumbY = trackHeight - thumbHeight;
 
-        float thumbY = (float)this.getScrollY() / (float)maxScroll * maxThumbY;
+        float thumbY = (float)this.scrollAmount() / (float)maxScroll * maxThumbY;
 
         thumbY = Math.min(thumbY, maxThumbY);
 
         int thumbColor = isDraggingScrollbar ? Colors.SCROLLBAR_THUMB_ACTIVE : Colors.SCROLLBAR_THUMB_INACTIVE;
 
-        context.fill(scrollbarX, this.getY() + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.getY() + (int) (thumbY + thumbHeight), thumbColor);
+        graphics.fill(scrollbarX, this.getY() + (int) thumbY, scrollbarX + SCROLLBAR_WIDTH, this.getY() + (int) (thumbY + thumbHeight), thumbColor);
     }
 
     // --- SHARED LAYOUT METHODS ---
@@ -149,7 +141,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
     }
 
     @Override
-    protected int getScrollbarX() {
+    protected int scrollBarX() {
         int listWidth = getRowWidth();
         int xStart = (this.width - listWidth) / 2; // center the list
         return xStart + listWidth + 4; // small padding from edge
@@ -158,15 +150,15 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
 
     // --- SHARED UTILITY OVERRIDES ---
     @Override
-    public void appendClickableNarrations(NarrationMessageBuilder builder) {
+    public void updateWidgetNarration(NarrationElementOutput output) {
         // We don't need narrations for this UI.
     }
 
     protected void handleEntryClick(E entry) {
         long now = System.currentTimeMillis();
         if (entry == this.lastClickedEntry && (now - this.lastClickTime) <= DOUBLE_CLICK_MS) {
-            MinecraftClient.getInstance().getSoundManager().play(
-                    PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0F)
+            Minecraft.getInstance().getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F)
             );
 
             // double click detected
@@ -183,7 +175,7 @@ public abstract class AbstractListWidget<E extends AbstractListWidget.Entry<E>> 
         this.lastClickTime = now;
     }
 
-    public static abstract class Entry<E extends Entry<E>> extends EntryListWidget.Entry<E> {
+    public static abstract class Entry<E extends Entry<E>> extends ObjectSelectionList.Entry<E> {
     }
 
 }

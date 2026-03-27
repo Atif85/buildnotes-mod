@@ -6,8 +6,8 @@ import com.mojang.authlib.GameProfile;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.network.ServerPacketHandler;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.WorldSavePath;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -31,7 +31,7 @@ public class PermissionManager {
 
     public PermissionManager(MinecraftServer server) {
         this.server = server;
-        this.configPath = server.getSavePath(WorldSavePath.ROOT).resolve("buildnotes").resolve(PERMISSIONS_FILE);
+        this.configPath = server.getWorldPath(LevelResource.ROOT).resolve("buildnotes").resolve(PERMISSIONS_FILE);
         load();
     }
 
@@ -76,15 +76,15 @@ public class PermissionManager {
         }
     }
 
-    public boolean isAllowedToEdit(ServerPlayerEntity player) {
+    public boolean isAllowedToEdit(ServerPlayer player) {
         if (this.allowAll) {
             return true;
         }
-        if (server.getPlayerManager().isOperator(player.getPlayerConfigEntry())) {
+        if (server.getPlayerList().isOp(player.nameAndId())) {
             return true;
         }
         // Check if any entry in the set matches the player's UUID
-        return allowedPlayers.stream().anyMatch(entry -> entry.getUuid().equals(player.getUuid()));
+        return allowedPlayers.stream().anyMatch(entry -> entry.getUuid().equals(player.getUUID()));
     }
 
     // Now accepts a GameProfile to get both UUID and name
@@ -115,13 +115,13 @@ public class PermissionManager {
         this.allowAll = allow;
         save();
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             ServerPacketHandler.refreshPlayerPermissions(player);
         }
     }
 
     private void refreshIfOnline(UUID uuid) {
-        ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         if (player != null) {
             ServerPacketHandler.refreshPlayerPermissions(player);
         }

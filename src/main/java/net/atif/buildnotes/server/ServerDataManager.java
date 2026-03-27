@@ -12,8 +12,8 @@ import net.atif.buildnotes.network.packet.s2c.ImageNotFoundS2CPacket;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.WorldSavePath;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -38,7 +38,7 @@ public class ServerDataManager {
 
     public ServerDataManager(MinecraftServer server) {
         this.server = server;
-        this.storagePath = server.getSavePath(WorldSavePath.ROOT).resolve(MOD_DATA_SUBFOLDER);
+        this.storagePath = server.getWorldPath(LevelResource.ROOT).resolve(MOD_DATA_SUBFOLDER);
     }
 
     private <T> List<T> loadFromFile(String fileName, Type type) {
@@ -106,7 +106,7 @@ public class ServerDataManager {
     }
 
     // The logic to read and send an image file
-    public void sendImageToPlayer(ServerPlayerEntity player, UUID buildId, String filename) {
+    public void sendImageToPlayer(ServerPlayer player, UUID buildId, String filename) {
         // Read the file off-thread but schedule actual packet sends on the server thread.
         CompletableFuture.runAsync(() -> {
             Path imagePath = getImageStoragePath(buildId).resolve(filename);

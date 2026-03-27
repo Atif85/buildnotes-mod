@@ -11,13 +11,13 @@ public class ModPackets {
      * This should be called from your main ModInitializer.
      */
     public static void registerC2SPackets() {
-        PayloadTypeRegistry.playC2S().register(DeleteNoteC2SPacket.ID, DeleteNoteC2SPacket.CODEC);
-        PayloadTypeRegistry.playC2S().register(RequestDataC2SPacket.ID, RequestDataC2SPacket.CODEC);
-        PayloadTypeRegistry.playC2S().register(SaveNoteC2SPacket.ID, SaveNoteC2SPacket.CODEC);
-        PayloadTypeRegistry.playC2S().register(SaveBuildC2SPacket.ID, SaveBuildC2SPacket.CODEC);
-        PayloadTypeRegistry.playC2S().register(DeleteBuildC2SPacket.ID, DeleteBuildC2SPacket.CODEC);
-        PayloadTypeRegistry.playC2S().register(UploadImageChunkC2SPacket.ID, UploadImageChunkC2SPacket.CODEC);
-        PayloadTypeRegistry.playC2S().register(RequestImageC2SPacket.ID, RequestImageC2SPacket.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(DeleteNoteC2SPacket.TYPE, DeleteNoteC2SPacket.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(RequestDataC2SPacket.TYPE, RequestDataC2SPacket.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SaveNoteC2SPacket.TYPE, SaveNoteC2SPacket.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SaveBuildC2SPacket.TYPE, SaveBuildC2SPacket.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(DeleteBuildC2SPacket.TYPE, DeleteBuildC2SPacket.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(UploadImageChunkC2SPacket.TYPE, UploadImageChunkC2SPacket.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(RequestImageC2SPacket.TYPE, RequestImageC2SPacket.CODEC);
     }
 
     /**
@@ -25,15 +25,15 @@ public class ModPackets {
      * This should be called from your ClientModInitializer.
      */
     public static void registerS2CPackets() {
-        PayloadTypeRegistry.playS2C().register(HandshakeS2CPacket.ID, HandshakeS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(InitialSyncS2CPacket.ID, InitialSyncS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(UpdatePermissionS2CPacket.ID, UpdatePermissionS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(HandshakeS2CPacket.TYPE, HandshakeS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(InitialSyncS2CPacket.TYPE, InitialSyncS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(UpdatePermissionS2CPacket.TYPE, UpdatePermissionS2CPacket.CODEC);
 
-        PayloadTypeRegistry.playS2C().register(UpdateNoteS2CPacket.ID, UpdateNoteS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(UpdateBuildS2CPacket.ID, UpdateBuildS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(DeleteNoteS2CPacket.ID, DeleteNoteS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(DeleteBuildS2CPacket.ID, DeleteBuildS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(ImageChunkS2CPacket.ID, ImageChunkS2CPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(ImageNotFoundS2CPacket.ID, ImageNotFoundS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(UpdateNoteS2CPacket.TYPE, UpdateNoteS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(UpdateBuildS2CPacket.TYPE, UpdateBuildS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(DeleteNoteS2CPacket.TYPE, DeleteNoteS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(DeleteBuildS2CPacket.TYPE, DeleteBuildS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ImageChunkS2CPacket.TYPE, ImageChunkS2CPacket.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ImageNotFoundS2CPacket.TYPE, ImageNotFoundS2CPacket.CODEC);
     }
 }

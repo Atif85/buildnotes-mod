@@ -4,11 +4,11 @@ import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.screen.MainScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.time.Instant;
@@ -20,7 +20,7 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public NoteListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
+    public NoteListWidget(MainScreen parent, Minecraft client, int top, int bottom, int itemHeight) {
         super(parent, client, top, bottom, itemHeight);
     }
 
@@ -30,7 +30,7 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
     }
 
     public Note getSelectedNote() {
-        NoteEntry entry = getSelectedOrNull();
+        NoteEntry entry = getSelected();
         return entry != null ? entry.getNote() : null;
     }
 
@@ -76,57 +76,64 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             int entryX = getX();
             int entryY = getY();
             int entryWidth = NoteListWidget.this.getRowWidth();
 
             // Prepare Scope indicator to calculate its width
-            Text scopeText = null;
+            Component scopeText = null;
             int scopeWidth = 0;
             if (note.getScope() != null) {
                 switch (note.getScope()) {
-                    case GLOBAL -> scopeText = Text.literal("Global").formatted(Formatting.AQUA);
-                    case SERVER -> scopeText = Text.literal("Server").formatted(Formatting.GREEN);
+                    case GLOBAL -> scopeText = Component.literal("Global").withStyle(ChatFormatting.AQUA);
+                    case SERVER -> scopeText = Component.literal("Server").withStyle(ChatFormatting.GREEN);
                     // We don't draw an indicator for WORLD scope to keep the UI clean
                 }
             }
 
             if (scopeText != null) {
-                scopeWidth = client.textRenderer.getWidth(scopeText);
+                scopeWidth = minecraft.font.width(scopeText);
             }
 
             // Truncate and draw the Title
             // Calculate available width for the title by subtracting space for the scope indicator and padding
             int availableTitleWidth = entryWidth - 8; // Base padding
             if (scopeText != null) {
-                availableTitleWidth -= (scopeWidth + 7); // Account for the scope text and its padding
+                availableTitleWidth -= (scopeWidth + 7); // Account for the scope Component and its padding
             }
 
-            String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
-            context.drawText(client.textRenderer, truncatedTitle, entryX + 4, entryY +  4, Colors.TEXT_PRIMARY, false);
+            String truncatedTitle = minecraft.font.plainSubstrByWidth(note.getTitle(), availableTitleWidth);
+            graphics.text(minecraft.font, truncatedTitle, entryX + 4, entryY +  4, Colors.TEXT_PRIMARY, false);
 
             if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, entryX + entryWidth - scopeWidth - 4, entryY +  4, Colors.TEXT_PRIMARY, false);
+                graphics.text(minecraft.font, scopeText, entryX + entryWidth - scopeWidth - 4, entryY +  4, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Content Preview
-            Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
-            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 8);
-            context.drawText(client.textRenderer, Text.literal(truncatedContent), entryX + 4, entryY +  14, Colors.TEXT_MUTED, false);
+            Component contentPreview = Component.literal(firstLine).withStyle(ChatFormatting.GRAY);
+            String truncatedContent = minecraft.font.plainSubstrByWidth(contentPreview.getString(), entryWidth - 8);
+            graphics.text(minecraft.font, Component
+                    
+                    .literal(truncatedContent), entryX + 4, entryY +  14, Colors.TEXT_MUTED, false);
 
-            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, entryX + 4, entryY +  24, Colors.TEXT_MUTED, false);
+            graphics.text(minecraft.font, "Last Modified: " + this.formattedDateTime, entryX + 4, entryY +  24, Colors.TEXT_MUTED, false);
         }
 
         @Override
-        public boolean mouseClicked(Click click, boolean doubled) {
-            if (click.button() == 0) {
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+            if (event.button() == 0) {
                 NoteListWidget.this.setSelected(this);
 
                 NoteListWidget.this.handleEntryClick(this);
                 return true;
             }
             return false;
+        }
+
+        @Override
+        public Component getNarration() {
+            return Component.translatable("gui.narrate.entry", note.getTitle());
         }
     }
 }

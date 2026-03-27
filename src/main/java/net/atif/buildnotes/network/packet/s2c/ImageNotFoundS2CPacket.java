@@ -1,26 +1,25 @@
 package net.atif.buildnotes.network.packet.s2c;
 
 import net.atif.buildnotes.Buildnotes;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
 import java.util.UUID;
 
-public record ImageNotFoundS2CPacket(UUID buildId, String filename) implements CustomPayload {
-    public static final CustomPayload.Id<ImageNotFoundS2CPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "image_not_found_s2c"));
+public record ImageNotFoundS2CPacket(UUID buildId, String filename) implements CustomPacketPayload {
+    public static final Type<ImageNotFoundS2CPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Buildnotes.MOD_ID, "image_not_found_s2c"));
 
-    public static final PacketCodec<PacketByteBuf, ImageNotFoundS2CPacket> CODEC = CustomPayload.codecOf(
+    public static final StreamCodec<FriendlyByteBuf, ImageNotFoundS2CPacket> CODEC = CustomPacketPayload.codec(
             ImageNotFoundS2CPacket::write,
             ImageNotFoundS2CPacket::new
     );
 
-    public ImageNotFoundS2CPacket(PacketByteBuf buf) { this(buf.readUuid(), buf.readString()); }
+    public ImageNotFoundS2CPacket(FriendlyByteBuf buf) { this(buf.readUUID(), buf.readUtf()); }
 
-    public void write(PacketByteBuf buf) { buf.writeUuid(buildId); buf.writeString(filename); }
+    public void write(FriendlyByteBuf buf) { buf.writeUUID(buildId); buf.writeUtf(filename); }
 
     @Override
-    public Id<? extends CustomPayload> getId() { return ID; }
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
 }
 

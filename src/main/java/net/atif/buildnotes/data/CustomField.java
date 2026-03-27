@@ -1,6 +1,6 @@
 package net.atif.buildnotes.data;
 
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 
 public class CustomField {
     private String title;
@@ -17,12 +17,12 @@ public class CustomField {
     public void setTitle(String title) { this.title = title; }
     public void setContent(String content) { this.content = content; }
 
-    public void writeToBuf(PacketByteBuf buf) {
-        buf.writeString(this.title);
-        buf.writeString(this.content);
+    public void writeToBuf(FriendlyByteBuf buf) {
+        buf.writeUtf(this.title);
+        buf.writeUtf(this.content);
     }
 
-    public static CustomField fromBuf(PacketByteBuf buf) {
-        return new CustomField(buf.readString(), buf.readString());
+    public static CustomField fromBuf(FriendlyByteBuf buf) {
+        return new CustomField(buf.readUtf(), buf.readUtf());
     }
 }

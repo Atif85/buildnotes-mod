@@ -1,19 +1,20 @@
 package net.atif.buildnotes.gui.widget;
 
 import net.atif.buildnotes.gui.helper.Colors;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 
-public class DarkButtonWidget extends ButtonWidget {
+public class DarkButtonWidget extends Button {
 
-    public DarkButtonWidget(int x, int y, int width, int height, net.minecraft.text.Text message, PressAction onPress) {
-        super(x, y, width, height, message, onPress, ButtonWidget.DEFAULT_NARRATION_SUPPLIER);
+    public DarkButtonWidget(int x, int y, int width, int height, Component message, OnPress onPress) {
+        super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
     }
 
     @Override
-    protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         int color;
         if (!this.active) {
             color = Colors.BUTTON_DISABLED;
@@ -23,11 +24,11 @@ public class DarkButtonWidget extends ButtonWidget {
             color = Colors.PANEL_BACKGROUND;
         }
 
-        context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, color);
+        graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, color);
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Font font = Minecraft.getInstance().font;
         int textColor = this.active ? Colors.TEXT_PRIMARY : Colors.TEXT_DISABLED;
 
-        context.drawCenteredTextWithShadow(textRenderer, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
+        graphics.centeredText(font, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, textColor);
     }
 }

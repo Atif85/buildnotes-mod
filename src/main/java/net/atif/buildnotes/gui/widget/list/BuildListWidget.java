@@ -3,11 +3,11 @@ package net.atif.buildnotes.gui.widget.list;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.time.Instant;
@@ -19,7 +19,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public BuildListWidget(MainScreen parent, MinecraftClient client, int top, int bottom, int itemHeight) {
+    public BuildListWidget(MainScreen parent, Minecraft client, int top, int bottom, int itemHeight) {
         super(parent, client, top, bottom, itemHeight);
     }
 
@@ -29,7 +29,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
     }
 
     public Build getSelectedBuild() {
-        BuildEntry entry = getSelectedOrNull();
+        BuildEntry entry = getSelected();
         return entry != null ? entry.getBuild() : null;
     }
 
@@ -55,61 +55,66 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             int entryX = getX();
             int entryY = getY();
             int entryWidth = BuildListWidget.this.getRowWidth();
-            
+
             // Prepare Scope indicator to calculate its width
-            Text scopeText = null;
+            Component scopeComponent = null;
             int scopeWidth = 0;
             if (build.getScope() != null) {
                 switch (build.getScope()) {
-                    case GLOBAL -> scopeText = Text.literal("Global").formatted(Formatting.AQUA);
-                    case SERVER -> scopeText = Text.literal("Server").formatted(Formatting.GREEN);
+                    case GLOBAL -> scopeComponent = Component.literal("Global").withStyle(ChatFormatting.AQUA);
+                    case SERVER -> scopeComponent = Component.literal("Server").withStyle(ChatFormatting.GREEN);
                     // We don't draw an indicator for WORLD scope
                 }
             }
 
-            if (scopeText != null) {
-                scopeWidth = client.textRenderer.getWidth(scopeText);
+            if (scopeComponent != null) {
+                scopeWidth = minecraft.font.width(scopeComponent);
             }
 
             // Truncate and draw the Build Name
             // Calculate available width for the name by subtracting space for the scope indicator and padding
             int availableNameWidth = entryWidth - 8; // Base padding
-            if (scopeText != null) {
+            if (scopeComponent != null) {
                 availableNameWidth -= (scopeWidth + 7); // Account for the scope text and its padding
             }
 
-            String truncatedName = client.textRenderer.trimToWidth(build.getName(), availableNameWidth);
-            context.drawText(client.textRenderer, truncatedName, entryX + 4, entryY + 4, Colors.TEXT_PRIMARY, false);
+            String truncatedName = minecraft.font.plainSubstrByWidth(build.getName(), availableNameWidth);
+            graphics.text(minecraft.font, truncatedName, entryX + 4, entryY + 4, Colors.TEXT_PRIMARY, false);
 
             // Draw the Scope indicator
-            if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, entryX + entryWidth - scopeWidth - 4, entryY + 4, Colors.TEXT_PRIMARY, false);
+            if (scopeComponent != null) {
+                graphics.text(minecraft.font, scopeComponent, entryX + entryWidth - scopeWidth - 4, entryY + 4, Colors.TEXT_PRIMARY, false);
             }
 
             // Truncate and draw the Coordinates
             String fullCoordsText = "Coords: " + build.getCoordinates();
-            String truncatedCoords = client.textRenderer.trimToWidth(fullCoordsText, entryWidth - 8);
-            context.drawText(client.textRenderer, Text.literal(truncatedCoords).formatted(Formatting.GRAY), entryX + 4, entryY + 14, Colors.TEXT_MUTED, false);
+            String truncatedCoords = minecraft.font.plainSubstrByWidth(fullCoordsText, entryWidth - 8);
+            graphics.text(minecraft.font, Component.literal(truncatedCoords).withStyle(ChatFormatting.GRAY), entryX + 4, entryY + 14, Colors.TEXT_MUTED, false);
 
             // Truncate and draw the Date/Time
             String fullDateText = "Last Modified: " + this.formattedDateTime;
-            String truncatedDate = client.textRenderer.trimToWidth(fullDateText, entryWidth - 8);
-            context.drawText(client.textRenderer, truncatedDate, entryX + 4, entryY + 24, Colors.TEXT_MUTED, false);
+            String truncatedDate = minecraft.font.plainSubstrByWidth(fullDateText, entryWidth - 8);
+            graphics.text(minecraft.font, truncatedDate, entryX + 4, entryY + 24, Colors.TEXT_MUTED, false);
         }
 
         @Override
-        public boolean mouseClicked(Click click, boolean doubled) {
-            if (click.button() == 0) { // Check for left-click
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+            if (event.button() == 0) { // Check for left-click
                 BuildListWidget.this.setSelected(this);
 
                 BuildListWidget.this.handleEntryClick(this);
                 return true;
             }
             return false;
+        }
+
+        @Override
+        public Component getNarration() {
+            return Component.translatable("gui.narrate.entry", build.getName());
         }
     }
 }

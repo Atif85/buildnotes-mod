@@ -16,7 +16,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +45,11 @@ public class Buildnotes implements ModInitializer {
 
         // Register the server-side event for when a player joins
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayerEntity player = handler.getPlayer();
+            ServerPlayer player = handler.getPlayer();
 
             // This is a good check for dedicated servers, but for testing in a client/server environment,
             // you might want to temporarily disable it. For now, it's correct.
-            if (!server.isDedicated()) return;
+            if (!server.isDedicatedServer()) return;
 
             // Determine the player's permission level.
             PermissionLevel permission = PERMISSION_MANAGER.isAllowedToEdit(player)
@@ -61,40 +62,40 @@ public class Buildnotes implements ModInitializer {
         });
 
         // Register the disconnect event for cleaning up image transfers
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> ServerImageTransferManager.onPlayerDisconnect(handler.player.getUuid()));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> ServerImageTransferManager.onPlayerDisconnect(handler.player.getUUID()));
 
-        ServerPlayNetworking.registerGlobalReceiver(DeleteNoteC2SPacket.ID, (packet, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(DeleteNoteC2SPacket.TYPE, (packet, context) -> {
                     MinecraftServer server = context.server();
                     server.execute(() -> ServerPacketHandler.handleDeleteNote(server, context.player(), packet));
         });
 
         // Register C2S receivers using the new packet types
-        ServerPlayNetworking.registerGlobalReceiver(RequestDataC2SPacket.ID, (packet, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(RequestDataC2SPacket.TYPE, (packet, context) -> {
             MinecraftServer server = context.server();
             server.execute(() -> ServerPacketHandler.handleRequestInitialData(server, context.player(), packet));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(SaveNoteC2SPacket.ID, (packet, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(SaveNoteC2SPacket.TYPE, (packet, context) -> {
             MinecraftServer server = context.server();
             server.execute(() -> ServerPacketHandler.handleSaveNote(server, context.player(), packet));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(SaveBuildC2SPacket.ID, (packet, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(SaveBuildC2SPacket.TYPE, (packet, context) -> {
             MinecraftServer server = context.server();
             server.execute(() -> ServerPacketHandler.handleSaveBuild(server, context.player(), packet));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(DeleteBuildC2SPacket.ID, (packet, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(DeleteBuildC2SPacket.TYPE, (packet, context) -> {
             MinecraftServer server = context.server();
             server.execute(() -> ServerPacketHandler.handleDeleteBuild(server, context.player(), packet));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(UploadImageChunkC2SPacket.ID, (packet, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(UploadImageChunkC2SPacket.TYPE, (packet, context) -> {
             MinecraftServer server = context.server();
             server.execute(() -> ServerPacketHandler.handleImageChunkUpload(server, context.player(), packet));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(RequestImageC2SPacket.ID, (packet, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(RequestImageC2SPacket.TYPE, (packet, context) -> {
             MinecraftServer server = context.server();
             server.execute(() -> ServerPacketHandler.handleImageRequest(server, context.player(), packet));
         });

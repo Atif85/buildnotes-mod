@@ -1,11 +1,11 @@
 package net.atif.buildnotes.gui.helper;
 
 import net.atif.buildnotes.gui.screen.ConfirmScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,8 +32,8 @@ public class UIHelper {
     /**
      * Draws the standard dark, semi-transparent panel background.
      */
-    public static void drawPanel(DrawContext context, int x, int y, int width, int height) {
-        context.fill(x, y, x + width, y + height, Colors.PANEL_BACKGROUND);
+    public static void drawPanel(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
+        graphics.fill(x, y, x + width, y + height, Colors.PANEL_BACKGROUND);
     }
 
     /**
@@ -58,8 +58,8 @@ public class UIHelper {
     /**
      * Creates a row of dynamically sized buttons, centered on the screen.
      */
-    public static void createButtonRow(Screen screen, int y, List<Text> buttonTexts, DynamicButtonCreator creator) {
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+    public static void createButtonRow(Screen screen, int y, List<Component> buttonTexts, DynamicButtonCreator creator) {
+        Font font = Minecraft.getInstance().font;
         if (buttonTexts.isEmpty()) return;
 
         // Calculate total width of all buttons
@@ -67,7 +67,7 @@ public class UIHelper {
         int totalWidth = 0;
         for (int i = 0; i < buttonTexts.size(); i++) {
             // Calculate the width based on text, but ensure it's at least BUTTON_WIDTH.
-            int textWidth = textRenderer.getWidth(buttonTexts.get(i)) + BUTTON_TEXT_PADDING * 2;
+            int textWidth = font.width(buttonTexts.get(i)) + BUTTON_TEXT_PADDING * 2;
             widths[i] = Math.max(textWidth, BUTTON_WIDTH);
             totalWidth += widths[i];
         }
@@ -105,7 +105,7 @@ public class UIHelper {
     /**
      * Shortcut to open a standard confirm dialog.
      */
-    public static void showConfirmDialog(Screen parent, Text message, Runnable onConfirm) {
-        MinecraftClient.getInstance().setScreen(new ConfirmScreen(parent, message, onConfirm, () -> MinecraftClient.getInstance().setScreen(parent)));
+    public static void showConfirmDialog(Screen parent, Component message, Runnable onConfirm) {
+        Minecraft.getInstance().setScreen(new ConfirmScreen(parent, message, onConfirm, () -> Minecraft.getInstance().setScreen(parent)));
     }
 }

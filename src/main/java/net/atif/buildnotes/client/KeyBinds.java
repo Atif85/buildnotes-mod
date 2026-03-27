@@ -1,24 +1,22 @@
 package net.atif.buildnotes.client;
 
-import net.atif.buildnotes.Buildnotes;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class KeyBinds {
 
-    public static KeyBinding openGuiKey;
+    public static KeyMapping openGuiKey;
 
-    private static final KeyBinding.Category MOD_CATEGORY = KeyBinding.Category.create(Identifier.of("buildnotes", "main"));
+    private static final KeyMapping.Category MOD_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("buildnotes", "main"));
 
     public static void register() {
 
-        openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        openGuiKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.buildnotes.opengui",
-                InputUtil.Type.KEYSYM, // The type of input, KEYSYM for keyboard
+                InputConstants.Type.KEYSYM, // The type of input, KEYSYM for keyboard
                 GLFW.GLFW_KEY_N, // The default key, N in this case
                 MOD_CATEGORY
         ));

@@ -6,14 +6,16 @@ import net.atif.buildnotes.gui.helper.NoteScreenLayouts;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.atif.buildnotes.client.ClientSession;
 import net.atif.buildnotes.data.Scope;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 
-public class ViewNoteScreen extends BaseScreen {
+public class 
+
+ViewNoteScreen extends BaseScreen {
 
     private final Note note;
 
@@ -21,7 +23,7 @@ public class ViewNoteScreen extends BaseScreen {
     private ReadOnlyMultiLineTextFieldWidget contentArea;
 
     public ViewNoteScreen(Screen parent, Note note) {
-        super(Text.translatable(note.getTitle()), parent);
+        super(Component.translatable(note.getTitle()), parent);
         this.note = note;
     }
 
@@ -36,17 +38,17 @@ public class ViewNoteScreen extends BaseScreen {
             int idx = (x - UIHelper.getCenteredButtonStartX(this.width, 3)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (idx) {
                 case 0 -> {
-                    DarkButtonWidget deleteButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete());
+                    DarkButtonWidget deleteButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Component.translatable("gui.buildnotes.delete_button"), button -> confirmDelete());
                     deleteButton.active = canEdit;
-                    this.addDrawableChild(deleteButton);
+                    this.addRenderableWidget(deleteButton);
                 }
                 case 1 -> {
-                    DarkButtonWidget editButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Text.translatable("gui.buildnotes.edit_button"), button -> this.client.setScreen(new EditNoteScreen(this.parent, this.note)));
+                    DarkButtonWidget editButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Component.translatable("gui.buildnotes.edit_button"), button -> this.minecraft.setScreen(new EditNoteScreen(this.parent, this.note)));
                     editButton.active = canEdit;
-                    this.addDrawableChild(editButton);
+                    this.addRenderableWidget(editButton);
                 }
-                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.close_button"), button -> this.client.setScreen(parent)));
+                case 2 -> this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Component.translatable("gui.buildnotes.close_button"), button -> this.minecraft.setScreen(parent)));
             }
         });
 
@@ -56,7 +58,7 @@ public class ViewNoteScreen extends BaseScreen {
 
         // --- Title Widget ---
         this.titleArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer,
+                this.font,
                 contentX,
                 NoteScreenLayouts.TOP_MARGIN + 5,
                 contentWidth,
@@ -65,7 +67,7 @@ public class ViewNoteScreen extends BaseScreen {
                 1,
                 false
         );
-        this.addSelectableChild(this.titleArea);
+        this.addWidget(this.titleArea);
 
         int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
@@ -73,7 +75,7 @@ public class ViewNoteScreen extends BaseScreen {
 
         // --- Content Widget ---
         this.contentArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer,
+                this.font,
                 contentX,
                 contentPanelY,
                 contentWidth,
@@ -82,20 +84,20 @@ public class ViewNoteScreen extends BaseScreen {
                 Integer.MAX_VALUE,
                 true
         );
-        this.addSelectableChild(this.contentArea);
+        this.addWidget(this.contentArea);
     }
 
     private void confirmDelete() {
         Runnable onConfirm = () -> {
             DataManager.getInstance().deleteNote(this.note);
-            this.close();
+            this.onClose();
         };
-        UIHelper.showConfirmDialog(this, Text.translatable("Delete note \"" + note.getTitle() + "\"?"), onConfirm);
+        UIHelper.showConfirmDialog(this, Component.translatable("Delete note \"" + note.getTitle() + "\"?"), onConfirm);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         int contentWidth = (int) (this.width * NoteScreenLayouts.CONTENT_WIDTH_RATIO);
         int contentX = (this.width - contentWidth) / 2;
@@ -103,20 +105,20 @@ public class ViewNoteScreen extends BaseScreen {
 
         // --- Title Panel ---
         UIHelper.drawPanel(context, contentX, NoteScreenLayouts.TOP_MARGIN, contentWidth, NoteScreenLayouts.TITLE_PANEL_HEIGHT);
-        this.titleArea.render(context, mouseX, mouseY, delta);
+        this.titleArea.extractRenderState(context, mouseX, mouseY, delta);
 
         // --- Content Panel ---
         int contentPanelY = NoteScreenLayouts.TOP_MARGIN + NoteScreenLayouts.TITLE_PANEL_HEIGHT + NoteScreenLayouts.PANEL_SPACING;
         int contentPanelBottom = this.height - bottomMargin;
         UIHelper.drawPanel(context, contentX, contentPanelY, contentWidth, contentPanelBottom - contentPanelY);
-        this.contentArea.render(context, mouseX, mouseY, delta);
+        this.contentArea.extractRenderState(context, mouseX, mouseY, delta);
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (this.titleArea.keyPressed(input)) return true;
-        if (this.contentArea.keyPressed(input)) return true;
-        return super.keyPressed(input);
+    public boolean keyPressed(KeyEvent event) {
+        if (this.titleArea.keyPressed(event)) return true;
+        if (this.contentArea.keyPressed(event)) return true;
+        return super.keyPressed(event);
     }
 
     // --- Delegate scrolling to the widget ---

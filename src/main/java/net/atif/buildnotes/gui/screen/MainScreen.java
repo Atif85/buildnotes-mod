@@ -13,8 +13,8 @@ import net.atif.buildnotes.gui.widget.MultiLineTextFieldWidget;
 import net.atif.buildnotes.gui.widget.TabButtonWidget;
 import net.atif.buildnotes.gui.widget.list.BuildListWidget;
 import net.atif.buildnotes.gui.widget.list.NoteListWidget;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +37,7 @@ public class MainScreen extends BaseScreen {
     private TabType currentTab;
 
     public MainScreen(TabType startTab) {
-        super(Text.translatable("gui.buildnotes.main_title"), null);
+        super(Component.translatable("gui.buildnotes.main_title"), null);
         this.currentTab = startTab;
     }
 
@@ -51,47 +51,47 @@ public class MainScreen extends BaseScreen {
 
         // Vertically center the tabs in the top margin
         int tabY = (MainScreenLayouts.TOP_MARGIN - MainScreenLayouts.TAB_HEIGHT) / 2;
-        this.notesTab = this.addDrawableChild(new TabButtonWidget(
+        this.notesTab = this.addRenderableWidget(new TabButtonWidget(
                 (this.width / 2) - MainScreenLayouts.TAB_WIDTH - 2, tabY,
                 MainScreenLayouts.TAB_WIDTH, MainScreenLayouts.TAB_HEIGHT,
-                Text.translatable("gui.buildnotes.notes_tab"), b -> selectTab(TabType.NOTES)
+                Component.translatable("gui.buildnotes.notes_tab"), b -> selectTab(TabType.NOTES)
         ));
-        this.buildsTab = this.addDrawableChild(new TabButtonWidget(
+        this.buildsTab = this.addRenderableWidget(new TabButtonWidget(
                 (this.width / 2) + 2, tabY,
                 MainScreenLayouts.TAB_WIDTH, MainScreenLayouts.TAB_HEIGHT,
-                Text.translatable("gui.buildnotes.builds_tab"), b -> selectTab(TabType.BUILDS)
+                Component.translatable("gui.buildnotes.builds_tab"), b -> selectTab(TabType.BUILDS)
         ));
 
         // Lists
-        this.noteListWidget = new NoteListWidget(this, this.client, MainScreenLayouts.TOP_MARGIN, this.height - bottomMargin, 38);
-        this.buildListWidget = new BuildListWidget(this, this.client, MainScreenLayouts.TOP_MARGIN, this.height - bottomMargin, 38);
-        this.addSelectableChild(noteListWidget);
-        this.addSelectableChild(buildListWidget);
+        this.noteListWidget = new NoteListWidget(this, this.minecraft, MainScreenLayouts.TOP_MARGIN, this.height - bottomMargin, 38);
+        this.buildListWidget = new BuildListWidget(this, this.minecraft, MainScreenLayouts.TOP_MARGIN, this.height - bottomMargin, 38);
+        this.addWidget(noteListWidget);
+        this.addWidget(buildListWidget);
 
         // Search field
         int searchFieldX = (this.width - MainScreenLayouts.SEARCH_FIELD_WIDTH) / 2;
         this.searchField = new MultiLineTextFieldWidget(
-                this.textRenderer, searchFieldX, searchBarY,
+                this.font, searchFieldX, searchBarY,
                 MainScreenLayouts.SEARCH_FIELD_WIDTH, MainScreenLayouts.SEARCH_BAR_HEIGHT,
                 "", "Search...", 1, false
         );
         this.searchField.setChangedListener(this::onSearchTermChanged);
-        this.addSelectableChild(searchField);
+        this.addWidget(searchField);
 
         // Action buttons
         UIHelper.createButtonRow(this, buttonsY, 5, x -> {
             int index = (x - UIHelper.getCenteredButtonStartX(this.width, 5)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (index) {
-                case 0 -> this.addButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.add_button"), b -> addEntry()));
-                case 1 -> this.openButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.open_button"), b -> openSelected()));
-                case 2 -> this.editButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.edit_button"), b -> editSelected()));
-                case 3 -> this.deleteButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.delete_button"), b -> confirmDelete()));
-                case 4 -> this.closeButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.close_button"), b -> this.client.setScreen(null)));
+                case 0 -> this.addButton = this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Component.translatable("gui.buildnotes.add_button"), b -> addEntry()));
+                case 1 -> this.openButton = this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Component.translatable("gui.buildnotes.open_button"), b -> openSelected()));
+                case 2 -> this.editButton = this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Component.translatable("gui.buildnotes.edit_button"), b -> editSelected()));
+                case 3 -> this.deleteButton = this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Component.translatable("gui.buildnotes.delete_button"), b -> confirmDelete()));
+                case 4 -> this.closeButton = this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Component.translatable("gui.buildnotes.close_button"), b -> this.minecraft.setScreen(null)));
             }
         });
 
@@ -161,14 +161,14 @@ public class MainScreen extends BaseScreen {
         boolean canEdit = true; // Default to true for local notes/builds
 
         if (currentTab == TabType.NOTES) {
-            NoteListWidget.NoteEntry selectedEntry = this.noteListWidget.getSelectedOrNull();
+            NoteListWidget.NoteEntry selectedEntry = this.noteListWidget.getSelected();
             hasSelection = selectedEntry != null;
             if (hasSelection && selectedEntry.getNote().getScope() == Scope.SERVER) {
                 // For server-scoped notes, check edit permission
                 canEdit = ClientSession.hasEditPermission();
             }
         } else { // BUILDS tab
-            BuildListWidget.BuildEntry selectedEntry = this.buildListWidget.getSelectedOrNull();
+            BuildListWidget.BuildEntry selectedEntry = this.buildListWidget.getSelected();
             hasSelection = selectedEntry != null;
             if (hasSelection && selectedEntry.getBuild().getScope() == Scope.SERVER) {
                 // For server-scoped builds, check edit permission
@@ -216,14 +216,14 @@ public class MainScreen extends BaseScreen {
         if (currentTab == TabType.NOTES) {
             Note sel = noteListWidget.getSelectedNote();
             if (sel != null)
-                showConfirm(Text.of("Delete note \"" + sel.getTitle() + "\"?"), () -> {
+                showConfirm(Component.literal("Delete note \"" + sel.getTitle() + "\"?"), () -> {
                     dm.deleteNote(sel);
                     open(this);
                 });
         } else {
             Build sel = buildListWidget.getSelectedBuild();
             if (sel != null)
-                showConfirm(Text.of("Delete build \"" + sel.getName() + "\"?"), () -> {
+                showConfirm(Component.literal("Delete build \"" + sel.getName() + "\"?"), () -> {
                     dm.deleteBuild(sel);
                     open(this);
                 });
@@ -241,12 +241,12 @@ public class MainScreen extends BaseScreen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        (currentTab == TabType.NOTES ? noteListWidget : buildListWidget).render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        (currentTab == TabType.NOTES ? noteListWidget : buildListWidget).extractRenderState(context, mouseX, mouseY, delta);
 
         UIHelper.drawPanel(context, this.searchField.x - 2, this.searchField.y, this.searchField.width + 4, this.searchField.height);
 
-        this.searchField.render(context, mouseX, mouseY, delta);
+        this.searchField.extractRenderState(context, mouseX, mouseY, delta);
     }
 }

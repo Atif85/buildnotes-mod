@@ -2,26 +2,25 @@ package net.atif.buildnotes.network.packet.c2s;
 
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.data.Build;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
-public record SaveBuildC2SPacket(Build build) implements CustomPayload {
-    public static final CustomPayload.Id<SaveBuildC2SPacket> ID = new CustomPayload.Id<>(Identifier.of(Buildnotes.MOD_ID, "save_build_c2s"));
+public record SaveBuildC2SPacket(Build build) implements CustomPacketPayload {
+    public static final Type<SaveBuildC2SPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Buildnotes.MOD_ID, "save_build_c2s"));
 
-    public static final PacketCodec<PacketByteBuf, SaveBuildC2SPacket> CODEC = CustomPayload.codecOf(
+    public static final StreamCodec<FriendlyByteBuf, SaveBuildC2SPacket> CODEC = CustomPacketPayload.codec(
             SaveBuildC2SPacket::write,
             SaveBuildC2SPacket::new
     );
 
-    public SaveBuildC2SPacket(PacketByteBuf buf) {
+    public SaveBuildC2SPacket(FriendlyByteBuf buf) {
         this(Build.fromBuf(buf));
     }
 
-    public void write(PacketByteBuf buf) { build.writeToBuf(buf); }
+    public void write(FriendlyByteBuf buf) { build.writeToBuf(buf); }
 
     @Override
-    public Id<? extends CustomPayload> getId() { return ID; }
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
 }
 

@@ -1,7 +1,6 @@
 package net.atif.buildnotes.data;
 
-import net.minecraft.network.PacketByteBuf;
-
+import net.minecraft.network.FriendlyByteBuf;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -63,29 +62,29 @@ public class Build extends BaseEntry {
     public void setDescription(String description) { this.description = description; }
     public void setCredits(String credits) { this.credits = credits; }
 
-    public void writeToBuf(PacketByteBuf buf) {
-        buf.writeUuid(this.getId());
+    public void writeToBuf(FriendlyByteBuf buf) {
+        buf.writeUUID(this.getId());
         buf.writeLong(this.getLastModified());
-        buf.writeEnumConstant(this.getScope());
-        buf.writeString(this.name);
-        buf.writeString(this.coordinates);
-        buf.writeString(this.dimension);
-        buf.writeString(this.description);
-        buf.writeString(this.credits);
-        buf.writeCollection(this.imageFileNames, PacketByteBuf::writeString);
+        buf.writeEnum(this.getScope());
+        buf.writeUtf(this.name);
+        buf.writeUtf(this.coordinates);
+        buf.writeUtf(this.dimension);
+        buf.writeUtf(this.description);
+        buf.writeUtf(this.credits);
+        buf.writeCollection(this.imageFileNames, FriendlyByteBuf::writeUtf);
         buf.writeCollection(this.customFields, (b, field) -> field.writeToBuf(b));
     }
 
-    public static Build fromBuf(PacketByteBuf buf) {
-        UUID id = buf.readUuid();
+    public static Build fromBuf(FriendlyByteBuf buf) {
+        UUID id = buf.readUUID();
         long lastModified = buf.readLong();
-        Scope scope = buf.readEnumConstant(Scope.class);
-        String name = buf.readString();
-        String coords = buf.readString();
-        String dim = buf.readString();
-        String desc = buf.readString();
-        String cred = buf.readString();
-        List<String> images = buf.readList(PacketByteBuf::readString);
+        Scope scope = buf.readEnum(Scope.class);
+        String name = buf.readUtf();
+        String coords = buf.readUtf();
+        String dim = buf.readUtf();
+        String desc = buf.readUtf();
+        String cred = buf.readUtf();
+        List<String> images = buf.readList(FriendlyByteBuf::readUtf);
         List<CustomField> fields = buf.readList(CustomField::fromBuf);
 
         return new Build(id, lastModified, scope, name, coords, dim, desc, cred, images, fields);

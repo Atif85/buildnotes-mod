@@ -2,7 +2,7 @@ package net.atif.buildnotes.server;
 
 import com.google.common.collect.Maps;
 import net.atif.buildnotes.Buildnotes;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,8 +56,8 @@ public class ServerImageTransferManager {
     // This map holds all ongoing uploads. We key it by the player to handle disconnects.
     private static final Map<UUID, Map<TransferKey, ImageAssembler>> IN_PROGRESS_UPLOADS = Maps.newConcurrentMap();
 
-    public static void handleChunk(ServerPlayerEntity player, UUID buildId, String filename, int totalChunks, int chunkIndex, byte[] data) {
-        UUID playerId = player.getUuid();
+    public static void handleChunk(ServerPlayer player, UUID buildId, String filename, int totalChunks, int chunkIndex, byte[] data) {
+        UUID playerId = player.getUUID();
         IN_PROGRESS_UPLOADS.computeIfAbsent(playerId, k -> Maps.newHashMap());
 
         Map<TransferKey, ImageAssembler> playerUploads = IN_PROGRESS_UPLOADS.get(playerId);

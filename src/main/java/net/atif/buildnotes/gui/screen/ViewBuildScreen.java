@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.screen;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientImageTransferManager;
 import net.atif.buildnotes.client.ClientSession;
@@ -13,14 +14,13 @@ import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
 import net.atif.buildnotes.gui.widget.ReadOnlyMultiLineTextFieldWidget;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -43,7 +43,7 @@ public class ViewBuildScreen extends ScrollableScreen {
     private DarkButtonWidget nextImageButton;
 
     public ViewBuildScreen(Screen parent, Build build) {
-        super(Text.literal(build.getName()), parent);
+        super(Component.literal(build.getName()), parent);
         this.build = build;
     }
 
@@ -61,7 +61,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
         // --- TITLE WIDGET ---
         ReadOnlyMultiLineTextFieldWidget titleArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT,
+                this.font, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT,
                 this.title.getString(), 1, false
         );
         addScrollableWidget(titleArea);
@@ -73,7 +73,7 @@ public class ViewBuildScreen extends ScrollableScreen {
         // Coords Widget (positioned after the label)
         int coordsTextX = contentX + 50;
         ReadOnlyMultiLineTextFieldWidget coordsArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, coordsTextX, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
+                this.font, coordsTextX, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
                 build.getCoordinates(), 1, false
         );
         addScrollableWidget(coordsArea);
@@ -82,7 +82,7 @@ public class ViewBuildScreen extends ScrollableScreen {
         int dimensionX = contentX + fieldWidth + BuildScreenLayouts.PANEL_SPACING;
         int dimensionTextX = dimensionX + 65;
         ReadOnlyMultiLineTextFieldWidget dimensionArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, dimensionTextX, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
+                this.font, dimensionTextX, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
                 build.getDimension(), 1, false
         );
         addScrollableWidget(dimensionArea);
@@ -95,7 +95,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
         // --- DESCRIPTION WIDGET ---
         ReadOnlyMultiLineTextFieldWidget descriptionArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT,
+                this.font, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT,
                 build.getDescription(), Integer.MAX_VALUE, true
         );
         addScrollableWidget(descriptionArea);
@@ -103,7 +103,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
         // --- CREDITS WIDGET ---
         ReadOnlyMultiLineTextFieldWidget creditsArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT,
+                this.font, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT,
                 build.getCredits(), Integer.MAX_VALUE, true
         );
         addScrollableWidget(creditsArea);
@@ -112,7 +112,7 @@ public class ViewBuildScreen extends ScrollableScreen {
         // --- CUSTOM FIELD WIDGETS ---
         for (CustomField field : build.getCustomFields()) {
             ReadOnlyMultiLineTextFieldWidget fieldArea = new ReadOnlyMultiLineTextFieldWidget(
-                    this.textRenderer, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT,
+                    this.font, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT,
                     field.getContent(), Integer.MAX_VALUE, true
             );
             addScrollableWidget(fieldArea);
@@ -135,18 +135,18 @@ public class ViewBuildScreen extends ScrollableScreen {
             switch (idx) {
                 case 0 -> {
                     DarkButtonWidget deleteButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                            Text.translatable("gui.buildnotes.delete_button"), button -> confirmDelete());
+                            Component.translatable("gui.buildnotes.delete_button"), button -> confirmDelete());
                     deleteButton.active = canEdit;
-                    this.addDrawableChild(deleteButton);
+                    this.addRenderableWidget(deleteButton);
                 }
                 case 1 -> {
                     DarkButtonWidget editButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                            Text.translatable("gui.buildnotes.edit_button"), button -> open(new EditBuildScreen(this.parent, this.build)));
+                            Component.translatable("gui.buildnotes.edit_button"), button -> open(new EditBuildScreen(this.parent, this.build)));
                     editButton.active = canEdit;
-                    this.addDrawableChild(editButton);
+                    this.addRenderableWidget(editButton);
                 }
-                case 2 -> this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Text.translatable("gui.buildnotes.close_button"), button -> this.open(this.parent)));
+                case 2 -> this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Component.translatable("gui.buildnotes.close_button"), button -> this.open(this.parent)));
             }
         });
 
@@ -157,8 +157,8 @@ public class ViewBuildScreen extends ScrollableScreen {
             int galleryY = getTopMargin() + BuildScreenLayouts.NAME_FIELD_HEIGHT + BuildScreenLayouts.PANEL_SPACING + BuildScreenLayouts.SMALL_FIELD_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
             int navButtonY = galleryY + (galleryHeight - 20) / 2;
 
-            prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, Text.literal("<"), b -> switchImage(-1));
-            nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, Text.literal(">"), b -> switchImage(1));
+            prevImageButton = new DarkButtonWidget(contentX - 25, navButtonY, 20, 20, Component.literal("<"), b -> switchImage(-1));
+            nextImageButton = new DarkButtonWidget(contentX + contentWidth + 5, navButtonY, 20, 20, Component.literal(">"), b -> switchImage(1));
             addScrollableWidget(prevImageButton);
             addScrollableWidget(nextImageButton);
             updateNavButtons();
@@ -166,7 +166,7 @@ public class ViewBuildScreen extends ScrollableScreen {
     }
 
         @Override
-        protected void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
+        protected void renderContent(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
             int contentWidth = (int) (this.width * BuildScreenLayouts.CONTENT_WIDTH_RATIO);
             int contentX = (this.width - contentWidth) / 2;
             int yPos = getTopMargin();
@@ -180,11 +180,11 @@ public class ViewBuildScreen extends ScrollableScreen {
 
             // Backgrounds and Labels only
             UIHelper.drawPanel(context, contentX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
-            context.drawText(this.textRenderer ,Text.literal("Coords: ").formatted(Formatting.GRAY), contentX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
+            context.text(this.font ,Component.literal("Coords: ").withStyle(ChatFormatting.GRAY), contentX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
 
             int dimensionX = contentX + fieldWidth + BuildScreenLayouts.PANEL_SPACING;
             UIHelper.drawPanel(context, dimensionX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
-            context.drawText(this.textRenderer, Text.literal("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
+            context.text(this.font, Component.literal("Dimension: ").withStyle(ChatFormatting.GRAY), dimensionX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
             yPos += BuildScreenLayouts.SMALL_FIELD_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
             if (!build.getImageFileNames().isEmpty()) {
                 int galleryBoxHeight = (int) (contentWidth * (BuildScreenLayouts.GALLERY_ASPECT_RATIO_H / BuildScreenLayouts.GALLERY_ASPECT_RATIO_W));
@@ -192,7 +192,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
                 String currentImageName = build.getImageFileNames().get(currentImageIndex);
                 if (downloadingImages.contains(currentImageName)) {
-                    context.drawCenteredTextWithShadow(textRenderer, Text.literal("Loading image...").formatted(Formatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
+                    context.centeredText(font, Component.literal("Loading image...").withStyle(ChatFormatting.YELLOW), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
                 } else {
                     ImageData data = getImageDataForCurrentImage();
                     if (data != null && data.textureId != null) {
@@ -214,29 +214,29 @@ public class ViewBuildScreen extends ScrollableScreen {
                         int renderX = contentX + 2 + (boxWidth - renderWidth) / 2;
                         int renderY = yPos + 2 + (boxHeight - renderHeight) / 2;
 
-                        context.drawTexture(RenderPipelines.GUI_TEXTURED, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
+                        context.blit(RenderPipelines.GUI_TEXTURED, data.textureId, renderX, renderY, 0, 0, renderWidth, renderHeight, renderWidth, renderHeight);
                     } else {
-                        context.drawCenteredTextWithShadow(textRenderer, Text.literal("Error or missing image").formatted(Formatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
+                        context.centeredText(font, Component.literal("Error or missing image").withStyle(ChatFormatting.RED), this.width / 2, yPos + galleryBoxHeight / 2 - 4, Colors.TEXT_PRIMARY);
                     }
                 }
                 String counter = (currentImageIndex + 1) + " / " + build.getImageFileNames().size();
-                int counterWidth = textRenderer.getWidth(counter);
-                context.drawText(this.textRenderer, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, Colors.TEXT_PRIMARY, false);
+                int counterWidth = font.width(counter);
+                context.text(this.font, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, Colors.TEXT_PRIMARY, false);
 
                 yPos += galleryBoxHeight + BuildScreenLayouts.PANEL_SPACING;
             }
 
             // --- DYNAMIC CONTENT ---
-            context.drawText(this.textRenderer, Text.literal("Description:").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+            context.text(this.font, Component.literal("Description:").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
             UIHelper.drawPanel(context, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT);
             yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + BuildScreenLayouts.LABEL_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
 
-            context.drawText(this.textRenderer, Text.literal("Credits:").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+            context.text(this.font, Component.literal("Credits:").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
             UIHelper.drawPanel(context, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT);
             yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + BuildScreenLayouts.LABEL_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
 
             for (CustomField field : build.getCustomFields()) {
-                context.drawText(this.textRenderer, Text.literal(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+                context.text(this.font, Component.literal(field.getTitle() + ":").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
                 UIHelper.drawPanel(context, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT);
                 yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + BuildScreenLayouts.LABEL_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
             }
@@ -279,10 +279,10 @@ public class ViewBuildScreen extends ScrollableScreen {
                 try (InputStream stream = Files.newInputStream(imagePath)) {
                     NativeImage image = NativeImage.read(stream);
 
-                    Identifier textureId = Identifier.of(Buildnotes.MOD_ID, "buildnotes_image_" + build.getId() + "_" + fileName.hashCode());
-                    NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> textureId.toString(), image);
+                    Identifier textureId = Identifier.fromNamespaceAndPath(Buildnotes.MOD_ID, "buildnotes_image_" + build.getId() + "_" + fileName.hashCode());
+                    DynamicTexture texture = new DynamicTexture(textureId::toString, image);
 
-                    this.client.getTextureManager().registerTexture(textureId, texture);
+                    this.minecraft.getTextureManager().register(textureId, texture);
 
                     ImageData data = new ImageData(textureId, image.getWidth(), image.getHeight());
                     textureCache.put(fileName, data);
@@ -290,14 +290,14 @@ public class ViewBuildScreen extends ScrollableScreen {
                 }
             } else {
                 // --- Only request images for SERVER-scoped builds when on a dedicated server ---
-                boolean isDedicatedServer = this.client != null && !this.client.isIntegratedServerRunning();
+                boolean isDedicatedServer = !this.minecraft.isSingleplayer();
                 if (build.getScope() == Scope.SERVER && isDedicatedServer) {
                     // Image does NOT exist, request it from the server
                     if (!downloadingImages.contains(fileName)) {
                         downloadingImages.add(fileName);
                         ClientImageTransferManager.requestImage(build.getId(), fileName, () -> {
                             // This is the CALLBACK! It runs when the download is finished (success or fail).
-                            this.client.execute(() -> downloadingImages.remove(fileName));
+                            this.minecraft.execute(() -> downloadingImages.remove(fileName));
                         });
                     }
                 }
@@ -312,19 +312,19 @@ public class ViewBuildScreen extends ScrollableScreen {
     private void confirmDelete() {
         Runnable onConfirm = () -> {
             DataManager.getInstance().deleteBuild(this.build);
-            this.close();
+            this.onClose();
         };
-        this.showConfirm(Text.literal("Delete build \"" + build.getName() + "\"?"), onConfirm);
+        this.showConfirm(Component.literal("Delete build \"" + build.getName() + "\"?"), onConfirm);
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         textureCache.values().forEach(data -> {
             if (data != null && data.textureId != null) {
-                client.getTextureManager().destroyTexture(data.textureId);
+                minecraft.getTextureManager().release(data.textureId);
             }
         });
-        super.close();
+        super.onClose();
     }
 
 }
