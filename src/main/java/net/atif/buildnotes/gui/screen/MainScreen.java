@@ -23,10 +23,12 @@ public class MainScreen extends BaseScreen {
 
     private TabButtonWidget notesTab;
     private TabButtonWidget buildsTab;
-    private DarkButtonWidget editButton;
-    private DarkButtonWidget deleteButton;
+
     private DarkButtonWidget addButton;
     private DarkButtonWidget openButton;
+    private DarkButtonWidget editButton;
+    private DarkButtonWidget pinButton;
+    private DarkButtonWidget deleteButton;
     private DarkButtonWidget closeButton;
 
     private NoteListWidget noteListWidget;
@@ -79,8 +81,9 @@ public class MainScreen extends BaseScreen {
         this.addSelectableChild(searchField);
 
         // Action buttons
-        UIHelper.createButtonRow(this, buttonsY, 5, x -> {
-            int index = (x - UIHelper.getCenteredButtonStartX(this.width, 5)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
+        int button_count = 6;
+        UIHelper.createButtonRow(this, buttonsY, button_count, x -> {
+            int index = (x - UIHelper.getCenteredButtonStartX(this.width, button_count)) / (UIHelper.BUTTON_WIDTH + UIHelper.BUTTON_SPACING);
             switch (index) {
                 case 0 -> this.addButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
                         Text.translatable("gui.buildnotes.add_button"), b -> addEntry()));
@@ -88,9 +91,11 @@ public class MainScreen extends BaseScreen {
                         Text.translatable("gui.buildnotes.open_button"), b -> openSelected()));
                 case 2 -> this.editButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
                         Text.translatable("gui.buildnotes.edit_button"), b -> editSelected()));
-                case 3 -> this.deleteButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                case 3 -> this.pinButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                        Text.translatable("gui.buildnotes.pin_button"), b -> pinSelected()));
+                case 4 -> this.deleteButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
                         Text.translatable("gui.buildnotes.delete_button"), b -> confirmDelete()));
-                case 4 -> this.closeButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
+                case 5 -> this.closeButton = this.addDrawableChild(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
                         Text.translatable("gui.buildnotes.close_button"), b -> this.client.setScreen(null)));
             }
         });
@@ -149,8 +154,6 @@ public class MainScreen extends BaseScreen {
         buildListWidget.setSelected(null);
 
         refreshListContents();
-
-        updateActionButtons();
     }
 
     public void onNoteSelected() { updateActionButtons(); }
@@ -163,24 +166,38 @@ public class MainScreen extends BaseScreen {
         if (currentTab == TabType.NOTES) {
             NoteListWidget.NoteEntry selectedEntry = this.noteListWidget.getSelectedOrNull();
             hasSelection = selectedEntry != null;
-            if (hasSelection && selectedEntry.getNote().getScope() == Scope.SERVER) {
-                // For server-scoped notes, check edit permission
-                canEdit = ClientSession.hasEditPermission();
+            if (hasSelection) {
+                if (selectedEntry.getNote().getScope() == Scope.SERVER) canEdit = ClientSession.hasEditPermission();
+                // Update Pin button text
+                boolean isPinned = selectedEntry.getNote().getId().equals(DataManager.getInstance().getPinnedNoteId());
+                this.pinButton.setMessage(Text.translatable(isPinned ? "gui.buildnotes.unpin_button" : "gui.buildnotes.pin_button"));
             }
         } else { // BUILDS tab
             BuildListWidget.BuildEntry selectedEntry = this.buildListWidget.getSelectedOrNull();
             hasSelection = selectedEntry != null;
-            if (hasSelection && selectedEntry.getBuild().getScope() == Scope.SERVER) {
-                // For server-scoped builds, check edit permission
-                canEdit = ClientSession.hasEditPermission();
+            if (hasSelection) {
+                if (selectedEntry.getBuild().getScope() == Scope.SERVER) canEdit = ClientSession.hasEditPermission();
+
+                boolean isPinned = selectedEntry.getBuild().getId().equals(DataManager.getInstance().getPinnedBuildId());
+                this.pinButton.setMessage(Text.translatable(isPinned ? "gui.buildnotes.unpin_button" : "gui.buildnotes.pin_button"));
             }
         }
 
-        // The open button is active as long as there is a selection.
         this.openButton.active = hasSelection;
-        // Edit and delete buttons require a selection AND edit permissions for server-scoped items.
+        this.pinButton.active = hasSelection;
+
         this.editButton.active = hasSelection && canEdit;
         this.deleteButton.active = hasSelection && canEdit;
+    }
+
+    private void addEntry() {
+        if (currentTab == TabType.NOTES) {
+            Note newNote = new Note("New Note", ""); // Create a new, empty note
+            open(new EditNoteScreen(this, newNote));
+        } else {
+            Build newBuild = new Build("New Build", "", "", "", ""); // Create a new, empty build
+            open(new EditBuildScreen(this, newBuild)); // Open the edit screen immediately
+        }
     }
 
     public void openSelected() {
@@ -211,6 +228,22 @@ public class MainScreen extends BaseScreen {
         }
     }
 
+    private void pinSelected() {
+        if (currentTab == TabType.NOTES) {
+            NoteListWidget.NoteEntry sel = noteListWidget.getSelectedOrNull();
+            if (sel != null) {
+                DataManager.getInstance().togglePinNote(sel.getNote().getId());
+                refreshData(); // Re-sorts the list and refreshes UI
+            }
+        } else {
+            BuildListWidget.BuildEntry sel = buildListWidget.getSelectedOrNull();
+            if (sel != null) {
+                DataManager.getInstance().togglePinBuild(sel.getBuild().getId());
+                refreshData();
+            }
+        }
+    }
+
     private void confirmDelete() {
         DataManager dm = DataManager.getInstance();
         if (currentTab == TabType.NOTES) {
@@ -227,16 +260,6 @@ public class MainScreen extends BaseScreen {
                     dm.deleteBuild(sel);
                     open(this);
                 });
-        }
-    }
-
-    private void addEntry() {
-        if (currentTab == TabType.NOTES) {
-            Note newNote = new Note("New Note", ""); // Create a new, empty note
-            open(new EditNoteScreen(this, newNote));
-        } else {
-            Build newBuild = new Build("New Build", "", "", "", ""); // Create a new, empty build
-            open(new EditBuildScreen(this, newBuild)); // Open the edit screen immediately
         }
     }
 
