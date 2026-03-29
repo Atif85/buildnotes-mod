@@ -1,13 +1,15 @@
 {
-  "key.buildnotes.opengui": "打开建筑笔记",
-  "category.buildnotes.main": "建筑笔记",
+  "key.buildnotes.opengui": "打开构建说明",
+  "category.buildnotes.main": "构建说明",
 
-  "gui.buildnotes.main_title": "建筑笔记",
+  "gui.buildnotes.main_title": "构建说明",
   "gui.buildnotes.notes_tab": "笔记",
   "gui.buildnotes.builds_tab": "建筑",
 
   "gui.buildnotes.add_button": "添加",
   "gui.buildnotes.edit_button": "编辑",
+  "gui.buildnotes.pin_button": "置顶",
+  "gui.buildnotes.unpin_button": "取消置顶",
   "gui.buildnotes.delete_button": "删除",
   "gui.buildnotes.open_button": "打开",
   "gui.buildnotes.close_button": "关闭",
