@@ -108,7 +108,7 @@ public class ClientImageTransferManager {
             return;
         }
 
-        ImageAssembler assembler = IN_PROGRESS_DOWNLOADS.computeIfAbsent(key, k -> new ImageAssembler(totalChunks));
+        ImageAssembler assembler = IN_PROGRESS_DOWNLOADS.computeIfAbsent(key, _ -> new ImageAssembler(totalChunks));
 
         if (assembler.addChunk(chunkIndex, data)) {
             byte[] fullImageData = assembler.reassemble();

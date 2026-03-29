@@ -128,7 +128,7 @@ public class EditNoteScreen extends BaseScreen {
         } else if (currentScope == Scope.SERVER) {
             scopeName = Component.translatable("gui.buildnotes.edit.scope.server");
         } else {
-            scopeName = this.minecraft.isSingleplayer()
+            scopeName = this.minecraft.isLocalServer()
                     ? Component.translatable("gui.buildnotes.edit.scope.world")
                     : Component.translatable("gui.buildnotes.edit.scope.per_server");
         }

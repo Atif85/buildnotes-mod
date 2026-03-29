@@ -82,7 +82,7 @@ public class EditBuildScreen extends ScrollableScreen {
         UIHelper.createButtonRow(this, bottomRowY, bottomTexts, (index, x, width) -> {
             if (index == 0) {
                 this.addRenderableWidget(new DarkButtonWidget(x, bottomRowY, width, UIHelper.BUTTON_HEIGHT,
-                    bottomTexts.get(0), button -> {
+                    bottomTexts.getFirst(), _ -> {
                         saveBuild();
                         open(new ViewBuildScreen(this.parent, this.build));
                     })
@@ -104,11 +104,11 @@ public class EditBuildScreen extends ScrollableScreen {
         );
         UIHelper.createButtonRow(this, topRowY, topTexts, (index, x, width) -> {
             switch (index) {
-                case 0 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(0), b -> insertCoords()));
-                case 1 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(1), b -> insertDimension()));
-                case 2 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(2), b -> insertBiome()));
-                case 3 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(3), b -> openImageSelectionDialog()));
-                case 4 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(4), b -> {
+                case 0 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(0), _ -> insertCoords()));
+                case 1 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(1), _ -> insertDimension()));
+                case 2 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(2), _ -> insertBiome()));
+                case 3 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(3), _ -> openImageSelectionDialog()));
+                case 4 -> this.addRenderableWidget(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(4), _ -> {
                     saveBuild();
                     this.open(new RequestFieldTitleScreen(this, this::addCustomField));
                 }));
@@ -341,7 +341,7 @@ public class EditBuildScreen extends ScrollableScreen {
             }
             else {
                 // --- Only request images for SERVER-scoped builds when on a dedicated server ---
-                boolean isDedicatedServer = !this.minecraft.isSingleplayer();
+                boolean isDedicatedServer = !this.minecraft.isLocalServer();
                 if (build.getScope() == Scope.SERVER && isDedicatedServer) {
                     // Image does NOT exist, request it from the server
                     if (!downloadingImages.contains(fileName)) {
@@ -494,7 +494,7 @@ public class EditBuildScreen extends ScrollableScreen {
         } else if (currentScope == Scope.SERVER) {
             scopeName = Component.translatable("gui.buildnotes.edit.scope.server");
         } else {
-            scopeName = this.minecraft.isSingleplayer()
+            scopeName = this.minecraft.isLocalServer()
                     ? Component.translatable("gui.buildnotes.edit.scope.world")
                     : Component.translatable("gui.buildnotes.edit.scope.per_server");
         }
@@ -538,7 +538,7 @@ public class EditBuildScreen extends ScrollableScreen {
             int buttonsY = panelY + panelH - UIHelper.BUTTON_HEIGHT - UIHelper.OUTER_PADDING;
             UIHelper.createButtonRow(this, buttonsY, buttonTexts, (index, x, width) -> {
                 if (index == 0) {
-                    this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.get(0), button -> {
+                    this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, width, 20, buttonTexts.getFirst(), button -> {
                         this.onConfirm.accept(this.titleField.getValue());
                         this.open(this.parent);
                     }));

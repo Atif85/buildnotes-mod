@@ -338,7 +338,7 @@ public class MultiLineTextFieldWidget implements Renderable, GuiEventListener, N
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         if (this.focused) {
-            Screen currentScreen = Minecraft.getInstance().screen;
+            Screen currentScreen = Minecraft.getInstance().gui.screen();
             if (currentScreen != null && currentScreen.getFocused() != this) {
                 this.focused = false;
             }
@@ -686,7 +686,7 @@ public class MultiLineTextFieldWidget implements Renderable, GuiEventListener, N
         }
         if (event.isPaste()) {
             String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
-            if (clip != null && !clip.isEmpty()) insertText(clip);
+            if (!clip.isEmpty()) insertText(clip);
             return true;
         }
         if (event.isCut()) {
@@ -1015,9 +1015,9 @@ public class MultiLineTextFieldWidget implements Renderable, GuiEventListener, N
                 lines.add(insertAt, parts[parts.length - 1] + afterCursor);
                 setCursor(parts[parts.length - 1].length(), insertAt);
             } else {
-                String last = lines.get(lines.size() - 1);
+                String last = lines.getLast();
                 lines.set(lines.size() - 1, last + afterCursor);
-                setCursor(lines.get(lines.size() - 1).length(), lines.size() - 1);
+                setCursor(lines.getLast().length(), lines.size() - 1);
             }
         }
         ensureCursorVisible();
