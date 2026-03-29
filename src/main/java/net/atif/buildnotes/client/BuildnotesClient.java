@@ -1,13 +1,11 @@
 package net.atif.buildnotes.client;
 
-import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.data.ColorConfig;
-import net.atif.buildnotes.data.PermissionLevel;
-import net.atif.buildnotes.gui.helper.Colors;
+import net.atif.buildnotes.data.ConfigManager;
+import net.atif.buildnotes.gui.hud.PinnedNoteHud;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.network.ClientPacketHandler;
-import net.atif.buildnotes.network.ModPackets;
 import net.atif.buildnotes.network.packet.s2c.*;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -16,23 +14,33 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Identifier;
 
 @Environment(EnvType.CLIENT)
 public class BuildnotesClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ColorConfig.loadColors();
+        ConfigManager.load();
         KeyBinds.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (KeyBinds.openGuiKey.wasPressed()) {
                 if (client.currentScreen == null) {
-                    Colors.reload();
+                    ColorConfig.loadColors();
+                    ConfigManager.load();
                     client.setScreen(new MainScreen(TabType.NOTES));
                 }
             }
         });
+
+        // Add the pinned note HUD to render after all vanilla elements are drawn
+        HudElementRegistry.addLast(
+                Identifier.of("buildnotes", "pinned_hud"),
+                PinnedNoteHud::render
+        );
 
         // Register all S2C packet
         ClientPlayNetworking.registerGlobalReceiver(HandshakeS2CPacket.ID,
@@ -97,14 +105,6 @@ public class BuildnotesClient implements ClientModInitializer {
                     client.execute(() -> ClientPacketHandler.handleImageNotFound(client, packet));
                 }
         );
-
-//        // Register disconnect event to clear server-side cache
-//        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
-//            ClientSession.leaveServer();
-//            ClientCache.clear();
-//
-//            ClientImageTransferManager.clearFailedDownloads();
-//        }));
 
         // Register disconnect event to clear server-side cache
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
