@@ -30,22 +30,94 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DataManager {
+    public static class PinnedState {
+        public UUID pinnedNoteId = null;
+        public UUID pinnedBuildId = null;
+    }
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
     private static final String NOTES_FILE_NAME = "notes.json";
     private static final String BUILDS_FILE_NAME = "builds.json";
     private static final String MOD_DATA_SUBFOLDER = "buildnotes";
     private static final String PER_SERVER_SUBFOLDER = "servers";
+    private static final String PINNED_FILE_NAME = "pinned.json";
+
+    private PinnedState pinnedState = new PinnedState();
+    private Note cachedPinnedNote = null;
+    private boolean needsPinnedRefresh = true;
 
     private static DataManager instance;
 
-    private DataManager() {}
+    private DataManager() {
+        loadPinnedState();
+    }
 
     public static DataManager getInstance() {
         if (instance == null) {
             instance = new DataManager();
         }
         return instance;
+    }
+
+    // Pinned state logic
+    public void markPinnedDirty() {
+        this.needsPinnedRefresh = true;
+    }
+
+    private void loadPinnedState() {
+        File file = getGlobalPath().resolve(PINNED_FILE_NAME).toFile();
+        if (file.exists()) {
+            try (FileReader reader = new FileReader(file)) {
+                PinnedState loaded = GSON.fromJson(reader, PinnedState.class);
+                if (loaded != null) this.pinnedState = loaded;
+            } catch (Exception e) { Buildnotes.LOGGER.warn("Could not load pinned state", e); }
+        }
+    }
+
+    private void savePinnedState() {
+        try {
+            Files.createDirectories(getGlobalPath());
+            try (FileWriter writer = new FileWriter(getGlobalPath().resolve(PINNED_FILE_NAME).toFile())) {
+                GSON.toJson(pinnedState, writer);
+            }
+        } catch (Exception e) { Buildnotes.LOGGER.error("Could not save pinned state", e); }
+    }
+
+    public Note getPinnedNote() {
+        if (needsPinnedRefresh) {
+            UUID id = getPinnedNoteId();
+            if (id == null) {
+                cachedPinnedNote = null;
+            } else {
+                // Only do the expensive file reading/searching when data has changed
+                cachedPinnedNote = getNotes().stream()
+                        .filter(n -> n.getId().equals(id))
+                        .findFirst().orElse(null);
+            }
+            needsPinnedRefresh = false;
+        }
+        return cachedPinnedNote;
+    }
+
+    public UUID getPinnedNoteId() { return pinnedState.pinnedNoteId; }
+    public UUID getPinnedBuildId() { return pinnedState.pinnedBuildId; }
+
+    // Toggle a pin on and off
+    public void togglePinNote(UUID id) {
+        if (id.equals(pinnedState.pinnedNoteId)) {
+            pinnedState.pinnedNoteId = null;
+        } else {
+            pinnedState.pinnedNoteId = id;
+        }
+        savePinnedState();
+        markPinnedDirty();
+    }
+
+    public void togglePinBuild(UUID id) {
+        if (id.equals(pinnedState.pinnedBuildId)) pinnedState.pinnedBuildId = null;
+        else pinnedState.pinnedBuildId = id;
+        savePinnedState();
     }
 
     // --- Path Helper Methods ---
@@ -141,7 +213,13 @@ public class DataManager {
         List<Note> localNotes = loadFromFile(getLocalPath(), NOTES_FILE_NAME, new TypeToken<ArrayList<Note>>() {}.getType());
         List<Note> serverNotes = ClientCache.getNotes();
         return Stream.of(globalNotes, localNotes, serverNotes).flatMap(List::stream)
-                .sorted(Comparator.comparingLong(Note::getLastModified).reversed()).collect(Collectors.toList());
+                .sorted((n1, n2) -> {
+                    boolean isN1Pinned = n1.getId().equals(pinnedState.pinnedNoteId);
+                    boolean isN2Pinned = n2.getId().equals(pinnedState.pinnedNoteId);
+                    if (isN1Pinned && !isN2Pinned) return -1;
+                    if (!isN1Pinned && isN2Pinned) return 1;
+                    return Long.compare(n2.getLastModified(), n1.getLastModified()); // Fallback to newest
+                }).collect(Collectors.toList());
     }
 
     public void saveNote(Note noteToSave) {
@@ -150,6 +228,8 @@ public class DataManager {
 
             // Use the typed packet
             ClientPlayNetworking.send(new SaveNoteC2SPacket(noteToSave));
+
+            if (noteToSave.getId().equals(getPinnedNoteId())) markPinnedDirty();
             return;
         }
 
@@ -171,9 +251,18 @@ public class DataManager {
         List<Note> notes = loadFromFile(path, NOTES_FILE_NAME, type);
         notes.add(noteToSave);
         writeToFile(notes, path, NOTES_FILE_NAME);
+
+        if (noteId.equals(getPinnedNoteId())) markPinnedDirty();
     }
 
     public void deleteNote(Note noteToDelete) {
+        // If the note being deleted is currently pinned, remove the pin!
+        if (noteToDelete.getId().equals(getPinnedNoteId())) {
+            pinnedState.pinnedNoteId = null;
+            savePinnedState();
+            markPinnedDirty();
+        }
+
         if (noteToDelete.getScope() == Scope.SERVER) {
             // Send a C2S packet to the server
             ClientPlayNetworking.send(new DeleteNoteC2SPacket(noteToDelete.getId()));
@@ -188,7 +277,13 @@ public class DataManager {
         List<Build> localBuilds = loadFromFile(getLocalPath(), BUILDS_FILE_NAME, new TypeToken<ArrayList<Build>>() {}.getType());
         List<Build> serverBuilds = ClientCache.getBuilds();
         return Stream.of(globalBuilds, localBuilds, serverBuilds).flatMap(List::stream)
-                .sorted(Comparator.comparingLong(Build::getLastModified).reversed()).collect(Collectors.toList());
+                .sorted((b1, b2) -> {
+                    boolean isB1Pinned = b1.getId().equals(pinnedState.pinnedBuildId);
+                    boolean isB2Pinned = b2.getId().equals(pinnedState.pinnedBuildId);
+                    if (isB1Pinned && !isB2Pinned) return -1;
+                    if (!isB1Pinned && isB2Pinned) return 1;
+                    return Long.compare(b2.getLastModified(), b1.getLastModified()); // Fallback to newest
+                }).collect(Collectors.toList());
     }
 
     public void saveBuild(Build buildToSave) {
