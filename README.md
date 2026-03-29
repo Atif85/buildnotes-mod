@@ -2,7 +2,7 @@
 
 A lightweight in-game notetaking and build tracking mod for Minecraft, built for the Fabric loader. BuildNotes provides a seamless way to document your ideas, track build progress, and share information without ever leaving the game. It works in singleplayer and can be installed on a server for shared, collaborative notes.
 
-<img width="1280" height="1024" alt="main_screen_screenshot" src="https://github.com/user-attachments/assets/515a8fd0-9d3f-470d-a823-41273c9bcd24" />
+<img width="1920" height="1080" alt="main_screen_screenshot" src="https://github.com/user-attachments/assets/274c6e0f-e359-4aad-9684-3adf03635377" />
 
 ## Features
 
@@ -14,8 +14,23 @@ BuildNotes is designed to be a flexible tool for players and server administrato
 *   **Global Scope:** Notes and builds are saved to your global Minecraft config folder. This makes them accessible across all your worlds and even on servers, acting as a personal, persistent in-game notepad.
 *   **Server Scope:** When both the client and a dedicated server have the mod, notes and builds can be saved to the server itself. These are visible to all connected players who also have the mod, making it a perfect tool for community noticeboards, server tours, or collaborative project planning.
 
+#### **Pinning & On-Screen HUD**
+
+You can pin a single Note and Build to keep them sorted at the top of your lists for quick access. Additionally, the currently pinned Note is displayed on an on-screen HUD during regular gameplay. This allows you to reference block palettes, coordinates, or to-do lists without having to open the mod's menu. The HUD automatically wraps text and hides itself when F1 (hide GUI), F3 (debug screen), or any menu is open.
+
+<img width="1920" height="1080" alt="pin_screenshot" src="https://github.com/user-attachments/assets/1959567e-004b-4fad-ab3b-1c8df652deb3" />
+
+#### **Client Configuration**
+
+BuildNotes includes local configuration files found in your `config/buildnotes` folder. Using `config.json`, you can fully customize the pinned Note HUD, including:
+*   **Position:** Anchor the HUD to 9 different screen locations (e.g., `BOTTOM_RIGHT`, `TOP_LEFT`, `CENTER`).
+*   **Size:** Adjust the maximum width and height the HUD is allowed to take up on your screen.
+*   **Padding:** Adjust the distance between the HUD and the edge of your screen.
+*   *(UI colors can also be customized via the color configuration).*
+
 #### **Advanced Text Editor**
-All text fields are powered by a custom-built widget designed for a superior editing experience. It includes quality-of-life features like:
+
+All text fields are powered by a custom multiline text editor. It includes quality-of-life features like:
 *   Full undo/redo support (`Ctrl+Z` / `Ctrl+Y`).
 *   Double-click to select words and triple-click to select entire lines.
 *   Intuitive selection and navigation (e.g., `Ctrl` + Arrow Keys to move word by word).
@@ -34,11 +49,11 @@ The build tracker is more than just a simple note. It includes dedicated fields 
 When installed on a Fabric server, BuildNotes offers a complete permission system to control who can create, edit, and delete server-scoped notes.
 
 *   **Operator Access:** Server operators can edit server notes by default.
-*   **Permission Commands:** A robust command system allows OPs to grant or revoke editing permissions for specific players.
+*   **Permission Commands:** The command system allows OPs to grant or revoke editing permissions for specific players.
 *   **Allow All Mode:** A simple command toggle to allow every player on the server to edit notes, perfect for smaller, trusted communities.
 
 **Admin Commands:**
-```
+```text
 /buildnotes allow <player>
 /buildnotes disallow <player>
 /buildnotes list
@@ -47,14 +62,11 @@ When installed on a Fabric server, BuildNotes offers a complete permission syste
 
 ## Screenshots
 
-**Main Screen**
-<img width="1280" height="1024" alt="main_screen_screenshot" src="https://github.com/user-attachments/assets/1df3da2d-43d0-45df-b5e0-0afe665e7ce8" />
+**Note**
+<img width="1920" height="1080" alt="2026-03-29_20 52 30" src="https://github.com/user-attachments/assets/f50f3866-48e8-47fa-a0f3-caf71a12ae3d" />
 
-**Note Editor**
-<img width="1280" height="1024" alt="note_editor_screen_screenshot" src="https://github.com/user-attachments/assets/03031642-37ef-4fb0-aee5-58279ac3eb20" />
-
-**Build Editor**
-<img width="1280" height="1024" alt="build_editor_screen_screenshot" src="https://github.com/user-attachments/assets/a66f3033-e3f6-41c2-b0cb-657365f6a654" />
+**Build**
+<img width="1920" height="1080" alt="2026-03-29_20 50 46" src="https://github.com/user-attachments/assets/d4f8c794-66b1-4542-9fd7-982b2fdc8438" />
 
 ## Download
 
