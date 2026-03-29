@@ -8,6 +8,8 @@
 
   "gui.buildnotes.add_button": "Add a Tale",
   "gui.buildnotes.edit_button": "Mend Yer Words",
+  "gui.buildnotes.pin_button": "Nail to the Mast",
+  "gui.buildnotes.unpin_button": "Pry it Loose",
   "gui.buildnotes.delete_button": "Scuttle It",
   "gui.buildnotes.open_button": "Lay Eyes On",
   "gui.buildnotes.close_button": "Batten Down",

@@ -41,18 +41,29 @@ public class ColorConfig {
     }
 
     private static void applyColors(Map<String, String> colorMap) {
-        for (Map.Entry<String, String> entry : colorMap.entrySet()) {
-            try {
-                Field field = Colors.class.getField(entry.getKey());
-                if (Modifier.isStatic(field.getModifiers()) && field.getType() == int.class) {
-                    int colorValue = ColorParser.parse(entry.getValue());
-                    field.set(null, colorValue);
+        boolean isMissingKeys = false;
+
+        for (Field field : Colors.class.getDeclaredFields()) {
+            if (Modifier.isPublic(field.getModifiers()) && Modifier.isStatic(field.getModifiers()) && field.getType() == int.class) {
+                String fieldName = field.getName();
+
+                // If the key is in the JSON, apply it
+                if (colorMap.containsKey(fieldName)) {
+                    try {
+                        int colorValue = ColorParser.parse(colorMap.get(fieldName));
+                        field.set(null, colorValue);
+                    } catch (Exception e) {
+                        Buildnotes.LOGGER.warn("Could not apply color '{}': {}", fieldName, e.getMessage());
+                    }
+                } else {
+                    isMissingKeys = true;
                 }
-            } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
-                Buildnotes.LOGGER.warn("Could not apply color '{}' with value '{}': {}", entry.getKey(), entry.getValue(), e.getMessage());
-            } catch (Exception e) {
-                Buildnotes.LOGGER.error("An unexpected error occurred while applying color '{}'", entry.getKey(), e);
             }
+        }
+
+        // Re-save the file so the missing keys are appended to the user's old config automatically
+        if (isMissingKeys) {
+            saveDefaultColors();
         }
     }
 
