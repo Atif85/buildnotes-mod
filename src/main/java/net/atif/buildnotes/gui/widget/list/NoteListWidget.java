@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.widget.list;
 
+import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.screen.MainScreen;
@@ -72,12 +73,12 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             return this.note;
         }
 
-
         @Override
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            // Prepare Scope indicator to calculate its width
+            boolean isPinned = note.getId().equals(DataManager.getInstance().getPinnedNoteId());
+
+            // Prepare Base Texts
             Text scopeText = null;
-            int scopeWidth = 0;
             if (note.getScope() != null) {
                 switch (note.getScope()) {
                     case GLOBAL -> scopeText = Text.literal("Global").formatted(Formatting.AQUA);
@@ -85,31 +86,56 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
                     // We don't draw an indicator for WORLD scope to keep the UI clean
                 }
             }
+            Text pinText = isPinned ? Text.literal("📌 Pinned").formatted(Formatting.GOLD) : null;
 
-            if (scopeText != null) {
-                scopeWidth = client.textRenderer.getWidth(scopeText);
+            // Figure out layout positions
+            Text line1RightText = null;
+            Text line2RightText = null;
+
+            if (pinText != null) {
+                // If there is a pinned, Pinned gets Line 1, Scope gets pushed to Line 2
+                line1RightText = pinText;
+                if (scopeText != null) {
+                    line2RightText = scopeText;
+                }
+            } else {
+                // If no pinned, Scope takes Line 1
+                if (scopeText != null) {
+                    line1RightText = scopeText;
+                }
             }
 
-            // Truncate and draw the Title
-            // Calculate available width for the title by subtracting space for the scope indicator and padding
-            int availableTitleWidth = entryWidth - 6; // Base padding
-            if (scopeText != null) {
-                availableTitleWidth -= (scopeWidth + 7); // Account for the scope text and its padding
-            }
+            // Calculate widths for truncating
+            int line1RightWidth = line1RightText != null ? client.textRenderer.getWidth(line1RightText) : 0;
+            int line2RightWidth = line2RightText != null ? client.textRenderer.getWidth(line2RightText) : 0;
 
+            // Truncate and draw the Title (Line 1)
+            int availableTitleWidth = entryWidth - 8; // Base padding
+            if (line1RightText != null) {
+                availableTitleWidth -= (line1RightWidth + 7); // Account for Line 1 text and padding
+            }
             String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
-            context.drawText(client.textRenderer, truncatedTitle, x + 2, y + 2, Colors.TEXT_PRIMARY, false);
+            context.drawText(client.textRenderer, truncatedTitle, x + 4, y + 4, Colors.TEXT_PRIMARY, false);
 
-            if (scopeText != null) {
-                context.drawText(client.textRenderer, scopeText, x + entryWidth - scopeWidth - 4, y + 2, Colors.TEXT_PRIMARY, false);
+            if (line1RightText != null) {
+                context.drawText(client.textRenderer, line1RightText, x + entryWidth - line1RightWidth - 4, y + 4, Colors.TEXT_PRIMARY, false);
             }
 
-            // Truncate and draw the Content Preview
-            Text contentPreview = Text.literal(firstLine).formatted(Formatting.GRAY);
-            String truncatedContent = client.textRenderer.trimToWidth(contentPreview.getString(), entryWidth - 6);
-            context.drawText(client.textRenderer, Text.literal(truncatedContent), x + 2, y + 12, Colors.TEXT_MUTED, false);
+            // Truncate and draw the Content Preview (Line 2)
+            int availableContentWidth = entryWidth - 8;
+            if (line2RightText != null) {
+                availableContentWidth -= (line2RightWidth + 7); // Account for Line 2 text and padding so they don't overlap
+            }
+            String truncatedContent = client.textRenderer.trimToWidth(firstLine, availableContentWidth);
+            context.drawText(client.textRenderer, Text.literal(truncatedContent).formatted(Formatting.GRAY), x + 4, y + 14, Colors.TEXT_MUTED, false);
 
-            context.drawText(client.textRenderer, "Last Modified: " + this.formattedDateTime, x + 2, y + 22, Colors.TEXT_MUTED, false);
+            if (line2RightText != null) {
+                context.drawText(client.textRenderer, line2RightText, x + entryWidth - line2RightWidth - 4, y + 14, Colors.TEXT_PRIMARY, false);
+            }
+
+            // Draw Last Modified (Line 3)
+            String fullDateText = "Last Modified: " + this.formattedDateTime;
+            context.drawText(client.textRenderer, Text.literal(fullDateText).formatted(Formatting.GRAY), x + 4, y + 24, Colors.TEXT_MUTED, false);
         }
 
         @Override
