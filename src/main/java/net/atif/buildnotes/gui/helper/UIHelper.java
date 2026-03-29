@@ -106,6 +106,6 @@ public class UIHelper {
      * Shortcut to open a standard confirm dialog.
      */
     public static void showConfirmDialog(Screen parent, Component message, Runnable onConfirm) {
-        Minecraft.getInstance().setScreen(new ConfirmScreen(parent, message, onConfirm, () -> Minecraft.getInstance().setScreen(parent)));
+        Minecraft.getInstance().gui.setScreen(new ConfirmScreen(parent, message, onConfirm, () -> Minecraft.getInstance().gui.setScreen(parent)));
     }
 }

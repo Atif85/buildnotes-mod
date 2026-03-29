@@ -96,7 +96,7 @@ public class MainScreen extends BaseScreen {
                 case 4 -> this.deleteButton = this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
                         Component.translatable("gui.buildnotes.delete_button"), b -> confirmDelete()));
                 case 5 -> this.closeButton = this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Component.translatable("gui.buildnotes.close_button"), b -> this.minecraft.setScreen(null)));
+                        Component.translatable("gui.buildnotes.close_button"), b -> this.minecraft.gui.setScreen(null)));
             }
         });
 

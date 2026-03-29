@@ -33,7 +33,7 @@ public class PinnedNoteHud {
         Minecraft client = Minecraft.getInstance();
 
         // Hide HUD if F1 is pressed, F3 is open, or a menu is open
-        if (client.options.hideGui || client.getDebugOverlay().showDebugScreen() || client.screen != null) return;
+        if (client.gui.hud.isHidden() || client.getDebugOverlay().showDebugScreen() || client.gui.screen() != null) return;
 
         Note pinnedNote = DataManager.getInstance().getPinnedNote();
         if (pinnedNote == null) return;

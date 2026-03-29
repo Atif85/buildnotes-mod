@@ -18,12 +18,12 @@ import java.util.UUID;
 public class ClientPacketHandler {
 
     private static void refreshMainScreen(Minecraft client) {
-        if (client.screen instanceof MainScreen) {
-            ((MainScreen) client.screen).refreshData();
+        if (client.gui.screen() instanceof MainScreen) {
+            ((MainScreen) client.gui.screen()).refreshData();
         }
     }
 
-    public static void handleHandshake(Minecraft client, HandshakeS2CPacket packet) {
+    public static void handleHandshake(HandshakeS2CPacket packet) {
         final var permission = packet.permission();
         ClientSession.joinServer(permission);
         // After joining, immediately request data from the server
@@ -73,11 +73,11 @@ public class ClientPacketHandler {
         refreshMainScreen(client);
     }
 
-    public static void handleImageChunk(Minecraft client, ImageChunkS2CPacket packet) {
+    public static void handleImageChunk(ImageChunkS2CPacket packet) {
         ClientImageTransferManager.handleChunk(packet.buildId(), packet.filename(), packet.totalChunks(), packet.chunkIndex(), packet.data());
     }
 
-    public static void handleImageNotFound(Minecraft client, ImageNotFoundS2CPacket packet) {
+    public static void handleImageNotFound(ImageNotFoundS2CPacket packet) {
         ClientImageTransferManager.onDownloadFailed(packet.buildId(), packet.filename());
     }
 }

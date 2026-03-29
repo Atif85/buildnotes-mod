@@ -29,10 +29,10 @@ public class BuildnotesClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (KeyBinds.openGuiKey.consumeClick()) {
-                if (client.screen == null) {
+                if (client.gui.screen() == null) {
                     ColorConfig.loadColors();
                     ConfigManager.load();
-                    client.setScreen(new MainScreen(TabType.NOTES));
+                    client.gui.setScreen(new MainScreen(TabType.NOTES));
                 }
             }
         });
@@ -45,14 +45,14 @@ public class BuildnotesClient implements ClientModInitializer {
 
         // Register all S2C packet
         ClientPlayNetworking.registerGlobalReceiver(HandshakeS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
-                    client.execute(() -> ClientPacketHandler.handleHandshake(client, packet));
+                    client.execute(() -> ClientPacketHandler.handleHandshake(packet));
                 }
         );
 
         ClientPlayNetworking.registerGlobalReceiver(InitialSyncS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleInitialSync(client, packet));
                 }
@@ -66,49 +66,49 @@ public class BuildnotesClient implements ClientModInitializer {
         );
 
         ClientPlayNetworking.registerGlobalReceiver(UpdateNoteS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleUpdateNote(client, packet));
                 }
         );
 
         ClientPlayNetworking.registerGlobalReceiver(UpdateBuildS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleUpdateBuild(client, packet));
                 }
         );
 
         ClientPlayNetworking.registerGlobalReceiver(DeleteNoteS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleDeleteNote(client, packet));
                 }
         );
 
         ClientPlayNetworking.registerGlobalReceiver(DeleteBuildS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
                     client.execute(() -> ClientPacketHandler.handleDeleteBuild(client, packet));
                 }
         );
 
         ClientPlayNetworking.registerGlobalReceiver(ImageChunkS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
-                    client.execute(() -> ClientPacketHandler.handleImageChunk(client, packet));
+                    client.execute(() -> ClientPacketHandler.handleImageChunk(packet));
                 }
         );
 
         ClientPlayNetworking.registerGlobalReceiver(ImageNotFoundS2CPacket.TYPE,
-                (packet, context) -> {
+                (packet, _) -> {
                     Minecraft client = Minecraft.getInstance();
-                    client.execute(() -> ClientPacketHandler.handleImageNotFound(client, packet));
+                    client.execute(() -> ClientPacketHandler.handleImageNotFound(packet));
                 }
         );
 
         // Register disconnect event to clear server-side cache
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+        ClientPlayConnectionEvents.DISCONNECT.register((_, _) -> {
             ClientCache.clear();
             DataManager.getInstance().clearCachedPinnedNote();
             ClientImageTransferManager.clearFailedDownloads();

@@ -43,12 +43,12 @@ ViewNoteScreen extends BaseScreen {
                     this.addRenderableWidget(deleteButton);
                 }
                 case 1 -> {
-                    DarkButtonWidget editButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Component.translatable("gui.buildnotes.edit_button"), button -> this.minecraft.setScreen(new EditNoteScreen(this.parent, this.note)));
+                    DarkButtonWidget editButton = new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT, Component.translatable("gui.buildnotes.edit_button"), button -> this.minecraft.gui.setScreen(new EditNoteScreen(this.parent, this.note)));
                     editButton.active = canEdit;
                     this.addRenderableWidget(editButton);
                 }
                 case 2 -> this.addRenderableWidget(new DarkButtonWidget(x, buttonsY, UIHelper.BUTTON_WIDTH, UIHelper.BUTTON_HEIGHT,
-                        Component.translatable("gui.buildnotes.close_button"), button -> this.minecraft.setScreen(parent)));
+                        Component.translatable("gui.buildnotes.close_button"), button -> this.minecraft.gui.setScreen(parent)));
             }
         });
 

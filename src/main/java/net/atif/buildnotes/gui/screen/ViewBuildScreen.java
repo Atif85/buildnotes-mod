@@ -290,7 +290,7 @@ public class ViewBuildScreen extends ScrollableScreen {
                 }
             } else {
                 // --- Only request images for SERVER-scoped builds when on a dedicated server ---
-                boolean isDedicatedServer = !this.minecraft.isSingleplayer();
+                boolean isDedicatedServer = !this.minecraft.isLocalServer();
                 if (build.getScope() == Scope.SERVER && isDedicatedServer) {
                     // Image does NOT exist, request it from the server
                     if (!downloadingImages.contains(fileName)) {

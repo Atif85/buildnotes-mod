@@ -129,7 +129,7 @@ public class DataManager {
     private Path getGlobalPath() { return CONFIG_DIR.resolve(MOD_DATA_SUBFOLDER); }
     private Path getSinglePlayerWorldPath() {
         Minecraft client = Minecraft.getInstance();
-        if (client.isSingleplayer() && client.getSingleplayerServer() != null) {
+        if (client.hasSingleplayerServer()) {
             return client.getSingleplayerServer().getWorldPath(LevelResource.ROOT).resolve(MOD_DATA_SUBFOLDER);
         }
         return null;

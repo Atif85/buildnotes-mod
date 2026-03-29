@@ -27,17 +27,13 @@ public abstract class BaseScreen extends Screen {
     }
 
     /**
-     * Default close behaviour: stop repeat events and return to parent screen.
-     * Subclasses may override if they need different behaviour, but calling super.close()
+     * Default close behavior: stop repeat events and return to parent screen.
+     * Subclasses may override if they need different behavior, but calling super.close()
      * will still perform the default.
      */
     @Override
     public void onClose() {
-        if (this.minecraft != null) {
-            open(this.parent);
-        } else {
-            super.onClose();
-        }
+        open(this.parent);
     }
 
     @Override
@@ -49,7 +45,7 @@ public abstract class BaseScreen extends Screen {
      * Convenience to open another screen safely.
      */
     protected void open(Screen next) {
-        this.minecraft.setScreen(next);
+        this.minecraft.gui.setScreen(next);
     }
 
     /**
