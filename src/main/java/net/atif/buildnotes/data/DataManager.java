@@ -99,6 +99,11 @@ public class DataManager {
         return cachedPinnedNote;
     }
 
+    public void clearCachedPinnedNote() {
+        cachedPinnedNote = null;
+        needsPinnedRefresh = true;
+    }
+
     public UUID getPinnedNoteId() { return pinnedState.pinnedNoteId; }
     public UUID getPinnedBuildId() { return pinnedState.pinnedBuildId; }
 
