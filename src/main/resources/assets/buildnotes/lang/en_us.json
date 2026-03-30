@@ -7,9 +7,11 @@
   "gui.buildnotes.builds_tab": "Builds",
 
   "gui.buildnotes.add_button": "Add",
-  "gui.buildnotes.edit_button": "Edit",
-  "gui.buildnotes.delete_button": "Delete",
   "gui.buildnotes.open_button": "Open",
+  "gui.buildnotes.edit_button": "Edit",
+  "gui.buildnotes.pin_button": "Pin",
+  "gui.buildnotes.unpin_button": "Unpin",
+  "gui.buildnotes.delete_button": "Delete",
   "gui.buildnotes.save_button": "Save",
   "gui.buildnotes.close_button": "Close",
   "gui.buildnotes.cancel_button": "Cancel",

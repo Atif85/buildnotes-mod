@@ -1,6 +1,7 @@
 package net.atif.buildnotes.gui.helper;
 
 import net.atif.buildnotes.data.ColorConfig;
+import net.atif.buildnotes.data.ConfigManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -42,11 +43,10 @@ public final class Colors {
     public static int FADE_GRADIENT_TOP = 0x60000000;
     public static int FADE_GRADIENT_BOTTOM = 0x00000000;
 
-    private Colors() {}
+    public static int HUD_BACKGROUND = 0x80000000;
+    public static int HUD_CONTENT = 0xFFAAAAAA;
 
-    public static void reload() {
-        ColorConfig.loadColors();
-    }
+    private Colors() {}
 
     public static Map<String, String> getColorsAsMap() {
         Map<String, String> colorMap = new LinkedHashMap<>();

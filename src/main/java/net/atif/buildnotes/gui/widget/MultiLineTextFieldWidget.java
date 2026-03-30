@@ -373,20 +373,42 @@ public class MultiLineTextFieldWidget implements Renderable, GuiEventListener, N
 
         // Draw selection background (per-line)
         if (hasSelection() && this.focused) {
-            int selStart = selectionStart;
-            int selEnd = selectionEnd;
-            for (int i = firstVisibleLine; i <= lastVisibleLine; i++) {
-                int lineStartAbs = getAbsoluteIndex(i, 0);
-                int lineEndAbs = lineStartAbs + lines.get(i).length();
-                int interStart = Math.max(selStart, lineStartAbs);
-                int interEnd = Math.min(selEnd, lineEndAbs);
-                if (interStart < interEnd) {
-                    int startCol = interStart - lineStartAbs;
-                    int endCol = interEnd - lineStartAbs;
-                    int sx = contentX + (int) Math.round(font.width(lines.get(i).substring(0, startCol)) - scrollX);
-                    int ex = contentX + (int) Math.round(font.width(lines.get(i).substring(0, endCol)) - scrollX);
-                    int lineYPos = contentY + (i * lineHeight) - (int) scrollY;
-                    graphics.fill(sx, lineYPos, ex, lineYPos + lineHeight, Colors.SELECTION_BACKGROUND);
+            int selectionStartIndex = selectionStart;
+            int selectionEndIndex = selectionEnd;
+
+            for (int lineIndex = firstVisibleLine; lineIndex <= lastVisibleLine; lineIndex++) {
+                String currentLineText = lines.get(lineIndex);
+                int lineAbsoluteStart = getAbsoluteIndex(lineIndex, 0);
+                int lineAbsoluteEnd = lineAbsoluteStart + currentLineText.length();
+
+                // Clamp the selection to the portion that overlaps this line
+                int overlapStart = Math.max(selectionStartIndex, lineAbsoluteStart);
+                int overlapEnd = Math.min(selectionEndIndex, lineAbsoluteEnd);
+
+                int lineYTop = contentY + (lineIndex * lineHeight) - (int) scrollY;
+
+                // Only pad the top on the first selected line,
+                // so adjacent selection rects share an edge rather than overlapping
+                boolean isFirstSelectedLine = lineAbsoluteStart <= selectionStartIndex;
+                int rectTop = lineYTop - (isFirstSelectedLine ? 1 : 0);
+                int rectBottom = lineYTop + lineHeight;
+
+                if (overlapStart < overlapEnd) {
+                    // This line has selected characters, highlight the selected region
+                    int selectedColStart = overlapStart - lineAbsoluteStart;
+                    int selectedColEnd = overlapEnd - lineAbsoluteStart;
+
+                    int highlightStartX = contentX + (int) Math.round(font.width(currentLineText.substring(0, selectedColStart)) - scrollX);
+                    int highlightEndX = contentX + (int) Math.round(font.width(currentLineText.substring(0, selectedColEnd)) - scrollX);
+
+                    graphics.fill(highlightStartX, rectTop, highlightEndX, rectBottom, Colors.SELECTION_BACKGROUND);
+
+                } else if (currentLineText.isEmpty() && lineAbsoluteStart >= selectionStartIndex && lineAbsoluteStart <= selectionEndIndex) {
+                    // Empty line within selection, draw a small stub so the user knows it's selected
+                    int stubStartX = contentX - (int) Math.round(scrollX);
+                    int stubEndX = stubStartX + 3;
+
+                    graphics.fill(stubStartX, rectTop, stubEndX, rectBottom, Colors.SELECTION_BACKGROUND);
                 }
             }
         }
@@ -604,7 +626,7 @@ public class MultiLineTextFieldWidget implements Renderable, GuiEventListener, N
         int padding = 5;
         int contentX = this.x + padding;
         int clickedLine = (int) ((mouseY - (this.y + padding) + scrollY) / font.lineHeight);
-        clickedLine = Math.max(0, Math.min(clickedLine, this.lines.size() - 1));
+        clickedLine = Math.clamp(clickedLine, 0, this.lines.size() - 1);
         int relX = (int) Math.round(mouseX - (contentX) + scrollX);
         if (relX < 0) relX = 0;
         String line = this.lines.get(clickedLine);

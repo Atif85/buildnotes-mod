@@ -1,7 +1,8 @@
 package net.atif.buildnotes.client;
 
 import net.atif.buildnotes.data.ColorConfig;
-import net.atif.buildnotes.gui.helper.Colors;
+import net.atif.buildnotes.data.ConfigManager;
+import net.atif.buildnotes.gui.hud.PinnedNoteHud;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.atif.buildnotes.data.TabType;
 import net.atif.buildnotes.network.ClientPacketHandler;
@@ -13,23 +14,33 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
 
 @Environment(EnvType.CLIENT)
 public class BuildnotesClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ColorConfig.loadColors();
+        ConfigManager.load();
         KeyBinds.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (KeyBinds.openGuiKey.consumeClick()) {
                 if (client.screen == null) {
-                    Colors.reload();
+                    ColorConfig.loadColors();
+                    ConfigManager.load();
                     client.setScreen(new MainScreen(TabType.NOTES));
                 }
             }
         });
+
+        // Add the pinned note HUD to render after all vanilla elements are drawn
+        HudElementRegistry.addLast(
+                Identifier.fromNamespaceAndPath("buildnotes", "pinned_hud"),
+                PinnedNoteHud::render
+        );
 
         // Register all S2C packet
         ClientPlayNetworking.registerGlobalReceiver(HandshakeS2CPacket.TYPE,
@@ -94,14 +105,6 @@ public class BuildnotesClient implements ClientModInitializer {
                     client.execute(() -> ClientPacketHandler.handleImageNotFound(client, packet));
                 }
         );
-
-//        // Register disconnect event to clear server-side cache
-//        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
-//            ClientSession.leaveServer();
-//            ClientCache.clear();
-//
-//            ClientImageTransferManager.clearFailedDownloads();
-//        }));
 
         // Register disconnect event to clear server-side cache
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
