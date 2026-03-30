@@ -4,6 +4,7 @@ import io.netty.buffer.Unpooled;
 import net.atif.buildnotes.data.ColorConfig;
 import net.atif.buildnotes.data.PermissionLevel;
 import net.atif.buildnotes.data.ConfigManager;
+import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.gui.hud.PinnedNoteHud;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.atif.buildnotes.data.TabType;
@@ -57,6 +58,7 @@ public class BuildnotesClient implements ClientModInitializer {
         // Register disconnect event to clear server-side cache
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ClientCache.clear();
+            DataManager.getInstance().clearCachedPinnedNote();
             ClientImageTransferManager.clearFailedDownloads();
             ClientSession.leaveServer();
         });
