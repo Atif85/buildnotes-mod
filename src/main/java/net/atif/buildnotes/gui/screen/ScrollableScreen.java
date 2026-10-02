@@ -27,6 +27,7 @@ public abstract class ScrollableScreen extends BaseScreen {
 
     protected abstract void initContent();
     protected abstract void renderContent(DrawContext context, int mouseX, int mouseY, float delta);
+    protected void renderForeground(DrawContext context, int mouseX, int mouseY, float delta) {}
     protected abstract int getTopMargin();
     protected abstract int getBottomMargin();
 
@@ -53,7 +54,6 @@ public abstract class ScrollableScreen extends BaseScreen {
         int bottom = this.height - getBottomMargin();
         if (bottom <= top) return;
 
-
         context.enableScissor( 0, top, this.width, bottom);
 
         Matrix3x2fStack matrices = context.getMatrices();
@@ -72,6 +72,8 @@ public abstract class ScrollableScreen extends BaseScreen {
                 drawable.render(context, mouseX, adjustedMouseY, delta);
             }
         }
+
+        this.renderForeground(context, mouseX, adjustedMouseY, delta);
 
         matrices.popMatrix();
         context.disableScissor();
