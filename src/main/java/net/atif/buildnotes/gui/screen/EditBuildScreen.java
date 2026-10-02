@@ -582,26 +582,23 @@ public class EditBuildScreen extends ScrollableScreen {
                 }
             });
 
-
-
             this.setInitialFocus(this.titleField);
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-            //parent.render(context, -1, -1, delta);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
             int panelW = 200;
             int panelH = 100;
             int panelX = (this.width - panelW) / 2;
             int panelY = (this.height - panelH) / 2;
 
             panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
-            UIHelper.drawPanel(context, panelX, panelY, panelW, panelH);
-            super.extractRenderState(context, mouseX, mouseY, delta);
+            UIHelper.drawPanel(graphics, panelX, panelY, panelW, panelH);
+            super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-            context.centeredText(this.font, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
+            graphics.centeredText(this.font, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
 
-            this.titleField.extractRenderState(context, mouseX, mouseY, delta);
+            this.titleField.extractRenderState(graphics, mouseX, mouseY, delta);
         }
     }
 }

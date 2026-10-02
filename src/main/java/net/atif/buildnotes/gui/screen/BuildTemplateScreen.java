@@ -195,17 +195,19 @@ public class BuildTemplateScreen extends ScrollableScreen {
 
         @Override
         public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-            int panelWidth = Math.min(BuildScreenLayouts.TEMPLATE_PROMPT_WIDTH,
+            int panelH = BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT;
+            int panelW = Math.min(BuildScreenLayouts.TEMPLATE_PROMPT_WIDTH,
                     this.width - BuildScreenLayouts.TEMPLATE_PROMPT_MIN_HORIZONTAL_MARGIN * 2);
-            int panelX = (this.width - panelWidth) / 2;
-            int panelY = (this.height - BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT) / 2;
+            int panelX = (this.width - panelW) / 2;
+            int panelY = (this.height - panelH) / 2;
 
-            UIHelper.drawPanel(graphics, panelX, panelY, panelWidth, BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT);
-
+            panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
+            UIHelper.drawPanel(graphics, panelX, panelY, panelW, panelH);
             super.extractRenderState(graphics, mouseX, mouseY, delta);
 
             graphics.centeredText(this.font, this.title, this.width / 2,
                     panelY + BuildScreenLayouts.TEMPLATE_PROMPT_TITLE_Y, Colors.TEXT_PRIMARY);
+
             this.nameField.extractRenderState(graphics, mouseX, mouseY, delta);
         }
     }
