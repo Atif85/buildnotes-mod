@@ -25,6 +25,7 @@
   "gui.buildnotes.edit.biome": "生物群系",
   "gui.buildnotes.edit.add_images": "添加图片",
   "gui.buildnotes.edit.add_field": "添加字段",
+  "gui.buildnotes.edit.fields_and_templates": "模板与字段",
   "gui.buildnotes.edit.remove_field": "X",
   "gui.buildnotes.edit.scope_button": "范围: %s",
   "gui.buildnotes.edit.scope.global": "全局",
@@ -51,5 +52,11 @@
   "gui.buildnotes.label.description": "描述:",
   "gui.buildnotes.label.credits": "设计者/贡献者:",
 
-  "gui.buildnotes.prompt.field_title": "输入字段标题"
+  "gui.buildnotes.prompt.field_title": "输入字段标题",
+  "gui.buildnotes.template.title": "建筑模板",
+  "gui.buildnotes.template.save_as": "另存为模板",
+  "gui.buildnotes.template.add_single": "+ 添加单个字段",
+  "gui.buildnotes.template.prompt_name": "输入模板名称：",
+  "gui.buildnotes.template.builtin_tag": "（内置）",
+  "gui.buildnotes.template.empty": "没有可用的模板。"
 }
