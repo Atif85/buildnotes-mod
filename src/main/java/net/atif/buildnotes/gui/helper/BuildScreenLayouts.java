@@ -5,7 +5,7 @@ public final class BuildScreenLayouts {
     // --- General Layout ---
     public static final double CONTENT_WIDTH_RATIO = 0.6;
     public static final int PANEL_SPACING = 5;
-    public static final int LABEL_HEIGHT = 12;
+    public static final int LABEL_HEIGHT = 16;
 
     // --- Field Heights ---
     public static final int NAME_FIELD_HEIGHT = 25;
