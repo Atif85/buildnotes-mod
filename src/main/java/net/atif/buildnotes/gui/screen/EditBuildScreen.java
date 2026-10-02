@@ -574,8 +574,6 @@ public class EditBuildScreen extends ScrollableScreen {
                 }
             });
 
-
-
             this.setInitialFocus(this.titleField);
         }
 
