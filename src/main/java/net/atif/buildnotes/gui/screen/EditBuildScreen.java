@@ -155,7 +155,7 @@ public class EditBuildScreen extends ScrollableScreen {
 
         // --- Name Widget ---
         this.nameField = new MultiLineTextFieldWidget(
-                this.font, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT, build.getName(),
+                this.font, contentX + 1, yPos + 5, contentWidth - 2, BuildScreenLayouts.NAME_FIELD_HEIGHT, build.getName(),
                 Component.translatable("gui.buildnotes.placeholder.build_name").getString(),
                 1, false
         );
@@ -166,13 +166,13 @@ public class EditBuildScreen extends ScrollableScreen {
         // --- Coords & Dimension Widgets ---
         int fieldWidth = (contentWidth - panelSpacing) / 2;
         this.coordsField = new MultiLineTextFieldWidget(
-                this.font, contentX + 50, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getCoordinates(),
+                this.font, contentX + 50, yPos + 2, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getCoordinates(),
                 Component.translatable("gui.buildnotes.placeholder.coords").getString(), 1, false
         );
         addScrollableWidget(this.coordsField);
         int dimensionX = contentX + fieldWidth + panelSpacing;
         this.dimensionField = new MultiLineTextFieldWidget(
-                this.font, dimensionX + 65, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getDimension(),
+                this.font, dimensionX + 65, yPos + 2, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getDimension(),
                 Component.translatable("gui.buildnotes.placeholder.dimension").getString(), 1, false
         );
         addScrollableWidget(this.dimensionField);
@@ -231,7 +231,6 @@ public class EditBuildScreen extends ScrollableScreen {
         UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT);
         yPos += BuildScreenLayouts.NAME_FIELD_HEIGHT + panelSpacing;
 
-
         int fieldWidth = (contentWidth - panelSpacing) / 2;
         UIHelper.drawPanel(context, contentX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
         context.text(this.font, Component.translatable("gui.buildnotes.label.coords").withStyle(ChatFormatting.GRAY), contentX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
@@ -273,16 +272,24 @@ public class EditBuildScreen extends ScrollableScreen {
             yPos += galleryBoxHeight + panelSpacing;
         }
 
-        context.text(this.font, Component.translatable("gui.buildnotes.label.description").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+        int labelOffset = 4;
+        int labelX = contentX + 1;
+
+        context.text(this.font, Component.translatable("gui.buildnotes.label.description").withStyle(ChatFormatting.GRAY),
+                labelX, yPos + labelOffset, Colors.TEXT_PRIMARY, false);
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT);
         yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + panelSpacing;
-        context.text(this.font, Component.translatable("gui.buildnotes.label.credits").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+
+        context.text(this.font, Component.translatable("gui.buildnotes.label.credits").withStyle(ChatFormatting.GRAY),
+                labelX, yPos + labelOffset, Colors.TEXT_PRIMARY, false);
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT);
         yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + panelSpacing;
+
         for (CustomField field : this.build.getCustomFields()) {
-            context.text(this.font, Component.translatable(field.getTitle() + ":").withStyle(ChatFormatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
+            context.text(this.font, Component.translatable(field.getTitle() + ":").withStyle(ChatFormatting.GRAY),
+                    labelX, yPos + labelOffset, Colors.TEXT_PRIMARY, false);
             yPos += BuildScreenLayouts.LABEL_HEIGHT;
             UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT);
             yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + panelSpacing;
