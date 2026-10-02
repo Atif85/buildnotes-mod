@@ -425,13 +425,12 @@ public class MultiLineTextFieldWidget implements Drawable, Element, Selectable {
         // Caret drawing (vertical bar) - make it a bit wider and taller for visibility
         if (this.caretEnabled && this.focused && caretVisible) {
             int paddingTop = 1;
-            int paddingBottom = 1;
             if (cursorY >= firstVisibleLine && cursorY <= lastVisibleLine) {
                 String line = this.lines.get(this.cursorY);
                 int caretPixelX = contentX + (int) Math.round(textRenderer.getWidth(line.substring(0, this.cursorX)) - scrollX);
                 int caretYPos = contentY + (cursorY * textRenderer.fontHeight) - (int) scrollY;
                 int top = caretYPos - paddingTop;
-                int bottom = caretYPos + textRenderer.fontHeight + paddingBottom;
+                int bottom = caretYPos + textRenderer.fontHeight;
                 // draw 2px wide vertical caret centered at caretPixelX
                 context.fill(caretPixelX, top, caretPixelX + 1, bottom, Colors.CARET_PRIMARY);
             }
