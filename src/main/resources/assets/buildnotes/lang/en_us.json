@@ -25,6 +25,7 @@
   "gui.buildnotes.edit.biome": "Biome",
   "gui.buildnotes.edit.add_images": "Add Images",
   "gui.buildnotes.edit.add_field": "Add Field",
+  "gui.buildnotes.edit.fields_and_templates": "Templates & Fields",
   "gui.buildnotes.edit.remove_field": "X",
   "gui.buildnotes.edit.scope_button": "Scope: %s",
   "gui.buildnotes.edit.scope.global": "Global",
@@ -51,5 +52,11 @@
   "gui.buildnotes.label.description": "Description:",
   "gui.buildnotes.label.credits": "Designer/Credits:",
 
-  "gui.buildnotes.prompt.field_title": "Enter Field Title"
+  "gui.buildnotes.prompt.field_title": "Enter Field Title",
+  "gui.buildnotes.template.title": "Build Templates",
+  "gui.buildnotes.template.save_as": "Save as Template",
+  "gui.buildnotes.template.add_single": "+ Single Field",
+  "gui.buildnotes.template.prompt_name": "Enter Template Name:",
+  "gui.buildnotes.template.builtin_tag": "Built-in",
+  "gui.buildnotes.template.empty": "No templates available."
 }
