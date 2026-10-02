@@ -30,6 +30,7 @@ public abstract class ScrollableScreen extends BaseScreen {
 
     protected abstract void initContent();
     protected abstract void renderContent(DrawContext context, int mouseX, int mouseY, float delta);
+    protected void renderForeground(DrawContext context, int mouseX, int mouseY, float delta) {}
     protected abstract int getTopMargin();
     protected abstract int getBottomMargin();
 
@@ -74,6 +75,8 @@ public abstract class ScrollableScreen extends BaseScreen {
                 drawable.render(context, mouseX, adjustedMouseY, delta);
             }
         }
+
+        this.renderForeground(context, mouseX, adjustedMouseY, delta);
 
         matrices.pop();
         ScissorStack.pop(context);
