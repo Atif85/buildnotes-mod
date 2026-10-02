@@ -1,12 +1,10 @@
 package net.atif.buildnotes.gui.widget;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 
 import net.minecraft.client.input.KeyEvent;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
 
@@ -42,7 +40,7 @@ public class ReadOnlyMultiLineTextFieldWidget extends MultiLineTextFieldWidget {
         // but performing no action.
         int keyCode = event.key();
         if (event.isPaste() || event.isCut() || event.isConfirmation() ||
-                keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE) {
+                keyCode == InputConstants.KEY_BACKSPACE || keyCode == InputConstants.KEY_DELETE) {
             return true;
         }
 

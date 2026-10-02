@@ -1,5 +1,6 @@
 package net.atif.buildnotes.gui.widget.list;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.gui.helper.Colors;
@@ -127,7 +128,7 @@ public class BuildListWidget extends AbstractListWidget<BuildListWidget.BuildEnt
 
         @Override
         public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
-            if (event.button() == 0) { // Check for left-click
+            if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) { // Check for left-click
                 BuildListWidget.this.setSelected(this);
 
                 BuildListWidget.this.handleEntryClick(this);

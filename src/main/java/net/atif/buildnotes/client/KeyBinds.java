@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 public class KeyBinds {
 
@@ -16,8 +15,8 @@ public class KeyBinds {
 
         openGuiKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.buildnotes.opengui",
-                InputConstants.Type.KEYSYM, // The type of input, KEYSYM for keyboard
-                GLFW.GLFW_KEY_N, // The default key, N in this case
+                InputConstants.Type.KEYBOARD, // The type of input, KEYSYM for keyboard
+                InputConstants.KEY_N, // The default key, N in this case
                 MOD_CATEGORY
         ));
     }

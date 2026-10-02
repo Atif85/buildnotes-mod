@@ -65,27 +65,46 @@ public class Build extends BaseEntry {
     public void writeToBuf(FriendlyByteBuf buf) {
         buf.writeUUID(this.getId());
         buf.writeLong(this.getLastModified());
-        buf.writeEnum(this.getScope());
+        buf.writeById(Scope::ordinal, this.getScope());
         buf.writeUtf(this.name);
         buf.writeUtf(this.coordinates);
         buf.writeUtf(this.dimension);
         buf.writeUtf(this.description);
         buf.writeUtf(this.credits);
-        buf.writeCollection(this.imageFileNames, FriendlyByteBuf::writeUtf);
-        buf.writeCollection(this.customFields, (b, field) -> field.writeToBuf(b));
+
+        List<String> images = this.getImageFileNames();
+        buf.writeVarInt(images.size());
+        for (String image: images) {
+            buf.writeUtf(image);
+        }
+
+        buf.writeVarInt(this.customFields.size());
+        for (CustomField field : this.customFields) {
+            field.writeToBuf(buf);
+        }
     }
 
     public static Build fromBuf(FriendlyByteBuf buf) {
         UUID id = buf.readUUID();
         long lastModified = buf.readLong();
-        Scope scope = buf.readEnum(Scope.class);
+        Scope scope = buf.readById(index -> Scope.values()[index]);
         String name = buf.readUtf();
         String coords = buf.readUtf();
         String dim = buf.readUtf();
         String desc = buf.readUtf();
         String cred = buf.readUtf();
-        List<String> images = buf.readList(FriendlyByteBuf::readUtf);
-        List<CustomField> fields = buf.readList(CustomField::fromBuf);
+
+        int imageCount = buf.readVarInt();
+        List<String> images = new ArrayList<>(imageCount);
+        for (int i = 0; i < imageCount; i++) {
+            images.add(buf.readUtf());
+        }
+
+        int fieldCount = buf.readVarInt();
+        List<CustomField> fields = new ArrayList<>(fieldCount);
+        for (int i = 0; i < fieldCount; i++) {
+            fields.add(CustomField.fromBuf(buf));
+        }
 
         return new Build(id, lastModified, scope, name, coords, dim, desc, cred, images, fields);
     }

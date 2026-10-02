@@ -31,7 +31,7 @@ public class Note extends BaseEntry {
     public void writeToBuf(FriendlyByteBuf buf) {
         buf.writeUUID(this.getId());
         buf.writeLong(this.getLastModified());
-        buf.writeEnum(this.getScope());
+        buf.writeById(Scope::ordinal, this.getScope());
         buf.writeUtf(this.title);
         buf.writeUtf(this.content);
     }
@@ -39,7 +39,7 @@ public class Note extends BaseEntry {
     public static Note fromBuf(FriendlyByteBuf buf) {
         UUID id = buf.readUUID();
         long lastModified = buf.readLong();
-        Scope scope = buf.readEnum(Scope.class);
+        Scope scope = buf.readById(index -> Scope.values()[index]);
         String title = buf.readUtf();
         String content = buf.readUtf();
 

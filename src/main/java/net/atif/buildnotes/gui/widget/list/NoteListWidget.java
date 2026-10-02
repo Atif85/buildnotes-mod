@@ -1,9 +1,9 @@
 package net.atif.buildnotes.gui.widget.list;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Note;
 import net.atif.buildnotes.gui.helper.Colors;
-import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.screen.MainScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -147,7 +147,7 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
 
         @Override
         public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
-            if (event.button() == 0) {
+            if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                 NoteListWidget.this.setSelected(this);
 
                 NoteListWidget.this.handleEntryClick(this);

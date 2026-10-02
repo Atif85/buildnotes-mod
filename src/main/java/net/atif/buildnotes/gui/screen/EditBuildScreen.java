@@ -28,7 +28,7 @@ import net.minecraft.resources.Identifier;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLVideo;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import java.io.InputStream;
@@ -436,8 +436,8 @@ public class EditBuildScreen extends ScrollableScreen {
                     processSelectedFiles(selectedFiles.split("\\|"));
                 }
                 long handle = minecraft.getWindow().handle();
-                GLFW.glfwRestoreWindow(handle);
-                GLFW.glfwFocusWindow(handle);
+                SDLVideo.SDL_RestoreWindow(handle);
+                SDLVideo.SDL_RaiseWindow(handle);
             });
         }).start();
     }
