@@ -156,7 +156,7 @@ public class EditBuildScreen extends ScrollableScreen {
 
         // --- Name Widget ---
         this.nameField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT, build.getName(),
+                this.textRenderer, contentX + 1, yPos + 5, contentWidth - 2, BuildScreenLayouts.NAME_FIELD_HEIGHT, build.getName(),
                 Text.translatable("gui.buildnotes.placeholder.build_name").getString(),
                 1, false
         );
@@ -167,13 +167,13 @@ public class EditBuildScreen extends ScrollableScreen {
         // --- Coords & Dimension Widgets ---
         int fieldWidth = (contentWidth - panelSpacing) / 2;
         this.coordsField = new MultiLineTextFieldWidget(
-                this.textRenderer, contentX + 50, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getCoordinates(),
+                this.textRenderer, contentX + 50, yPos + 2, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getCoordinates(),
                 Text.translatable("gui.buildnotes.placeholder.coords").getString(), 1, false
         );
         addScrollableWidget(this.coordsField);
         int dimensionX = contentX + fieldWidth + panelSpacing;
         this.dimensionField = new MultiLineTextFieldWidget(
-                this.textRenderer, dimensionX + 65, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getDimension(),
+                this.textRenderer, dimensionX + 65, yPos + 2, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT, build.getDimension(),
                 Text.translatable("gui.buildnotes.placeholder.dimension").getString(), 1, false
         );
         addScrollableWidget(this.dimensionField);
@@ -276,16 +276,24 @@ public class EditBuildScreen extends ScrollableScreen {
             yPos += galleryBoxHeight + panelSpacing;
         }
 
-        textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.description").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY);
+        int labelOffset = 4;
+        int labelX = contentX + 1;
+
+        textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.description").formatted(Formatting.GRAY),
+                labelX, yPos + labelOffset, Colors.TEXT_PRIMARY);
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT);
         yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + panelSpacing;
-        textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.credits").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY);
+
+        textRenderer.draw(matrices, Text.translatable("gui.buildnotes.label.credits").formatted(Formatting.GRAY),
+                labelX, yPos + labelOffset, Colors.TEXT_PRIMARY);
         yPos += BuildScreenLayouts.LABEL_HEIGHT;
         UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT);
         yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + panelSpacing;
+
         for (CustomField field : this.build.getCustomFields()) {
-            textRenderer.draw(matrices, Text.translatable(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY);
+            textRenderer.draw(matrices, Text.translatable(field.getTitle() + ":").formatted(Formatting.GRAY),
+                    labelX, yPos + labelOffset, Colors.TEXT_PRIMARY);
             yPos += BuildScreenLayouts.LABEL_HEIGHT;
             UIHelper.drawPanel(matrices, contentX, yPos, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT);
             yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + panelSpacing;
