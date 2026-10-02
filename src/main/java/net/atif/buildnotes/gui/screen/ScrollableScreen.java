@@ -1,6 +1,7 @@
 package net.atif.buildnotes.gui.screen;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.components.Renderable;
@@ -140,7 +141,7 @@ public abstract class ScrollableScreen extends BaseScreen {
             if (!scrollableWidgets.contains(child)) {
                 if (child.mouseClicked(event, doubled)) {
                     this.setFocused(child);
-                    if (button == 0) {
+                    if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                         this.setDragging(true);
                     }
                     return true;
@@ -164,7 +165,7 @@ public abstract class ScrollableScreen extends BaseScreen {
             for (GuiEventListener widget : this.scrollableWidgets) {
                 if (widget.mouseClicked(adjustedEvent, doubled)) {
                     this.setFocused(widget);
-                    if (button == 0) this.setDragging(true);
+                    if (button == InputConstants.MOUSE_BUTTON_LEFT) this.setDragging(true);
                     return true;
                 }
             }
@@ -178,7 +179,7 @@ public abstract class ScrollableScreen extends BaseScreen {
         double mouseY = event.y();
         int button = event.button();
 
-        if (this.getFocused() != null && this.isDragging() && button == 0) {
+        if (this.getFocused() != null && this.isDragging() && button == InputConstants.MOUSE_BUTTON_LEFT) {
             // Create a new Click object with adjusted coordinates for scrollable widgets
             if (this.scrollableWidgets.contains(this.getFocused())) {
                 double adjustedMouseY = mouseY - getTopMargin() + this.scrollY;
