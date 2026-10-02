@@ -120,7 +120,7 @@ public class BuildTemplateScreen extends ScrollableScreen {
             rowY += BuildScreenLayouts.TEMPLATE_ROW_HEIGHT + BuildScreenLayouts.TEMPLATE_ROW_SPACING;
         }
     }
-    
+
     private int getTemplateRowWidth() {
         return Math.min(this.width - BuildScreenLayouts.TEMPLATE_SCREEN_HORIZONTAL_MARGIN * 2,
                 BuildScreenLayouts.TEMPLATE_ROW_MAX_WIDTH);
@@ -192,17 +192,20 @@ public class BuildTemplateScreen extends ScrollableScreen {
 
         @Override
         public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            int panelWidth = Math.min(BuildScreenLayouts.TEMPLATE_PROMPT_WIDTH,
+            int panelH = BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT;
+            int panelW = Math.min(BuildScreenLayouts.TEMPLATE_PROMPT_WIDTH,
                     this.width - BuildScreenLayouts.TEMPLATE_PROMPT_MIN_HORIZONTAL_MARGIN * 2);
-            int panelX = (this.width - panelWidth) / 2;
-            int panelY = (this.height - BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT) / 2;
 
-            UIHelper.drawPanel(matrices, panelX, panelY, panelWidth, BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT);
+            int panelX = (this.width - panelW) / 2;
+            int panelY = (this.height - panelH) / 2;
 
+            panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
+            UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
             super.render(matrices, mouseX, mouseY, delta);
 
             client.textRenderer.drawWithShadow(matrices, this.title, (float) this.width / 2,
                     panelY + BuildScreenLayouts.TEMPLATE_PROMPT_TITLE_Y, Colors.TEXT_PRIMARY);
+
             this.nameField.render(matrices, mouseX, mouseY, delta);
         }
     }
