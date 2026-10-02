@@ -432,13 +432,12 @@ public class MultiLineTextFieldWidget implements Renderable, GuiEventListener, N
         // Caret drawing (vertical bar) - make it a bit wider and taller for visibility
         if (this.caretEnabled && this.focused && caretVisible) {
             int paddingTop = 1;
-            int paddingBottom = 1;
             if (cursorY >= firstVisibleLine && cursorY <= lastVisibleLine) {
                 String line = this.lines.get(this.cursorY);
                 int caretPixelX = contentX + (int) Math.round(font.width(line.substring(0, this.cursorX)) - scrollX);
                 int caretYPos = contentY + (cursorY * lineHeight) - (int) scrollY;
                 int top = caretYPos - paddingTop;
-                int bottom = caretYPos + lineHeight + paddingBottom;
+                int bottom = caretYPos + lineHeight;
                 // draw 2px wide vertical caret centered at caretPixelX
                 graphics.fill(caretPixelX, top, caretPixelX + 1, bottom, Colors.CARET_PRIMARY);
             }
