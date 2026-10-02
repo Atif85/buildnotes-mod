@@ -25,6 +25,7 @@
   "gui.buildnotes.edit.biome": "Climate",
   "gui.buildnotes.edit.add_images": "Add Portraits",
   "gui.buildnotes.edit.add_field": "Add a Detail",
+  "gui.buildnotes.edit.fields_and_templates": "Plans & Details",
   "gui.buildnotes.edit.remove_field": "X",
   "gui.buildnotes.edit.scope_button": "Reach: %s",
   "gui.buildnotes.edit.scope.global": "The Seven Seas",
@@ -51,5 +52,11 @@
   "gui.buildnotes.label.description": "The Legend:",
   "gui.buildnotes.label.credits": "Master Builder:",
 
-  "gui.buildnotes.prompt.field_title": "Name this Detail"
+  "gui.buildnotes.prompt.field_title": "Name this Detail",
+  "gui.buildnotes.template.title": "Build Plans",
+  "gui.buildnotes.template.save_as": "Bottle Yer Plan",
+  "gui.buildnotes.template.add_single": "+ Add a Lone Detail",
+  "gui.buildnotes.template.prompt_name": "Name Yer Plan, Matey:",
+  "gui.buildnotes.template.builtin_tag": "(Ship's Standard)",
+  "gui.buildnotes.template.empty": "No plans aboard, Matey."
 }

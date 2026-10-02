@@ -7,6 +7,7 @@ import net.atif.buildnotes.data.Build;
 import net.atif.buildnotes.data.CustomField;
 import net.atif.buildnotes.data.DataManager;
 import net.atif.buildnotes.data.Scope;
+import net.atif.buildnotes.data.template.BuildTemplate;
 import net.atif.buildnotes.gui.helper.BuildScreenLayouts;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
@@ -97,7 +98,7 @@ public class EditBuildScreen extends ScrollableScreen {
                 Text.translatable("gui.buildnotes.edit.dimension"),
                 Text.translatable("gui.buildnotes.edit.biome"),
                 Text.translatable("gui.buildnotes.edit.add_images"),
-                Text.translatable("gui.buildnotes.edit.add_field"),
+                Text.translatable("gui.buildnotes.edit.fields_and_templates"),
                 getScopeButtonText()
         );
         UIHelper.createButtonRow(this, topRowY, topTexts, (index, x, width) -> {
@@ -107,8 +108,8 @@ public class EditBuildScreen extends ScrollableScreen {
                 case 2 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(2), b -> insertBiome()));
                 case 3 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(3), b -> openImageSelectionDialog()));
                 case 4 -> this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(4), b -> {
-                    saveBuild();
-                    this.open(new RequestFieldTitleScreen(this, this::addCustomField));
+                    saveCurrentState();
+                    this.open(new BuildTemplateScreen(this, this.build));
                 }));
                 case 5 ->
                         this.addDrawableChild(new DarkButtonWidget(x, topRowY, width, UIHelper.BUTTON_HEIGHT, topTexts.get(5), button -> {
@@ -382,6 +383,33 @@ public class EditBuildScreen extends ScrollableScreen {
         }
         build.updateTimestamp();
         DataManager.getInstance().saveBuild(this.build);
+    }
+
+    void saveCurrentState() {
+        saveBuild();
+    }
+
+    void openSingleFieldPrompt() {
+        saveBuild();
+        EditBuildScreen returnScreen = new EditBuildScreen(this.parent, this.build);
+        this.open(new RequestFieldTitleScreen(returnScreen, title -> {
+            if (title == null || title.isBlank()) return;
+            this.build.getCustomFields().add(new CustomField(title, ""));
+            this.build.updateTimestamp();
+            DataManager.getInstance().saveBuild(this.build);
+        }));
+    }
+
+    public void applyTemplate(BuildTemplate template) {
+        // Add new fields without removing existing ones
+        for (String title : template.fieldTitles()) {
+            boolean exists = build.getCustomFields().stream()
+                    .anyMatch(field -> field.getTitle().equalsIgnoreCase(title));
+            if (!exists) {
+                build.getCustomFields().add(new CustomField(title, ""));
+            }
+        }
+        rebuild();
     }
 
 
