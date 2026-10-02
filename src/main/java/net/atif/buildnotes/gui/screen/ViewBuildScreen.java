@@ -60,7 +60,7 @@ public class ViewBuildScreen extends ScrollableScreen {
 
         // --- TITLE WIDGET ---
         ReadOnlyMultiLineTextFieldWidget titleArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, contentX, yPos + 5, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT,
+                this.textRenderer, contentX + 1, yPos + 5, contentWidth - 2, BuildScreenLayouts.NAME_FIELD_HEIGHT,
                 this.title.getString(), 1, false
         );
         addScrollableWidget(titleArea);
@@ -72,7 +72,7 @@ public class ViewBuildScreen extends ScrollableScreen {
         // Coords Widget (positioned after the label)
         int coordsTextX = contentX + 50;
         ReadOnlyMultiLineTextFieldWidget coordsArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, coordsTextX, yPos, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
+                this.textRenderer, coordsTextX, yPos + 2, fieldWidth - 50, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
                 build.getCoordinates(), 1, false
         );
         addScrollableWidget(coordsArea);
@@ -81,7 +81,7 @@ public class ViewBuildScreen extends ScrollableScreen {
         int dimensionX = contentX + fieldWidth + BuildScreenLayouts.PANEL_SPACING;
         int dimensionTextX = dimensionX + 65;
         ReadOnlyMultiLineTextFieldWidget dimensionArea = new ReadOnlyMultiLineTextFieldWidget(
-                this.textRenderer, dimensionTextX, yPos, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
+                this.textRenderer, dimensionTextX, yPos + 2, fieldWidth - 65, BuildScreenLayouts.SMALL_FIELD_HEIGHT,
                 build.getDimension(), 1, false
         );
         addScrollableWidget(dimensionArea);
@@ -169,22 +169,24 @@ public class ViewBuildScreen extends ScrollableScreen {
             int contentWidth = (int) (this.width * BuildScreenLayouts.CONTENT_WIDTH_RATIO);
             int contentX = (this.width - contentWidth) / 2;
             int yPos = getTopMargin();
+            int panelSpacing = BuildScreenLayouts.PANEL_SPACING;
 
             // --- TITLE ---
             UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.NAME_FIELD_HEIGHT);
-            yPos += BuildScreenLayouts.NAME_FIELD_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
+            yPos += BuildScreenLayouts.NAME_FIELD_HEIGHT + panelSpacing;
 
             // --- COORDS & DIMENSION ---
-            int fieldWidth = (contentWidth - BuildScreenLayouts.PANEL_SPACING) / 2;
+            int fieldWidth = (contentWidth - panelSpacing) / 2;
 
             // Backgrounds and Labels only
             UIHelper.drawPanel(context, contentX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
             context.drawText(this.textRenderer ,Text.literal("Coords: ").formatted(Formatting.GRAY), contentX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
 
-            int dimensionX = contentX + fieldWidth + BuildScreenLayouts.PANEL_SPACING;
+            int dimensionX = contentX + fieldWidth + panelSpacing;
             UIHelper.drawPanel(context, dimensionX, yPos, fieldWidth, BuildScreenLayouts.SMALL_FIELD_HEIGHT);
             context.drawText(this.textRenderer, Text.literal("Dimension: ").formatted(Formatting.GRAY), dimensionX + 4, (int)(yPos + (BuildScreenLayouts.SMALL_FIELD_HEIGHT - 8) / 2f + 1), Colors.TEXT_MUTED, false);
-            yPos += BuildScreenLayouts.SMALL_FIELD_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
+            yPos += BuildScreenLayouts.SMALL_FIELD_HEIGHT + panelSpacing;
+
             if (!build.getImageFileNames().isEmpty()) {
                 int galleryBoxHeight = (int) (contentWidth * (BuildScreenLayouts.GALLERY_ASPECT_RATIO_H / BuildScreenLayouts.GALLERY_ASPECT_RATIO_W));
                 UIHelper.drawPanel(context, contentX, yPos, contentWidth, galleryBoxHeight);
@@ -226,22 +228,31 @@ public class ViewBuildScreen extends ScrollableScreen {
                 int counterWidth = textRenderer.getWidth(counter);
                 context.drawText(this.textRenderer, counter, contentX + contentWidth - counterWidth - 5, yPos + galleryBoxHeight - 12, Colors.TEXT_PRIMARY, false);
 
-                yPos += galleryBoxHeight + BuildScreenLayouts.PANEL_SPACING;
+                yPos += galleryBoxHeight + panelSpacing;
             }
 
             // --- DYNAMIC CONTENT ---
-            context.drawText(this.textRenderer, Text.literal("Description:").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
-            UIHelper.drawPanel(context, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT);
-            yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + BuildScreenLayouts.LABEL_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
+            int labelOffset = 4;
+            int labelX = contentX + 1;
 
-            context.drawText(this.textRenderer, Text.literal("Credits:").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
-            UIHelper.drawPanel(context, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT);
-            yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + BuildScreenLayouts.LABEL_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
+            context.drawText(this.textRenderer, Text.literal("Description:").formatted(Formatting.GRAY),
+                    labelX, yPos + labelOffset, Colors.TEXT_PRIMARY, false);
+            yPos += BuildScreenLayouts.LABEL_HEIGHT;
+            UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT);
+            yPos += BuildScreenLayouts.DESCRIPTION_FIELD_HEIGHT + panelSpacing;
+
+            context.drawText(this.textRenderer, Text.literal("Credits:").formatted(Formatting.GRAY),
+                    labelX, yPos + labelOffset, Colors.TEXT_PRIMARY, false);
+            yPos += BuildScreenLayouts.LABEL_HEIGHT;
+            UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CREDITS_FIELD_HEIGHT);
+            yPos += BuildScreenLayouts.CREDITS_FIELD_HEIGHT + panelSpacing;
 
             for (CustomField field : build.getCustomFields()) {
-                context.drawText(this.textRenderer, Text.literal(field.getTitle() + ":").formatted(Formatting.GRAY), contentX, yPos, Colors.TEXT_PRIMARY, false);
-                UIHelper.drawPanel(context, contentX, yPos + BuildScreenLayouts.LABEL_HEIGHT, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT);
-                yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + BuildScreenLayouts.LABEL_HEIGHT + BuildScreenLayouts.PANEL_SPACING;
+                context.drawText(this.textRenderer, Text.literal(field.getTitle() + ":").formatted(Formatting.GRAY),
+                        labelX, yPos + labelOffset, Colors.TEXT_PRIMARY, false);
+                yPos += BuildScreenLayouts.LABEL_HEIGHT;
+                UIHelper.drawPanel(context, contentX, yPos, contentWidth, BuildScreenLayouts.CUSTOM_FIELD_HEIGHT);
+                yPos += BuildScreenLayouts.CUSTOM_FIELD_HEIGHT + panelSpacing;
             }
         }
 
