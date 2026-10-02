@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import net.atif.buildnotes.Buildnotes;
 import net.atif.buildnotes.client.ClientCache;
 import net.atif.buildnotes.client.ClientImageTransferManager;
+import net.atif.buildnotes.data.template.BuildTemplate;
 import net.atif.buildnotes.network.packet.c2s.DeleteBuildC2SPacket;
 import net.atif.buildnotes.network.packet.c2s.DeleteNoteC2SPacket;
 import net.atif.buildnotes.network.packet.c2s.SaveBuildC2SPacket;
@@ -37,11 +38,21 @@ public class DataManager {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
-    private static final String NOTES_FILE_NAME = "notes.json";
-    private static final String BUILDS_FILE_NAME = "builds.json";
+
     private static final String MOD_DATA_SUBFOLDER = "buildnotes";
     private static final String PER_SERVER_SUBFOLDER = "servers";
+
+    private static final String NOTES_FILE_NAME = "notes.json";
+    private static final String BUILDS_FILE_NAME = "builds.json";
     private static final String PINNED_FILE_NAME = "pinned.json";
+    private static final String TEMPLATES_FILE_NAME = "templates.json";
+
+    private static final List<BuildTemplate> BUILT_IN_TEMPLATES = List.of(
+            new BuildTemplate("farm_contraption", "Farm & Contraption",
+                    List.of("Rates / Output", "Required Materials", "Status"), true),
+            new BuildTemplate("mega_base_project", "Mega Base / Project",
+                    List.of("Palette / Theme", "Project Stage", "Missing Resources"), true)
+    );
 
     private PinnedState pinnedState = new PinnedState();
     private Note cachedPinnedNote = null;
@@ -351,6 +362,59 @@ public class DataManager {
             }
         } catch (IOException e) {
             Buildnotes.LOGGER.error("Failed to delete image directory for build: {}", buildToDelete.getId(), e);
+        }
+    }
+
+    public List<BuildTemplate> getAllTemplates() {
+        List<BuildTemplate> templates = new ArrayList<>(BUILT_IN_TEMPLATES);
+
+        // Load custom templates from file
+        List<BuildTemplate> customTemplates = this.loadFromFile(getGlobalPath(), TEMPLATES_FILE_NAME,
+                new TypeToken<ArrayList<BuildTemplate>>() {}.getType());
+
+        customTemplates
+                .stream()
+                .filter(template -> template != null && !template.isBuiltIn())
+                .forEach(templates::add);
+        return templates;
+    }
+
+    public void saveCustomTemplate(String name, List<String> fieldTitles) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Template name must not be blank");
+        }
+        List<String> titles = fieldTitles.stream()
+                .filter(title -> title != null && !title.isBlank())
+                .map(String::trim)
+                .distinct()
+                .toList();
+        if (titles.isEmpty()) {
+            throw new IllegalArgumentException("A template must contain at least one field title");
+        }
+
+        Path path = getGlobalPath();
+        Type type = new TypeToken<ArrayList<BuildTemplate>>() {}.getType();
+        List<BuildTemplate> templates = this.loadFromFile(path, TEMPLATES_FILE_NAME, type);
+
+        templates.removeIf(template -> template == null || template.isBuiltIn());
+        templates.add(new BuildTemplate(UUID.randomUUID().toString(), name.trim(), titles, false));
+        writeToFile(templates, path, TEMPLATES_FILE_NAME);
+    }
+
+    public void deleteCustomTemplate(String templateId) {
+        // Check to prevent deleting built-in templates
+        if (BUILT_IN_TEMPLATES.stream().anyMatch(template -> template.id().equals(templateId))) {
+            return;
+        }
+
+        Path path = getGlobalPath();
+        Type type = new TypeToken<ArrayList<BuildTemplate>>() {}.getType();
+        List<BuildTemplate> templates = this.loadFromFile(path, TEMPLATES_FILE_NAME, type);
+
+        if (templates.removeIf(template -> template != null
+                && !template.isBuiltIn()
+                && template.id().equals(templateId))) {
+            writeToFile(templates, path, TEMPLATES_FILE_NAME);
         }
     }
 }

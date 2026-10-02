@@ -14,7 +14,13 @@ public class Build extends BaseEntry {
     private final List<CustomField> customFields;
     private List<String> imageFileNames;
 
-    public Build(String name, String coordinates, String dimension, String description, String credits) {
+    public Build(
+            String name,
+            String coordinates,
+            String dimension,
+            String description,
+            String credits
+    ) {
         super();
         this.name = name;
         this.coordinates = coordinates;
