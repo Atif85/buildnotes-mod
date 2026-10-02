@@ -14,6 +14,7 @@ public final class Colors {
     public static int TEXT_PRIMARY = 0xFFFFFFFF;
     public static int TEXT_MUTED = 0xFFCCCCCC;
     public static int TEXT_DISABLED = 0xFF888888;
+    public static int TEMPLATE_BUILT_IN_TAG = 0xFF80D080;
 
     // --- Selection ---
     public static int SELECTION_BACKGROUND = 0x8855AADD;
