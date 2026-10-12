@@ -550,12 +550,12 @@ public class EditBuildScreen extends ScrollableScreen {
         @Override
         protected void init() {
             super.init();
-            int panelH = 100;
+            int panelH = 112;
             int panelW = 200;
             int panelX = (this.width - panelW) / 2;
             int panelY = (this.height - panelH) / 2;
 
-            this.titleField = new TextFieldWidget(this.textRenderer, panelX + 10, panelY + 20, panelW - 20, 20, Text.of(""));
+            this.titleField = new TextFieldWidget(this.textRenderer, panelX + 10, panelY + 30, panelW - 20, 20, Text.of(""));
             this.addSelectableChild(this.titleField);
 
             List<Text> buttonTexts = List.of(
@@ -583,14 +583,15 @@ public class EditBuildScreen extends ScrollableScreen {
             this.renderBackground(matrices);
             super.render(matrices, mouseX, mouseY, delta);
             int panelW = 200;
-            int panelH = 100;
+            int panelH = 112;
             int panelX = (this.width - panelW) / 2;
             int panelY = (this.height - panelH) / 2;
 
             panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
             UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
 
-            drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2, panelY + 8, Colors.TEXT_PRIMARY);
+            drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2,
+                    panelY + 8, Colors.TEXT_PRIMARY);
 
             this.titleField.render(matrices, mouseX, mouseY, delta);
         }

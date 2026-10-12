@@ -8,6 +8,7 @@ import net.atif.buildnotes.gui.helper.BuildScreenLayouts;
 import net.atif.buildnotes.gui.helper.Colors;
 import net.atif.buildnotes.gui.helper.UIHelper;
 import net.atif.buildnotes.gui.widget.DarkButtonWidget;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.screen.Screen;
@@ -139,7 +140,7 @@ public class BuildTemplateScreen extends ScrollableScreen {
 
     private static class TemplateNameScreen extends BaseScreen {
         private final java.util.function.Consumer<String> onConfirm;
-        private TextFieldWidget  nameField;
+        private TextFieldWidget titleField;
         private DarkButtonWidget saveButton;
 
         private TemplateNameScreen(Screen parent, java.util.function.Consumer<String> onConfirm) {
@@ -154,14 +155,15 @@ public class BuildTemplateScreen extends ScrollableScreen {
                     this.width - BuildScreenLayouts.TEMPLATE_PROMPT_MIN_HORIZONTAL_MARGIN * 2);
             int panelX = (this.width - panelWidth) / 2;
             int panelY = (this.height - BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT) / 2;
-            this.nameField = new TextFieldWidget (this.textRenderer,
+
+            this.titleField = new TextFieldWidget (this.textRenderer,
                     panelX + BuildScreenLayouts.TEMPLATE_PROMPT_CONTENT_PADDING,
                     panelY + BuildScreenLayouts.TEMPLATE_PROMPT_FIELD_Y,
                     panelWidth - BuildScreenLayouts.TEMPLATE_PROMPT_CONTENT_PADDING * 2,
                     BuildScreenLayouts.TEMPLATE_PROMPT_FIELD_HEIGHT, Text.literal(""));
-            this.nameField.setMaxLength(BuildScreenLayouts.TEMPLATE_NAME_MAX_LENGTH);
-            this.nameField.setChangedListener(value -> this.saveButton.active = !value.isBlank());
-            this.addSelectableChild(this.nameField);
+            this.titleField.setMaxLength(BuildScreenLayouts.TEMPLATE_NAME_MAX_LENGTH);
+            this.titleField.setChangedListener(value -> this.saveButton.active = !value.isBlank());
+            this.addSelectableChild(this.titleField);
 
             List<Text> buttons = List.of(
                     Text.translatable("gui.buildnotes.confirm_button"),
@@ -172,7 +174,7 @@ public class BuildTemplateScreen extends ScrollableScreen {
                 if (index == 0) {
                     this.saveButton = new DarkButtonWidget(x, buttonsY, width, UIHelper.BUTTON_HEIGHT,
                             buttons.get(0), button -> {
-                        String name = this.nameField.getText().trim();
+                        String name = this.titleField.getText().trim();
                         if (!name.isEmpty()) {
                             this.onConfirm.accept(name);
                             this.open(this.parent);
@@ -185,11 +187,13 @@ public class BuildTemplateScreen extends ScrollableScreen {
                             buttons.get(1), button -> this.close()));
                 }
             });
-            this.setInitialFocus(this.nameField);
+            this.setInitialFocus(this.titleField);
         }
 
         @Override
         public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+            this.renderBackground(matrices);
+            super.render(matrices, mouseX, mouseY, delta);
             int panelH = BuildScreenLayouts.TEMPLATE_PROMPT_HEIGHT;
             int panelW = Math.min(BuildScreenLayouts.TEMPLATE_PROMPT_WIDTH,
                     this.width - BuildScreenLayouts.TEMPLATE_PROMPT_MIN_HORIZONTAL_MARGIN * 2);
@@ -199,12 +203,11 @@ public class BuildTemplateScreen extends ScrollableScreen {
 
             panelH = panelH - (UIHelper.BUTTON_HEIGHT + (UIHelper.OUTER_PADDING * 2));
             UIHelper.drawPanel(matrices, panelX, panelY, panelW, panelH);
-            super.render(matrices, mouseX, mouseY, delta);
 
-            client.textRenderer.drawWithShadow(matrices, this.title, (float) this.width / 2,
+            DrawableHelper.drawCenteredTextWithShadow(matrices, this.textRenderer, this.title, this.width / 2,
                     panelY + BuildScreenLayouts.TEMPLATE_PROMPT_TITLE_Y, Colors.TEXT_PRIMARY);
 
-            this.nameField.render(matrices, mouseX, mouseY, delta);
+            this.titleField.render(matrices, mouseX, mouseY, delta);
         }
     }
 }
