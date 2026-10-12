@@ -114,25 +114,25 @@ public class NoteListWidget extends AbstractListWidget<NoteListWidget.NoteEntry>
             // Truncate and draw the Title (Line 1)
             int availableTitleWidth = entryWidth - 8; // Base padding
             if (line1RightText != null) {
-                availableTitleWidth -= (line1RightWidth + 7); // Account for Line 1 text and padding
+                availableTitleWidth -= (line1RightWidth + 8); // Account for Line 1 text and padding
             }
             String truncatedTitle = client.textRenderer.trimToWidth(note.getTitle(), availableTitleWidth);
             client.textRenderer.draw(matrices, Text.of(truncatedTitle), x + 4, y + 4, Colors.TEXT_PRIMARY);
 
             if (line1RightText != null) {
-                client.textRenderer.draw(matrices, line1RightText, x + entryWidth - line1RightWidth - 4, y + 4, Colors.TEXT_PRIMARY);
+                client.textRenderer.draw(matrices, line1RightText, x + entryWidth - line1RightWidth - 5, y + 4, Colors.TEXT_PRIMARY);
             }
 
             // Truncate and draw the Content Preview (Line 2)
             int availableContentWidth = entryWidth - 8;
             if (line2RightText != null) {
-                availableContentWidth -= (line2RightWidth + 7); // Account for Line 2 text and padding so they don't overlap
+                availableContentWidth -= (line2RightWidth + 8); // Account for Line 2 text and padding so they don't overlap
             }
             String truncatedContent = client.textRenderer.trimToWidth(firstLine, availableContentWidth);
             client.textRenderer.draw(matrices, Text.literal(truncatedContent).formatted(Formatting.GRAY), x + 4, y + 14, Colors.TEXT_MUTED);
 
             if (line2RightText != null) {
-                client.textRenderer.draw(matrices, line2RightText, x + entryWidth - line2RightWidth - 4, y + 14, Colors.TEXT_PRIMARY);
+                client.textRenderer.draw(matrices, line2RightText, x + entryWidth - line2RightWidth - 5, y + 14, Colors.TEXT_PRIMARY);
             }
 
             // Draw Last Modified (Line 3)
